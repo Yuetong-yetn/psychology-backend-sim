@@ -1,0 +1,44 @@
+{
+  "labels": [
+    {
+      "agent_id": 0,
+      "round_index": 0,
+      "teacher_appraisal": {
+        "_provider_meta": {
+          "provider": "volcengine",
+          "used_api": false,
+          "fallback": true,
+          "reason": "provider_disabled_or_unavailable"
+        }
+      },
+      "teacher_emotion": {
+        "_provider_meta": {
+          "provider": "volcengine",
+          "used_api": false,
+          "fallback": true,
+          "reason": "provider_disabled_or_unavailable"
+        }
+      }
+    },
+    {
+      "agent_id": 1,
+      "round_index": 0,
+      "teacher_appraisal": {
+        "_provider_meta": {
+          "provider": "volcengine",
+          "used_api": false,
+          "fallback": true,
+          "reason": "provider_disabled_or_unavailable"
+        }
+      },
+      "teacher_emotion": {
+        "_provider_meta": {
+          "provider": "volcengine",
+          "used_api": false,
+          "fallback": true,
+          "reason": "provider_disabled_or_unavailable"
+        }
+      }
+    }
+  ]
+}

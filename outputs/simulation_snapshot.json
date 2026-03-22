@@ -1,0 +1,3159 @@
+{
+  "round_index": 3,
+  "scenario_prompt": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+  "scenario": {
+    "scenario_id": "aid_policy_001",
+    "title": "News topic: Overseas aid package",
+    "description": "The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform.",
+    "environment_context": [
+      "Public opinion is divided.",
+      "Users can post, browse, reply, and influence each other."
+    ]
+  },
+  "platform": {
+    "current_round": 3,
+    "scenario_prompt": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+    "agent_count": 3,
+    "agents": {
+      "0": "Alex",
+      "1": "Bea",
+      "2": "Chen"
+    },
+    "posts": [
+      {
+        "post_id": 1,
+        "author_id": 0,
+        "content": "Alex starts discussing the current social issue.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.13481933689560835,
+        "sentiment": 0.0144,
+        "emotion_probs": {
+          "anger": 0.023678627713562814,
+          "frustration": 0.023678627713562814,
+          "anxiety": 0.023678627713562814,
+          "fear": 0.023678627713562814,
+          "guilt": 0.023678627713562814,
+          "shame": 0.023678627713562814,
+          "hope": 0.027625053041815926,
+          "confidence": 0.02894052815123363,
+          "relief": 0.04079977757196343,
+          "calm": 0.7605628749536102
+        },
+        "pad": [
+          0.0144,
+          0.09405333689560835,
+          0.04147040786033116
+        ],
+        "emotion_latent": [
+          0.014400000572204587,
+          0.09405333602905272,
+          0.041470408439636224,
+          0.07259502131909257,
+          0.16556337752282868,
+          0.07796701722125296,
+          0.08387674529522782,
+          0.3407939339599609,
+          -0.013733814954757688,
+          0.2253320988464355,
+          0.2409668350219726,
+          0.0,
+          0.0,
+          0.0,
+          0.5,
+          0.5
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 0
+      },
+      {
+        "post_id": 2,
+        "author_id": 1,
+        "content": "Bea shares a measured take on the scenario from the artist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.31436995670158907,
+        "sentiment": 0.185893248,
+        "emotion_probs": {
+          "anger": 0.03495903274355598,
+          "frustration": 0.034159333694396846,
+          "anxiety": 0.037881613754813095,
+          "fear": 0.03912237377495185,
+          "guilt": 0.034159333694396846,
+          "shame": 0.034159333694396846,
+          "hope": 0.034159333694396846,
+          "confidence": 0.23815933369439687,
+          "relief": 0.034159333694396846,
+          "calm": 0.4790809775602979
+        },
+        "pad": [
+          0.185893248,
+          0.22692195670158904,
+          0.1955123724641413
+        ],
+        "emotion_latent": [
+          0.1858932484817505,
+          0.22692195806121826,
+          0.19551237206459046,
+          0.2787682692286385,
+          0.22111599955499422,
+          0.2768796610353399,
+          0.1256460000750435,
+          0.5403100377502441,
+          0.18356886283874513,
+          0.3515068665466308,
+          0.4194762466430664,
+          0.004607999920845031,
+          0.030097067356109616,
+          0.0,
+          0.5006019401550292,
+          0.49832688331604
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 0
+      },
+      {
+        "post_id": 3,
+        "author_id": 2,
+        "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.32554741488557554,
+        "sentiment": 0.20984452914962848,
+        "emotion_probs": {
+          "anger": 0.033835531906149977,
+          "frustration": 0.033835531906149977,
+          "anxiety": 0.033835531906149977,
+          "fear": 0.033835531906149977,
+          "guilt": 0.033835531906149977,
+          "shame": 0.033835531906149977,
+          "hope": 0.038181572903140296,
+          "confidence": 0.24363025323547047,
+          "relief": 0.05078429853489925,
+          "calm": 0.46439068388959015
+        },
+        "pad": [
+          0.20984452914962848,
+          0.2380994148855755,
+          0.20755082354414822
+        ],
+        "emotion_latent": [
+          0.20984452919483187,
+          0.23809941682434083,
+          0.20755082349777224,
+          0.30271954994171985,
+          0.23229345831811676,
+          0.3029977845666814,
+          0.11421817080944902,
+          0.5256197530212402,
+          0.20196025134444237,
+          0.3568748131713867,
+          0.40788904647827146,
+          0.03363616228103637,
+          0.05258735179901122,
+          0.0,
+          0.5010517501831054,
+          0.4972382068634033
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 0
+      },
+      {
+        "post_id": 4,
+        "author_id": 0,
+        "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.34293947301891564,
+        "sentiment": 0.2115307645551978,
+        "emotion_probs": {
+          "anger": 0.033705478674837044,
+          "frustration": 0.033705478674837044,
+          "anxiety": 0.033705478674837044,
+          "fear": 0.033705478674837044,
+          "guilt": 0.033705478674837044,
+          "shame": 0.033705478674837044,
+          "hope": 0.03925746781672913,
+          "confidence": 0.24510813086402655,
+          "relief": 0.05013403237833457,
+          "calm": 0.4632674968918875
+        },
+        "pad": [
+          0.2115307645551978,
+          0.2554914730189156,
+          0.22187925146119564
+        ],
+        "emotion_latent": [
+          0.21153076426506043,
+          0.25549147519683835,
+          0.2218792531967163,
+          0.3044057850119484,
+          0.24968551669061434,
+          0.3049012922761846,
+          0.1134378506419075,
+          0.5244965535583497,
+          0.2168909849357605,
+          0.361341327758789,
+          0.4026413200378418,
+          0.06334277153015136,
+          0.07441495895385741,
+          0.00045683652162551873,
+          0.5055661392211914,
+          0.5111579322814941
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 1
+      },
+      {
+        "post_id": 5,
+        "author_id": 1,
+        "content": "Bea shares a measured take on the scenario from the artist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.34388022131261275,
+        "sentiment": 0.19761936713640949,
+        "emotion_probs": {
+          "anger": 0.03404274456602807,
+          "frustration": 0.03391850563523064,
+          "anxiety": 0.03983466604632859,
+          "fear": 0.04180671951669458,
+          "guilt": 0.03391850563523064,
+          "shame": 0.03391850563523064,
+          "hope": 0.03391850563523064,
+          "confidence": 0.2379185056352307,
+          "relief": 0.03391850563523064,
+          "calm": 0.4768048360595649
+        },
+        "pad": [
+          0.19761936713640949,
+          0.25643222131261273,
+          0.20999416687339226
+        ],
+        "emotion_latent": [
+          0.19761936710596087,
+          0.2564322224578857,
+          0.20999416570663454,
+          0.29049438785284887,
+          0.2506262639516617,
+          0.27615717644671683,
+          0.1286446263071907,
+          0.5380339032592774,
+          0.211064495010376,
+          0.35651567849731447,
+          0.39749363403320315,
+          0.0495235252380371,
+          0.06518553256988524,
+          0.0003084288723766803,
+          0.5091328620910645,
+          0.5059228324890137
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 1
+      },
+      {
+        "post_id": 6,
+        "author_id": 2,
+        "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.3570963620149006,
+        "sentiment": 0.20954424889149456,
+        "emotion_probs": {
+          "anger": 0.03360536758431918,
+          "frustration": 0.03360536758431918,
+          "anxiety": 0.03360536758431918,
+          "fear": 0.03360536758431918,
+          "guilt": 0.03360536758431918,
+          "shame": 0.03360536758431918,
+          "hope": 0.04008565956555867,
+          "confidence": 0.24624575689263853,
+          "relief": 0.04963347692574527,
+          "calm": 0.4624029011101424
+        },
+        "pad": [
+          0.20954424889149456,
+          0.26964836201490056,
+          0.2128910881801001
+        ],
+        "emotion_latent": [
+          0.20954424874305727,
+          0.26964836511230467,
+          0.2128910873413086,
+          0.30241926948994524,
+          0.26384240660608066,
+          0.30636655087451226,
+          0.1128371860262764,
+          0.523631971496582,
+          0.2215210332107544,
+          0.35626850518798825,
+          0.40578093032836915,
+          0.06368161678314208,
+          0.07913170814514159,
+          0.0007776801288127897,
+          0.5096128845214843,
+          0.5059936332702637
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 1
+      },
+      {
+        "post_id": 7,
+        "author_id": 0,
+        "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.35921207634372865,
+        "sentiment": 0.21047018751284202,
+        "emotion_probs": {
+          "anger": 0.03359082387466041,
+          "frustration": 0.03359082387466041,
+          "anxiety": 0.03359082387466041,
+          "fear": 0.03359082387466041,
+          "guilt": 0.03359082387466041,
+          "shame": 0.03359082387466041,
+          "hope": 0.04020597570909939,
+          "confidence": 0.24641102632057907,
+          "relief": 0.04956075837745143,
+          "calm": 0.46227729634490755
+        },
+        "pad": [
+          0.21047018751284202,
+          0.2717640763437286,
+          0.22102659022332627
+        ],
+        "emotion_latent": [
+          0.21047018782615662,
+          0.27176407250976564,
+          0.22102658967971803,
+          0.30334520857304464,
+          0.2659581140035416,
+          0.30657942051867726,
+          0.11274992244213944,
+          0.523506353515625,
+          0.2254511965942383,
+          0.3593855324707031,
+          0.40967447738647456,
+          0.06574498176574706,
+          0.08181859016418455,
+          0.0018335475027561185,
+          0.5146802139282227,
+          0.5222726821899414
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 2
+      },
+      {
+        "post_id": 8,
+        "author_id": 1,
+        "content": "Bea shares a measured take on the scenario from the artist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.3613023353184796,
+        "sentiment": 0.2043411759084827,
+        "emotion_probs": {
+          "anger": 0.033576558454718256,
+          "frustration": 0.033576558454718256,
+          "anxiety": 0.033576558454718256,
+          "fear": 0.033576558454718256,
+          "guilt": 0.033576558454718256,
+          "shame": 0.033576558454718256,
+          "hope": 0.04032398963771176,
+          "confidence": 0.24657313336537628,
+          "relief": 0.04948943127774065,
+          "calm": 0.4621540949908617
+        },
+        "pad": [
+          0.2043411759084827,
+          0.2738543353184796,
+          0.21223014542755447
+        ],
+        "emotion_latent": [
+          0.20434117601633073,
+          0.27385433587646485,
+          0.21223014574050905,
+          0.29721619676321875,
+          0.2680483773702408,
+          0.30678821320513966,
+          0.11266433017224198,
+          0.5233831578674316,
+          0.22337967769622805,
+          0.3553150979003906,
+          0.4071881340026855,
+          0.06736371040344237,
+          0.0851031970977783,
+          0.0015310975909233091,
+          0.5189147758483886,
+          0.5147789001464844
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 2
+      },
+      {
+        "post_id": 9,
+        "author_id": 2,
+        "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.36163232413827323,
+        "sentiment": 0.2096591495898874,
+        "emotion_probs": {
+          "anger": 0.03357431568729494,
+          "frustration": 0.03357431568729494,
+          "anxiety": 0.03357431568729494,
+          "fear": 0.03357431568729494,
+          "guilt": 0.03357431568729494,
+          "shame": 0.03357431568729494,
+          "hope": 0.04034254344094102,
+          "confidence": 0.24659861935882307,
+          "relief": 0.04947821744062407,
+          "calm": 0.4621347256358421
+        },
+        "pad": [
+          0.2096591495898874,
+          0.2741843241382732,
+          0.21380222326466414
+        ],
+        "emotion_latent": [
+          0.20965914980888367,
+          0.2741843262634277,
+          0.21380222301483154,
+          0.3025341705557717,
+          0.2683783677572037,
+          0.30682104344348193,
+          0.1126508738276375,
+          0.5233637792053223,
+          0.2249201907348633,
+          0.35594725045776365,
+          0.4074608085632324,
+          0.06676836490631102,
+          0.08562763214111327,
+          0.002543995082378387,
+          0.5191573143005371,
+          0.5159728813171387
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null,
+        "round_index": 2
+      }
+    ],
+    "replies": [],
+    "likes": [],
+    "shares": [],
+    "influence_events": [],
+    "traces": [
+      {
+        "round_index": 0,
+        "type": "register_agent",
+        "agent_id": 0,
+        "agent_name": "Alex"
+      },
+      {
+        "round_index": 0,
+        "type": "register_agent",
+        "agent_id": 1,
+        "agent_name": "Bea"
+      },
+      {
+        "round_index": 0,
+        "type": "register_agent",
+        "agent_id": 2,
+        "agent_name": "Chen"
+      },
+      {
+        "round_index": 0,
+        "type": "create_post",
+        "post_id": 1,
+        "author_id": 0,
+        "content": "Alex starts discussing the current social issue.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.13481933689560835,
+        "sentiment": 0.0144,
+        "emotion_probs": {
+          "anger": 0.023678627713562814,
+          "frustration": 0.023678627713562814,
+          "anxiety": 0.023678627713562814,
+          "fear": 0.023678627713562814,
+          "guilt": 0.023678627713562814,
+          "shame": 0.023678627713562814,
+          "hope": 0.027625053041815926,
+          "confidence": 0.02894052815123363,
+          "relief": 0.04079977757196343,
+          "calm": 0.7605628749536102
+        },
+        "pad": [
+          0.0144,
+          0.09405333689560835,
+          0.04147040786033116
+        ],
+        "emotion_latent": [
+          0.014400000572204587,
+          0.09405333602905272,
+          0.041470408439636224,
+          0.07259502131909257,
+          0.16556337752282868,
+          0.07796701722125296,
+          0.08387674529522782,
+          0.3407939339599609,
+          -0.013733814954757688,
+          0.2253320988464355,
+          0.2409668350219726,
+          0.0,
+          0.0,
+          0.0,
+          0.5,
+          0.5
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 0,
+        "type": "create_post",
+        "post_id": 2,
+        "author_id": 1,
+        "content": "Bea shares a measured take on the scenario from the artist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.31436995670158907,
+        "sentiment": 0.185893248,
+        "emotion_probs": {
+          "anger": 0.03495903274355598,
+          "frustration": 0.034159333694396846,
+          "anxiety": 0.037881613754813095,
+          "fear": 0.03912237377495185,
+          "guilt": 0.034159333694396846,
+          "shame": 0.034159333694396846,
+          "hope": 0.034159333694396846,
+          "confidence": 0.23815933369439687,
+          "relief": 0.034159333694396846,
+          "calm": 0.4790809775602979
+        },
+        "pad": [
+          0.185893248,
+          0.22692195670158904,
+          0.1955123724641413
+        ],
+        "emotion_latent": [
+          0.1858932484817505,
+          0.22692195806121826,
+          0.19551237206459046,
+          0.2787682692286385,
+          0.22111599955499422,
+          0.2768796610353399,
+          0.1256460000750435,
+          0.5403100377502441,
+          0.18356886283874513,
+          0.3515068665466308,
+          0.4194762466430664,
+          0.004607999920845031,
+          0.030097067356109616,
+          0.0,
+          0.5006019401550292,
+          0.49832688331604
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 0,
+        "type": "create_post",
+        "post_id": 3,
+        "author_id": 2,
+        "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.32554741488557554,
+        "sentiment": 0.20984452914962848,
+        "emotion_probs": {
+          "anger": 0.033835531906149977,
+          "frustration": 0.033835531906149977,
+          "anxiety": 0.033835531906149977,
+          "fear": 0.033835531906149977,
+          "guilt": 0.033835531906149977,
+          "shame": 0.033835531906149977,
+          "hope": 0.038181572903140296,
+          "confidence": 0.24363025323547047,
+          "relief": 0.05078429853489925,
+          "calm": 0.46439068388959015
+        },
+        "pad": [
+          0.20984452914962848,
+          0.2380994148855755,
+          0.20755082354414822
+        ],
+        "emotion_latent": [
+          0.20984452919483187,
+          0.23809941682434083,
+          0.20755082349777224,
+          0.30271954994171985,
+          0.23229345831811676,
+          0.3029977845666814,
+          0.11421817080944902,
+          0.5256197530212402,
+          0.20196025134444237,
+          0.3568748131713867,
+          0.40788904647827146,
+          0.03363616228103637,
+          0.05258735179901122,
+          0.0,
+          0.5010517501831054,
+          0.4972382068634033
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 0,
+        "type": "commit_round",
+        "agent_ids": [
+          0,
+          1,
+          2
+        ],
+        "post_count": 3,
+        "reply_count": 0,
+        "like_count": 0,
+        "share_count": 0,
+        "influence_count": 0
+      },
+      {
+        "round_index": 1,
+        "type": "create_post",
+        "post_id": 4,
+        "author_id": 0,
+        "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.34293947301891564,
+        "sentiment": 0.2115307645551978,
+        "emotion_probs": {
+          "anger": 0.033705478674837044,
+          "frustration": 0.033705478674837044,
+          "anxiety": 0.033705478674837044,
+          "fear": 0.033705478674837044,
+          "guilt": 0.033705478674837044,
+          "shame": 0.033705478674837044,
+          "hope": 0.03925746781672913,
+          "confidence": 0.24510813086402655,
+          "relief": 0.05013403237833457,
+          "calm": 0.4632674968918875
+        },
+        "pad": [
+          0.2115307645551978,
+          0.2554914730189156,
+          0.22187925146119564
+        ],
+        "emotion_latent": [
+          0.21153076426506043,
+          0.25549147519683835,
+          0.2218792531967163,
+          0.3044057850119484,
+          0.24968551669061434,
+          0.3049012922761846,
+          0.1134378506419075,
+          0.5244965535583497,
+          0.2168909849357605,
+          0.361341327758789,
+          0.4026413200378418,
+          0.06334277153015136,
+          0.07441495895385741,
+          0.00045683652162551873,
+          0.5055661392211914,
+          0.5111579322814941
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 1,
+        "type": "create_post",
+        "post_id": 5,
+        "author_id": 1,
+        "content": "Bea shares a measured take on the scenario from the artist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.34388022131261275,
+        "sentiment": 0.19761936713640949,
+        "emotion_probs": {
+          "anger": 0.03404274456602807,
+          "frustration": 0.03391850563523064,
+          "anxiety": 0.03983466604632859,
+          "fear": 0.04180671951669458,
+          "guilt": 0.03391850563523064,
+          "shame": 0.03391850563523064,
+          "hope": 0.03391850563523064,
+          "confidence": 0.2379185056352307,
+          "relief": 0.03391850563523064,
+          "calm": 0.4768048360595649
+        },
+        "pad": [
+          0.19761936713640949,
+          0.25643222131261273,
+          0.20999416687339226
+        ],
+        "emotion_latent": [
+          0.19761936710596087,
+          0.2564322224578857,
+          0.20999416570663454,
+          0.29049438785284887,
+          0.2506262639516617,
+          0.27615717644671683,
+          0.1286446263071907,
+          0.5380339032592774,
+          0.211064495010376,
+          0.35651567849731447,
+          0.39749363403320315,
+          0.0495235252380371,
+          0.06518553256988524,
+          0.0003084288723766803,
+          0.5091328620910645,
+          0.5059228324890137
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 1,
+        "type": "create_post",
+        "post_id": 6,
+        "author_id": 2,
+        "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.3570963620149006,
+        "sentiment": 0.20954424889149456,
+        "emotion_probs": {
+          "anger": 0.03360536758431918,
+          "frustration": 0.03360536758431918,
+          "anxiety": 0.03360536758431918,
+          "fear": 0.03360536758431918,
+          "guilt": 0.03360536758431918,
+          "shame": 0.03360536758431918,
+          "hope": 0.04008565956555867,
+          "confidence": 0.24624575689263853,
+          "relief": 0.04963347692574527,
+          "calm": 0.4624029011101424
+        },
+        "pad": [
+          0.20954424889149456,
+          0.26964836201490056,
+          0.2128910881801001
+        ],
+        "emotion_latent": [
+          0.20954424874305727,
+          0.26964836511230467,
+          0.2128910873413086,
+          0.30241926948994524,
+          0.26384240660608066,
+          0.30636655087451226,
+          0.1128371860262764,
+          0.523631971496582,
+          0.2215210332107544,
+          0.35626850518798825,
+          0.40578093032836915,
+          0.06368161678314208,
+          0.07913170814514159,
+          0.0007776801288127897,
+          0.5096128845214843,
+          0.5059936332702637
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 1,
+        "type": "commit_round",
+        "agent_ids": [
+          0,
+          1,
+          2
+        ],
+        "post_count": 6,
+        "reply_count": 0,
+        "like_count": 0,
+        "share_count": 0,
+        "influence_count": 0
+      },
+      {
+        "round_index": 2,
+        "type": "create_post",
+        "post_id": 7,
+        "author_id": 0,
+        "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.35921207634372865,
+        "sentiment": 0.21047018751284202,
+        "emotion_probs": {
+          "anger": 0.03359082387466041,
+          "frustration": 0.03359082387466041,
+          "anxiety": 0.03359082387466041,
+          "fear": 0.03359082387466041,
+          "guilt": 0.03359082387466041,
+          "shame": 0.03359082387466041,
+          "hope": 0.04020597570909939,
+          "confidence": 0.24641102632057907,
+          "relief": 0.04956075837745143,
+          "calm": 0.46227729634490755
+        },
+        "pad": [
+          0.21047018751284202,
+          0.2717640763437286,
+          0.22102659022332627
+        ],
+        "emotion_latent": [
+          0.21047018782615662,
+          0.27176407250976564,
+          0.22102658967971803,
+          0.30334520857304464,
+          0.2659581140035416,
+          0.30657942051867726,
+          0.11274992244213944,
+          0.523506353515625,
+          0.2254511965942383,
+          0.3593855324707031,
+          0.40967447738647456,
+          0.06574498176574706,
+          0.08181859016418455,
+          0.0018335475027561185,
+          0.5146802139282227,
+          0.5222726821899414
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 2,
+        "type": "create_post",
+        "post_id": 8,
+        "author_id": 1,
+        "content": "Bea shares a measured take on the scenario from the artist perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.3613023353184796,
+        "sentiment": 0.2043411759084827,
+        "emotion_probs": {
+          "anger": 0.033576558454718256,
+          "frustration": 0.033576558454718256,
+          "anxiety": 0.033576558454718256,
+          "fear": 0.033576558454718256,
+          "guilt": 0.033576558454718256,
+          "shame": 0.033576558454718256,
+          "hope": 0.04032398963771176,
+          "confidence": 0.24657313336537628,
+          "relief": 0.04948943127774065,
+          "calm": 0.4621540949908617
+        },
+        "pad": [
+          0.2043411759084827,
+          0.2738543353184796,
+          0.21223014542755447
+        ],
+        "emotion_latent": [
+          0.20434117601633073,
+          0.27385433587646485,
+          0.21223014574050905,
+          0.29721619676321875,
+          0.2680483773702408,
+          0.30678821320513966,
+          0.11266433017224198,
+          0.5233831578674316,
+          0.22337967769622805,
+          0.3553150979003906,
+          0.4071881340026855,
+          0.06736371040344237,
+          0.0851031970977783,
+          0.0015310975909233091,
+          0.5189147758483886,
+          0.5147789001464844
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 2,
+        "type": "create_post",
+        "post_id": 9,
+        "author_id": 2,
+        "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+        "emotion": "calm",
+        "dominant_emotion": "calm",
+        "intensity": 0.36163232413827323,
+        "sentiment": 0.2096591495898874,
+        "emotion_probs": {
+          "anger": 0.03357431568729494,
+          "frustration": 0.03357431568729494,
+          "anxiety": 0.03357431568729494,
+          "fear": 0.03357431568729494,
+          "guilt": 0.03357431568729494,
+          "shame": 0.03357431568729494,
+          "hope": 0.04034254344094102,
+          "confidence": 0.24659861935882307,
+          "relief": 0.04947821744062407,
+          "calm": 0.4621347256358421
+        },
+        "pad": [
+          0.2096591495898874,
+          0.2741843241382732,
+          0.21380222326466414
+        ],
+        "emotion_latent": [
+          0.20965914980888367,
+          0.2741843262634277,
+          0.21380222301483154,
+          0.3025341705557717,
+          0.2683783677572037,
+          0.30682104344348193,
+          0.1126508738276375,
+          0.5233637792053223,
+          0.2249201907348633,
+          0.35594725045776365,
+          0.4074608085632324,
+          0.06676836490631102,
+          0.08562763214111327,
+          0.002543995082378387,
+          0.5191573143005371,
+          0.5159728813171387
+        ],
+        "like_count": 0,
+        "share_count": 0,
+        "shared_post_id": null
+      },
+      {
+        "round_index": 2,
+        "type": "commit_round",
+        "agent_ids": [
+          0,
+          1,
+          2
+        ],
+        "post_count": 9,
+        "reply_count": 0,
+        "like_count": 0,
+        "share_count": 0,
+        "influence_count": 0
+      }
+    ],
+    "trace_size": 15
+  },
+  "agents": [
+    {
+      "profile": {
+        "agent_id": 0,
+        "name": "Alex",
+        "role": "journalist",
+        "ideology": "moderate",
+        "communication_style": "analytical"
+      },
+      "state": {
+        "emotion": 0.03296933597763129,
+        "emotion_state": {
+          "emotion_probs": {
+            "anger": 0.01247651133030549,
+            "frustration": 0.01247651133030549,
+            "anxiety": 0.01247651133030549,
+            "fear": 0.01247651133030549,
+            "guilt": 0.01247651133030549,
+            "shame": 0.01247651133030549,
+            "hope": 0.03314886081292731,
+            "confidence": 0.040039643973801255,
+            "relief": 0.06238255665152745,
+            "calm": 0.789569870579911
+          },
+          "pad": [
+            0.03296933597763129,
+            0.27615023857415194,
+            0.12492684444789459
+          ],
+          "latent": [
+            0.032969336956739426,
+            0.2761502265930176,
+            0.1249268427491188,
+            0.032969336956739426,
+            0.2761502265930176,
+            0.13557106256484985,
+            0.07485906779766083,
+            0.7895698547363281,
+            0.07978498935699463,
+            0.5499672889709473,
+            0.7144514918327332,
+            0.2054530680179596,
+            0.2556830942630768,
+            0.005729835946112871,
+            0.5458756685256958,
+            0.5696021318435669
+          ],
+          "dominant_label": "calm",
+          "intensity": 0.27615023857415194,
+          "signed_valence": 0.03296933597763129
+        },
+        "stress": 0.24857600979313316,
+        "expectation": 0.5633022389650625,
+        "influence_score": 0.6500000000000001,
+        "schemas": {
+          "support_tendency": 0.5057315577286464,
+          "threat_sensitivity": 0.5694211552481615,
+          "self_efficacy": 0.6199311435830558
+        },
+        "schema_flexibility": 0.5,
+        "equilibrium": 0.6016380969765435,
+        "last_cognitive_mode": "assimilation",
+        "dominant_emotion_label": "calm",
+        "last_appraisal": {
+          "relevance": 0.2864030922461562,
+          "valence": 0.0797849894378824,
+          "goal_congruence": 0.6800833176581196,
+          "controllability": 0.5499672651260474,
+          "agency": "external",
+          "certainty": 0.7144515123364406,
+          "novelty": 0.3056552948898252,
+          "coping_potential": 0.5749595793218473,
+          "dominant_emotion": "calm",
+          "emotion_intensity": 0.27615023857415194,
+          "cognitive_mode": "assimilation"
+        },
+        "last_contagion_pad": [
+          0.20545306570227678,
+          0.2556831008076405,
+          0.21029590850483088
+        ],
+        "last_contagion_vector": [
+          0.20545306565247956,
+          0.2556831028780253,
+          0.2102959077854857,
+          0.29832808639936753,
+          0.24987714437180125,
+          0.2947807765126238,
+          0.1187866585946851,
+          0.5292682724543367,
+          0.2120693612064592,
+          0.3565345010016984,
+          0.4034996079482971,
+          0.04983092953307811,
+          0.0663909781648897,
+          0.0003831453545664816,
+          0.5069121175474773,
+          0.5033788357675781
+        ],
+        "appraisal_runtime": {
+          "mode": "fallback",
+          "provider": "local",
+          "model": null,
+          "source": "local",
+          "fallback_used": true,
+          "fallback_reason": "provider_unavailable"
+        },
+        "latent_runtime": {
+          "mode": "fallback",
+          "provider": "local",
+          "model": null,
+          "source": "local",
+          "fallback_used": true,
+          "fallback_reason": "provider_unavailable"
+        },
+        "memory_size": 12,
+        "appraisal_count": 3
+      }
+    },
+    {
+      "profile": {
+        "agent_id": 1,
+        "name": "Bea",
+        "role": "artist",
+        "ideology": "progressive",
+        "communication_style": "expressive"
+      },
+      "state": {
+        "emotion": 0.013816174714008386,
+        "emotion_state": {
+          "emotion_probs": {
+            "anger": 0.012431931892986256,
+            "frustration": 0.012431931892986256,
+            "anxiety": 0.012431931892986256,
+            "fear": 0.012431931892986256,
+            "guilt": 0.012431931892986256,
+            "shame": 0.012431931892986256,
+            "hope": 0.03351765433984097,
+            "confidence": 0.04054622848879254,
+            "relief": 0.06215965946493128,
+            "calm": 0.7891848663485176
+          },
+          "pad": [
+            0.013816174714008386,
+            0.2826822978702487,
+            0.0974379544611077
+          ],
+          "latent": [
+            0.013816175051033497,
+            0.28268229961395264,
+            0.09743795543909073,
+            0.013816175051033497,
+            0.28268229961395264,
+            0.13622353971004486,
+            0.07459159195423126,
+            0.7891848683357239,
+            0.07331149280071259,
+            0.5372471809387207,
+            0.7066816687583923,
+            0.21051159501075745,
+            0.26594749093055725,
+            0.004784679971635342,
+            0.5591086745262146,
+            0.5461840629577637
+          ],
+          "dominant_label": "calm",
+          "intensity": 0.2826822978702487,
+          "signed_valence": 0.013816174714008386
+        },
+        "stress": 0.3004968924545216,
+        "expectation": 0.5075021189515858,
+        "influence_score": 0.6500000000000001,
+        "schemas": {
+          "support_tendency": 0.5053439028789274,
+          "threat_sensitivity": 0.5850620864371621,
+          "self_efficacy": 0.5923491857329514
+        },
+        "schema_flexibility": 0.5,
+        "equilibrium": 0.5781357863328269,
+        "last_cognitive_mode": "assimilation",
+        "dominant_emotion_label": "calm",
+        "last_appraisal": {
+          "relevance": 0.29900814053559965,
+          "valence": 0.07331149124503207,
+          "goal_congruence": 0.6754422836794912,
+          "controllability": 0.5372471949975259,
+          "agency": "external",
+          "certainty": 0.706681676007572,
+          "novelty": 0.3147098592393424,
+          "coping_potential": 0.5601907594635819,
+          "dominant_emotion": "calm",
+          "emotion_intensity": 0.2826822978702487,
+          "cognitive_mode": "assimilation"
+        },
+        "last_contagion_pad": [
+          0.2105116009683035,
+          0.26594749028843023,
+          0.21871377404277023
+        ],
+        "last_contagion_vector": [
+          0.21051160094424975,
+          0.2659474905554666,
+          0.21871377412606943,
+          0.3033866216911377,
+          0.26014153204924256,
+          0.3059812666168848,
+          0.11299512842254728,
+          0.523859305221004,
+          0.22149713320019243,
+          0.35901448735294467,
+          0.4062148548311985,
+          0.06433049806546749,
+          0.07862485764267652,
+          0.0010631064204424463,
+          0.5101900680406369,
+          0.5135910970074382
+        ],
+        "appraisal_runtime": {
+          "mode": "fallback",
+          "provider": "local",
+          "model": null,
+          "source": "local",
+          "fallback_used": true,
+          "fallback_reason": "provider_unavailable"
+        },
+        "latent_runtime": {
+          "mode": "fallback",
+          "provider": "local",
+          "model": null,
+          "source": "local",
+          "fallback_used": true,
+          "fallback_reason": "provider_unavailable"
+        },
+        "memory_size": 13,
+        "appraisal_count": 3
+      }
+    },
+    {
+      "profile": {
+        "agent_id": 2,
+        "name": "Chen",
+        "role": "programmer",
+        "ideology": "conservative",
+        "communication_style": "direct"
+      },
+      "state": {
+        "emotion": 0.03043484246839812,
+        "emotion_state": {
+          "emotion_probs": {
+            "anger": 0.012424923244788392,
+            "frustration": 0.012424923244788392,
+            "anxiety": 0.012424923244788392,
+            "fear": 0.012424923244788392,
+            "guilt": 0.012424923244788392,
+            "shame": 0.012424923244788392,
+            "hope": 0.0335756349749324,
+            "confidence": 0.040625872218313736,
+            "relief": 0.062124616223941956,
+            "calm": 0.7891243371140816
+          },
+          "pad": [
+            0.03043484246839812,
+            0.2837135129321038,
+            0.10235069770207539
+          ],
+          "latent": [
+            0.03043484315276146,
+            0.28371351957321167,
+            0.10235069692134857,
+            0.03043484315276146,
+            0.28371351957321167,
+            0.1363261342048645,
+            0.07454954087734222,
+            0.7891243100166321,
+            0.07812559604644775,
+            0.5392226576805115,
+            0.7075337767601013,
+            0.20865114033222198,
+            0.267586350440979,
+            0.00794998463243246,
+            0.5598666071891785,
+            0.5499152541160583
+          ],
+          "dominant_label": "calm",
+          "intensity": 0.2837135129321038,
+          "signed_valence": 0.03043484246839812
+        },
+        "stress": 0.28413594303297995,
+        "expectation": 0.5283547839579082,
+        "influence_score": 0.6500000000000001,
+        "schemas": {
+          "support_tendency": 0.5070506481270631,
+          "threat_sensitivity": 0.5855106771000491,
+          "self_efficacy": 0.5968739334512242
+        },
+        "schema_flexibility": 0.5,
+        "equilibrium": 0.5841949639504663,
+        "last_cognitive_mode": "assimilation",
+        "dominant_emotion_label": "calm",
+        "last_appraisal": {
+          "relevance": 0.3007500897624098,
+          "valence": 0.07812559671576114,
+          "goal_congruence": 0.6779557619232972,
+          "controllability": 0.5392226498639232,
+          "agency": "external",
+          "certainty": 0.7075337993660514,
+          "novelty": 0.3121199047288643,
+          "coping_potential": 0.5631280478381522,
+          "dominant_emotion": "calm",
+          "emotion_intensity": 0.2837135129321038,
+          "cognitive_mode": "assimilation"
+        },
+        "last_contagion_pad": [
+          0.20865114153992495,
+          0.26758633930712744,
+          0.21821397607524814
+        ],
+        "last_contagion_vector": [
+          0.20865114159955905,
+          0.2675863388187984,
+          0.21821397651785623,
+          0.3015261623464471,
+          0.26178038031257433,
+          0.30614622564078825,
+          0.11292750530821732,
+          0.5237619671914812,
+          0.2221468593308983,
+          0.35855484255803133,
+          0.40668587691062696,
+          0.06558546493721262,
+          0.08073218940590983,
+          0.001312837242602164,
+          0.5134095207482577,
+          0.5163057582510058
+        ],
+        "appraisal_runtime": {
+          "mode": "fallback",
+          "provider": "local",
+          "model": null,
+          "source": "local",
+          "fallback_used": true,
+          "fallback_reason": "provider_unavailable"
+        },
+        "latent_runtime": {
+          "mode": "fallback",
+          "provider": "local",
+          "model": null,
+          "source": "local",
+          "fallback_used": true,
+          "fallback_reason": "provider_unavailable"
+        },
+        "memory_size": 13,
+        "appraisal_count": 3
+      }
+    }
+  ],
+  "history": [
+    {
+      "round_index": 0,
+      "results": {
+        "0": {
+          "profile": {
+            "agent_id": 0,
+            "name": "Alex",
+            "role": "journalist",
+            "ideology": "moderate",
+            "communication_style": "analytical"
+          },
+          "state": {
+            "emotion": 0.045000000000000005,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.013375898326875484,
+                "frustration": 0.013375898326875484,
+                "anxiety": 0.013375898326875484,
+                "fear": 0.013375898326875484,
+                "guilt": 0.013375898326875484,
+                "shame": 0.013375898326875484,
+                "hope": 0.025708477477666462,
+                "confidence": 0.029819337194596788,
+                "relief": 0.06687949163437741,
+                "calm": 0.7973373037321065
+              },
+              "pad": [
+                0.045000000000000005,
+                0.1536666777987761,
+                0.1295950245635349
+              ],
+              "latent": [
+                0.04500000178813934,
+                0.1536666750907898,
+                0.12959502637386322,
+                0.04500000178813934,
+                0.1536666750907898,
+                0.12240730226039886,
+                0.08025538921356201,
+                0.7973372936248779,
+                -0.04291817173361778,
+                0.5639128088951111,
+                0.7530213594436646,
+                0.0,
+                0.0,
+                0.0,
+                0.5,
+                0.5
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.1536666777987761,
+              "signed_valence": 0.045000000000000005
+            },
+            "stress": 0.21389828904607633,
+            "expectation": 0.629835262342256,
+            "influence_score": 0.55,
+            "schemas": {
+              "support_tendency": 0.5057315577286464,
+              "threat_sensitivity": 0.5694211552481615,
+              "self_efficacy": 0.6199311435830558
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.6450752972362731,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.12104077573794098,
+              "valence": -0.0429181727861771,
+              "goal_congruence": 0.7672293628509719,
+              "controllability": 0.56391281137509,
+              "agency": "external",
+              "certainty": 0.7530213690604752,
+              "novelty": 0.3225,
+              "coping_potential": 0.5656822131884449,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.1536666777987761,
+              "cognitive_mode": "equilibrium"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.12104077573794098,
+                "valence": -0.0429181727861771,
+                "goal_congruence": 0.7672293628509719,
+                "controllability": 0.56391281137509,
+                "agency": "external",
+                "certainty": 0.7530213690604752,
+                "novelty": 0.3225,
+                "coping_potential": 0.5656822131884449,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.1536666777987761,
+                "cognitive_mode": "equilibrium"
+              }
+            ],
+            "last_contagion_pad": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "last_contagion_vector": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.0
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.045000000000000005
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Alex starts discussing the current social issue.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.036146667111951046,
+            "reason": "No visible posts, so the agent opens the discussion."
+          }
+        },
+        "1": {
+          "profile": {
+            "agent_id": 1,
+            "name": "Bea",
+            "role": "artist",
+            "ideology": "progressive",
+            "communication_style": "expressive"
+          },
+          "state": {
+            "emotion": -0.04383360000000001,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.016752164045604156,
+                "frustration": 0.014253104516981852,
+                "anxiety": 0.025885229705782636,
+                "fear": 0.029762604768716238,
+                "guilt": 0.014253104516981852,
+                "shame": 0.014253104516981852,
+                "hope": 0.014253104516981852,
+                "confidence": 0.014253104516981852,
+                "relief": 0.014253104516981852,
+                "calm": 0.8420813743780059
+              },
+              "pad": [
+                -0.04383360000000001,
+                0.13601861469246576,
+                0.045194913950441507
+              ],
+              "latent": [
+                -0.043833598494529724,
+                0.13601861894130707,
+                0.04519491270184517,
+                -0.043833598494529724,
+                0.13601861894130707,
+                0.04275931417942047,
+                0.11515931040048599,
+                0.8420813679695129,
+                -0.05109730362892151,
+                0.5253464579582214,
+                0.7450820207595825,
+                0.014399999752640724,
+                0.09405333548784256,
+                0.0,
+                0.5018810629844666,
+                0.4947715103626251
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.13601861469246576,
+              "signed_valence": -0.04383360000000001
+            },
+            "stress": 0.3634082302954186,
+            "expectation": 0.4794773792519053,
+            "influence_score": 0.55,
+            "schemas": {
+              "support_tendency": 0.5053439028789274,
+              "threat_sensitivity": 0.5850620864371621,
+              "self_efficacy": 0.5923491857329514
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.6238784357454302,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.14400591159157372,
+              "valence": -0.05109730180292554,
+              "goal_congruence": 0.7333253907139758,
+              "controllability": 0.5253464539054389,
+              "agency": "external",
+              "certainty": 0.7450820266383723,
+              "novelty": 0.12711837335826925,
+              "coping_potential": 0.5198484600450026,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.13601861469246576,
+              "cognitive_mode": "equilibrium"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.14400591159157372,
+                "valence": -0.05109730180292554,
+                "goal_congruence": 0.7333253907139758,
+                "controllability": 0.5253464539054389,
+                "agency": "external",
+                "certainty": 0.7450820266383723,
+                "novelty": 0.12711837335826925,
+                "coping_potential": 0.5198484600450026,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.13601861469246576,
+                "cognitive_mode": "equilibrium"
+              }
+            ],
+            "last_contagion_pad": [
+              0.014399999999999998,
+              0.09405333689560835,
+              0.04147040786033116
+            ],
+            "last_contagion_vector": [
+              0.014400000572204585,
+              0.09405333602905272,
+              0.041470408439636224,
+              0.07259502131909257,
+              0.16556337752282868,
+              0.07796701722125297,
+              0.08387674529522782,
+              0.34079393395996094,
+              -0.013733814954757688,
+              0.22533209884643549,
+              0.2409668350219726,
+              0.0,
+              0.0,
+              0.0,
+              0.5,
+              0.5
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": -0.04383360000000001
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Bea shares a measured take on the scenario from the artist perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.03426492781537043,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        },
+        "2": {
+          "profile": {
+            "agent_id": 2,
+            "name": "Chen",
+            "role": "programmer",
+            "ideology": "conservative",
+            "communication_style": "direct"
+          },
+          "state": {
+            "emotion": 0.03101415359258899,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.013241223928710369,
+                "frustration": 0.013241223928710369,
+                "anxiety": 0.013241223928710369,
+                "fear": 0.013241223928710369,
+                "guilt": 0.013241223928710369,
+                "shame": 0.013241223928710369,
+                "hope": 0.026822602044305116,
+                "confidence": 0.0313497280828367,
+                "relief": 0.06620611964355184,
+                "calm": 0.7961742066570441
+              },
+              "pad": [
+                0.03101415359258899,
+                0.17094817151742345,
+                0.08281507357546314
+              ],
+              "latent": [
+                0.031014153733849525,
+                0.17094817757606506,
+                0.08281507343053818,
+                0.031014153733849525,
+                0.17094817757606506,
+                0.12437845021486282,
+                0.07944734394550323,
+                0.7961742281913757,
+                0.006375785451382399,
+                0.5421212911605835,
+                0.7088720202445984,
+                0.10511300712823868,
+                0.1643354743719101,
+                0.0,
+                0.5032867193222046,
+                0.4913693964481354
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.17094817151742345,
+              "signed_valence": 0.03101415359258899
+            },
+            "stress": 0.2887468801085322,
+            "expectation": 0.5388151286361866,
+            "influence_score": 0.55,
+            "schemas": {
+              "support_tendency": 0.5070506481270631,
+              "threat_sensitivity": 0.5855106771000491,
+              "self_efficacy": 0.5968739334512242
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.6333381848798869,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.1934085999507969,
+              "valence": 0.006375785368476581,
+              "goal_congruence": 0.7280966462786014,
+              "controllability": 0.5421212886679644,
+              "agency": "external",
+              "certainty": 0.7088720086854502,
+              "novelty": 0.17873099152257577,
+              "coping_potential": 0.5406937849074986,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.17094817151742345,
+              "cognitive_mode": "equilibrium"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.1934085999507969,
+                "valence": 0.006375785368476581,
+                "goal_congruence": 0.7280966462786014,
+                "controllability": 0.5421212886679644,
+                "agency": "external",
+                "certainty": 0.7088720086854502,
+                "novelty": 0.17873099152257577,
+                "coping_potential": 0.5406937849074986,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.17094817151742345,
+                "cognitive_mode": "equilibrium"
+              }
+            ],
+            "last_contagion_pad": [
+              0.10511300731591341,
+              0.1643354746536806,
+              0.1229523905332764
+            ],
+            "last_contagion_vector": [
+              0.10511300784027144,
+              0.1643354749646869,
+              0.12295239059480621,
+              0.18165234902195507,
+              0.1949484726655949,
+              0.1831837783705604,
+              0.10597099541067069,
+              0.4463299010831126,
+              0.09063133914233731,
+              0.2920734589813342,
+              0.33539110974527647,
+              0.0024374459951411248,
+              0.015920134017534674,
+              0.0,
+              0.5003184020497816,
+              0.4991149887954047
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.200293248
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.185893248
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.03101415359258899
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.0351284451455227,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        }
+      }
+    },
+    {
+      "round_index": 1,
+      "results": {
+        "0": {
+          "profile": {
+            "agent_id": 0,
+            "name": "Alex",
+            "role": "journalist",
+            "ideology": "moderate",
+            "communication_style": "analytical"
+          },
+          "state": {
+            "emotion": 0.03628363923499304,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.012834807580857446,
+                "frustration": 0.012834807580857446,
+                "anxiety": 0.012834807580857446,
+                "fear": 0.012834807580857446,
+                "guilt": 0.012834807580857446,
+                "shame": 0.012834807580857446,
+                "hope": 0.030184773649270226,
+                "confidence": 0.035968095672074485,
+                "relief": 0.06417403790428723,
+                "calm": 0.7926642472892234
+              },
+              "pad": [
+                0.03628363923499304,
+                0.22529835318411132,
+                0.12759141081623637
+              ],
+              "latent": [
+                0.03628363832831383,
+                0.22529835999011993,
+                0.12759141623973846,
+                0.03628363832831383,
+                0.22529835999011993,
+                0.13032691180706024,
+                0.07700884342193604,
+                0.7926642298698425,
+                0.053034327924251556,
+                0.5560791492462158,
+                0.6924728751182556,
+                0.19794616103172302,
+                0.23254674673080444,
+                0.0014276141300797462,
+                0.5173941850662231,
+                0.5348685383796692
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.22529835318411132,
+              "signed_valence": 0.03628363923499304
+            },
+            "stress": 0.22533388560370088,
+            "expectation": 0.5883310917300038,
+            "influence_score": 0.6000000000000001,
+            "schemas": {
+              "support_tendency": 0.5057315577286464,
+              "threat_sensitivity": 0.5694211552481615,
+              "self_efficacy": 0.6199311435830558
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.6186209723874543,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.22939821109323583,
+              "valence": 0.053034329038036815,
+              "goal_congruence": 0.7127917949711001,
+              "controllability": 0.5560791536661804,
+              "agency": "external",
+              "certainty": 0.6924728655804676,
+              "novelty": 0.2407334194249296,
+              "coping_potential": 0.5715122571500559,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.22529835318411132,
+              "cognitive_mode": "assimilation"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.12104077573794098,
+                "valence": -0.0429181727861771,
+                "goal_congruence": 0.7672293628509719,
+                "controllability": 0.56391281137509,
+                "agency": "external",
+                "certainty": 0.7530213690604752,
+                "novelty": 0.3225,
+                "coping_potential": 0.5656822131884449,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.1536666777987761,
+                "cognitive_mode": "equilibrium"
+              },
+              {
+                "relevance": 0.22939821109323583,
+                "valence": 0.053034329038036815,
+                "goal_congruence": 0.7127917949711001,
+                "controllability": 0.5560791536661804,
+                "agency": "external",
+                "certainty": 0.6924728655804676,
+                "novelty": 0.2407334194249296,
+                "coping_potential": 0.5715122571500559,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.22529835318411132,
+                "cognitive_mode": "assimilation"
+              }
+            ],
+            "last_contagion_pad": [
+              0.19794616339497578,
+              0.2325467480010957,
+              0.2015704380618611
+            ],
+            "last_contagion_vector": [
+              0.1979461636570443,
+              0.23254674965216146,
+              0.20157043784003714,
+              0.2908211844039323,
+              0.22674079114593743,
+              0.2900229885772851,
+              0.11989521545413084,
+              0.5329174996283518,
+              0.19282389384399629,
+              0.3542081586449006,
+              0.4136452623888863,
+              0.01921573563290462,
+              0.04141477073513903,
+              0.0,
+              0.5008282964062186,
+              0.49777903265643814
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.0
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.045000000000000005
+              },
+              {
+                "round_index": 1,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.4101377771496285
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.20984452914962848
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.185893248
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 1,
+                "source": "self_post",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.03628363923499304
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.03675895059552334,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        },
+        "1": {
+          "profile": {
+            "agent_id": 1,
+            "name": "Bea",
+            "role": "artist",
+            "ideology": "progressive",
+            "communication_style": "expressive"
+          },
+          "state": {
+            "emotion": -0.007189477698720441,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.013888763490829415,
+                "frustration": 0.013500516832087445,
+                "anxiety": 0.03198851811676854,
+                "fear": 0.03815118521166225,
+                "guilt": 0.013500516832087445,
+                "shame": 0.013500516832087445,
+                "hope": 0.013500516832087445,
+                "confidence": 0.013500516832087445,
+                "relief": 0.013500516832087445,
+                "calm": 0.834968432188215
+              },
+              "pad": [
+                -0.007189477698720441,
+                0.22823819160191477,
+                0.09045052147935073
+              ],
+              "latent": [
+                -0.007189477793872356,
+                0.22823819518089294,
+                0.09045051783323288,
+                -0.007189477793872356,
+                0.22823819518089294,
+                0.04050154983997345,
+                0.12453001737594604,
+                0.8349684476852417,
+                0.03482654690742493,
+                0.5409989953041077,
+                0.6763863563537598,
+                0.15476101636886597,
+                0.20370478928089142,
+                0.0009638402261771262,
+                0.5285401940345764,
+                0.5185088515281677
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.22823819160191477,
+              "signed_valence": -0.007189477698720441
+            },
+            "stress": 0.3120094686640239,
+            "expectation": 0.4969793323355291,
+            "influence_score": 0.6000000000000001,
+            "schemas": {
+              "support_tendency": 0.5053439028789274,
+              "threat_sensitivity": 0.5850620864371621,
+              "self_efficacy": 0.5923491857329514
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.5879608149120005,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.2400507663662096,
+              "valence": 0.03482654556066912,
+              "goal_congruence": 0.7023558191886272,
+              "controllability": 0.5409989961053641,
+              "agency": "external",
+              "certainty": 0.6763863270713195,
+              "novelty": 0.25189355547623865,
+              "coping_potential": 0.5494515253739867,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.22823819160191477,
+              "cognitive_mode": "assimilation"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.14400591159157372,
+                "valence": -0.05109730180292554,
+                "goal_congruence": 0.7333253907139758,
+                "controllability": 0.5253464539054389,
+                "agency": "external",
+                "certainty": 0.7450820266383723,
+                "novelty": 0.12711837335826925,
+                "coping_potential": 0.5198484600450026,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.13601861469246576,
+                "cognitive_mode": "equilibrium"
+              },
+              {
+                "relevance": 0.2400507663662096,
+                "valence": 0.03482654556066912,
+                "goal_congruence": 0.7023558191886272,
+                "controllability": 0.5409989961053641,
+                "agency": "external",
+                "certainty": 0.6763863270713195,
+                "novelty": 0.25189355547623865,
+                "coping_potential": 0.5494515253739867,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.22823819160191477,
+                "cognitive_mode": "assimilation"
+              }
+            ],
+            "last_contagion_pad": [
+              0.15476101606517978,
+              0.2037047868281671,
+              0.16569635040774786
+            ],
+            "last_contagion_vector": [
+              0.1547610161318545,
+              0.20370478805885228,
+              0.1656963512242076,
+              0.2377470021408969,
+              0.21994555993876633,
+              0.23956118149275463,
+              0.10526656561088238,
+              0.47248507806970225,
+              0.14618974303864696,
+              0.3210808613521522,
+              0.35827538139556925,
+              0.0354550149283192,
+              0.04597594940011245,
+              0.0001754697924406218,
+              0.5024858084317149,
+              0.5033722673269584
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": -0.04383360000000001
+              },
+              {
+                "round_index": 1,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.43577529370482626
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.2115307645551978
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.20984452914962848
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 1,
+                "source": "self_post",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": -0.007189477698720441
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Bea shares a measured take on the scenario from the artist perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.03684714574805744,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        },
+        "2": {
+          "profile": {
+            "agent_id": 2,
+            "name": "Chen",
+            "role": "programmer",
+            "ideology": "conservative",
+            "communication_style": "direct"
+          },
+          "state": {
+            "emotion": 0.03007577778592044,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.012521960422989139,
+                "frustration": 0.012521960422989139,
+                "anxiety": 0.012521960422989139,
+                "fear": 0.012521960422989139,
+                "guilt": 0.012521960422989139,
+                "shame": 0.012521960422989139,
+                "hope": 0.032772872864362576,
+                "confidence": 0.03952317701148706,
+                "relief": 0.0626098021149457,
+                "calm": 0.7899623854712698
+              },
+              "pad": [
+                0.03007577778592044,
+                0.2695386312965643,
+                0.09950340056281282
+              ],
+              "latent": [
+                0.03007577732205391,
+                0.26953864097595215,
+                0.09950339794158936,
+                0.03007577732205391,
+                0.26953864097595215,
+                0.1349058449268341,
+                0.07513176649808884,
+                0.7899624109268188,
+                0.06750322878360748,
+                0.5402265787124634,
+                0.7022841572761536,
+                0.19900505244731903,
+                0.2472865879535675,
+                0.0024302504025399685,
+                0.5300402641296387,
+                0.518730103969574
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.2695386312965643,
+              "signed_valence": 0.03007577778592044
+            },
+            "stress": 0.28271146543190373,
+            "expectation": 0.5321294096546664,
+            "influence_score": 0.6000000000000001,
+            "schemas": {
+              "support_tendency": 0.5070506481270631,
+              "threat_sensitivity": 0.5855106771000491,
+              "self_efficacy": 0.5968739334512242
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.5971454075399028,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.2830429824539994,
+              "valence": 0.06750322802906417,
+              "goal_congruence": 0.6808434330964926,
+              "controllability": 0.5402265497900214,
+              "agency": "external",
+              "certainty": 0.7022841404100628,
+              "novelty": 0.29555740819261045,
+              "coping_potential": 0.5592768507727914,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.2695386312965643,
+              "cognitive_mode": "assimilation"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.1934085999507969,
+                "valence": 0.006375785368476581,
+                "goal_congruence": 0.7280966462786014,
+                "controllability": 0.5421212886679644,
+                "agency": "external",
+                "certainty": 0.7088720086854502,
+                "novelty": 0.17873099152257577,
+                "coping_potential": 0.5406937849074986,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.17094817151742345,
+                "cognitive_mode": "equilibrium"
+              },
+              {
+                "relevance": 0.2830429824539994,
+                "valence": 0.06750322802906417,
+                "goal_congruence": 0.6808434330964926,
+                "controllability": 0.5402265497900214,
+                "agency": "external",
+                "certainty": 0.7022841404100628,
+                "novelty": 0.29555740819261045,
+                "coping_potential": 0.5592768507727914,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.2695386312965643,
+                "cognitive_mode": "assimilation"
+              }
+            ],
+            "last_contagion_pad": [
+              0.19900504529944932,
+              0.24728659531285382,
+              0.2098446562207416
+            ],
+            "last_contagion_vector": [
+              0.19900504533074692,
+              0.24728659688502594,
+              0.209844656303005,
+              0.29188006607763495,
+              0.24148063837880193,
+              0.28647354518001533,
+              0.1224053092984607,
+              0.5339568460469897,
+              0.20489863999716745,
+              0.35671520114881766,
+              0.405868964065413,
+              0.04096276929226625,
+              0.05794738880985128,
+              0.00026844745233812014,
+              0.5053312482658252,
+              0.5054934269602209
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.200293248
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.185893248
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.03101415359258899
+              },
+              {
+                "round_index": 1,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.5950433796916073
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.2115307645551978
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.19761936713640949
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.185893248
+              },
+              {
+                "round_index": 1,
+                "source": "self_post",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.03007577778592044
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.03808615893889693,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        }
+      }
+    },
+    {
+      "round_index": 2,
+      "results": {
+        "0": {
+          "profile": {
+            "agent_id": 0,
+            "name": "Alex",
+            "role": "journalist",
+            "ideology": "moderate",
+            "communication_style": "analytical"
+          },
+          "state": {
+            "emotion": 0.03296933597763129,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.01247651133030549,
+                "frustration": 0.01247651133030549,
+                "anxiety": 0.01247651133030549,
+                "fear": 0.01247651133030549,
+                "guilt": 0.01247651133030549,
+                "shame": 0.01247651133030549,
+                "hope": 0.03314886081292731,
+                "confidence": 0.040039643973801255,
+                "relief": 0.06238255665152745,
+                "calm": 0.789569870579911
+              },
+              "pad": [
+                0.03296933597763129,
+                0.27615023857415194,
+                0.12492684444789459
+              ],
+              "latent": [
+                0.032969336956739426,
+                0.2761502265930176,
+                0.1249268427491188,
+                0.032969336956739426,
+                0.2761502265930176,
+                0.13557106256484985,
+                0.07485906779766083,
+                0.7895698547363281,
+                0.07978498935699463,
+                0.5499672889709473,
+                0.7144514918327332,
+                0.2054530680179596,
+                0.2556830942630768,
+                0.005729835946112871,
+                0.5458756685256958,
+                0.5696021318435669
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.27615023857415194,
+              "signed_valence": 0.03296933597763129
+            },
+            "stress": 0.24857600979313316,
+            "expectation": 0.5633022389650625,
+            "influence_score": 0.6500000000000001,
+            "schemas": {
+              "support_tendency": 0.5057315577286464,
+              "threat_sensitivity": 0.5694211552481615,
+              "self_efficacy": 0.6199311435830558
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.6016380969765435,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.2864030922461562,
+              "valence": 0.0797849894378824,
+              "goal_congruence": 0.6800833176581196,
+              "controllability": 0.5499672651260474,
+              "agency": "external",
+              "certainty": 0.7144515123364406,
+              "novelty": 0.3056552948898252,
+              "coping_potential": 0.5749595793218473,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.27615023857415194,
+              "cognitive_mode": "assimilation"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.12104077573794098,
+                "valence": -0.0429181727861771,
+                "goal_congruence": 0.7672293628509719,
+                "controllability": 0.56391281137509,
+                "agency": "external",
+                "certainty": 0.7530213690604752,
+                "novelty": 0.3225,
+                "coping_potential": 0.5656822131884449,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.1536666777987761,
+                "cognitive_mode": "equilibrium"
+              },
+              {
+                "relevance": 0.22939821109323583,
+                "valence": 0.053034329038036815,
+                "goal_congruence": 0.7127917949711001,
+                "controllability": 0.5560791536661804,
+                "agency": "external",
+                "certainty": 0.6924728655804676,
+                "novelty": 0.2407334194249296,
+                "coping_potential": 0.5715122571500559,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.22529835318411132,
+                "cognitive_mode": "assimilation"
+              },
+              {
+                "relevance": 0.2864030922461562,
+                "valence": 0.0797849894378824,
+                "goal_congruence": 0.6800833176581196,
+                "controllability": 0.5499672651260474,
+                "agency": "external",
+                "certainty": 0.7144515123364406,
+                "novelty": 0.3056552948898252,
+                "coping_potential": 0.5749595793218473,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.27615023857415194,
+                "cognitive_mode": "assimilation"
+              }
+            ],
+            "last_contagion_pad": [
+              0.20545306570227678,
+              0.2556831008076405,
+              0.21029590850483088
+            ],
+            "last_contagion_vector": [
+              0.20545306565247956,
+              0.2556831028780253,
+              0.2102959077854857,
+              0.29832808639936753,
+              0.24987714437180125,
+              0.2947807765126238,
+              0.1187866585946851,
+              0.5292682724543367,
+              0.2120693612064592,
+              0.3565345010016984,
+              0.4034996079482971,
+              0.04983092953307811,
+              0.0663909781648897,
+              0.0003831453545664816,
+              0.5069121175474773,
+              0.5033788357675781
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.0
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.045000000000000005
+              },
+              {
+                "round_index": 1,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.4101377771496285
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.20984452914962848
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.185893248
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 1,
+                "source": "self_post",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.03628363923499304
+              },
+              {
+                "round_index": 2,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.6170081451775326
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.20954424889149456
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.19761936713640949
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.20984452914962848
+              },
+              {
+                "round_index": 2,
+                "source": "self_post",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.03296933597763129
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.038284507157224555,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        },
+        "1": {
+          "profile": {
+            "agent_id": 1,
+            "name": "Bea",
+            "role": "artist",
+            "ideology": "progressive",
+            "communication_style": "expressive"
+          },
+          "state": {
+            "emotion": 0.013816174714008386,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.012431931892986256,
+                "frustration": 0.012431931892986256,
+                "anxiety": 0.012431931892986256,
+                "fear": 0.012431931892986256,
+                "guilt": 0.012431931892986256,
+                "shame": 0.012431931892986256,
+                "hope": 0.03351765433984097,
+                "confidence": 0.04054622848879254,
+                "relief": 0.06215965946493128,
+                "calm": 0.7891848663485176
+              },
+              "pad": [
+                0.013816174714008386,
+                0.2826822978702487,
+                0.0974379544611077
+              ],
+              "latent": [
+                0.013816175051033497,
+                0.28268229961395264,
+                0.09743795543909073,
+                0.013816175051033497,
+                0.28268229961395264,
+                0.13622353971004486,
+                0.07459159195423126,
+                0.7891848683357239,
+                0.07331149280071259,
+                0.5372471809387207,
+                0.7066816687583923,
+                0.21051159501075745,
+                0.26594749093055725,
+                0.004784679971635342,
+                0.5591086745262146,
+                0.5461840629577637
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.2826822978702487,
+              "signed_valence": 0.013816174714008386
+            },
+            "stress": 0.3004968924545216,
+            "expectation": 0.5075021189515858,
+            "influence_score": 0.6500000000000001,
+            "schemas": {
+              "support_tendency": 0.5053439028789274,
+              "threat_sensitivity": 0.5850620864371621,
+              "self_efficacy": 0.5923491857329514
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.5781357863328269,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.29900814053559965,
+              "valence": 0.07331149124503207,
+              "goal_congruence": 0.6754422836794912,
+              "controllability": 0.5372471949975259,
+              "agency": "external",
+              "certainty": 0.706681676007572,
+              "novelty": 0.3147098592393424,
+              "coping_potential": 0.5601907594635819,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.2826822978702487,
+              "cognitive_mode": "assimilation"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.14400591159157372,
+                "valence": -0.05109730180292554,
+                "goal_congruence": 0.7333253907139758,
+                "controllability": 0.5253464539054389,
+                "agency": "external",
+                "certainty": 0.7450820266383723,
+                "novelty": 0.12711837335826925,
+                "coping_potential": 0.5198484600450026,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.13601861469246576,
+                "cognitive_mode": "equilibrium"
+              },
+              {
+                "relevance": 0.2400507663662096,
+                "valence": 0.03482654556066912,
+                "goal_congruence": 0.7023558191886272,
+                "controllability": 0.5409989961053641,
+                "agency": "external",
+                "certainty": 0.6763863270713195,
+                "novelty": 0.25189355547623865,
+                "coping_potential": 0.5494515253739867,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.22823819160191477,
+                "cognitive_mode": "assimilation"
+              },
+              {
+                "relevance": 0.29900814053559965,
+                "valence": 0.07331149124503207,
+                "goal_congruence": 0.6754422836794912,
+                "controllability": 0.5372471949975259,
+                "agency": "external",
+                "certainty": 0.706681676007572,
+                "novelty": 0.3147098592393424,
+                "coping_potential": 0.5601907594635819,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.2826822978702487,
+                "cognitive_mode": "assimilation"
+              }
+            ],
+            "last_contagion_pad": [
+              0.2105116009683035,
+              0.26594749028843023,
+              0.21871377404277023
+            ],
+            "last_contagion_vector": [
+              0.21051160094424975,
+              0.2659474905554666,
+              0.21871377412606943,
+              0.3033866216911377,
+              0.26014153204924256,
+              0.3059812666168848,
+              0.11299512842254728,
+              0.523859305221004,
+              0.22149713320019243,
+              0.35901448735294467,
+              0.4062148548311985,
+              0.06433049806546749,
+              0.07862485764267652,
+              0.0010631064204424463,
+              0.5101900680406369,
+              0.5135910970074382
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": -0.04383360000000001
+              },
+              {
+                "round_index": 1,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.43577529370482626
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.2115307645551978
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.20984452914962848
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 1,
+                "source": "self_post",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": -0.007189477698720441
+              },
+              {
+                "round_index": 2,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.6315452009595344
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.21047018751284202
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.20954424889149456
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.2115307645551978
+              },
+              {
+                "round_index": 2,
+                "source": "self_post",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.013816174714008386
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Bea shares a measured take on the scenario from the artist perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.03848046893610746,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        },
+        "2": {
+          "profile": {
+            "agent_id": 2,
+            "name": "Chen",
+            "role": "programmer",
+            "ideology": "conservative",
+            "communication_style": "direct"
+          },
+          "state": {
+            "emotion": 0.03043484246839812,
+            "emotion_state": {
+              "emotion_probs": {
+                "anger": 0.012424923244788392,
+                "frustration": 0.012424923244788392,
+                "anxiety": 0.012424923244788392,
+                "fear": 0.012424923244788392,
+                "guilt": 0.012424923244788392,
+                "shame": 0.012424923244788392,
+                "hope": 0.0335756349749324,
+                "confidence": 0.040625872218313736,
+                "relief": 0.062124616223941956,
+                "calm": 0.7891243371140816
+              },
+              "pad": [
+                0.03043484246839812,
+                0.2837135129321038,
+                0.10235069770207539
+              ],
+              "latent": [
+                0.03043484315276146,
+                0.28371351957321167,
+                0.10235069692134857,
+                0.03043484315276146,
+                0.28371351957321167,
+                0.1363261342048645,
+                0.07454954087734222,
+                0.7891243100166321,
+                0.07812559604644775,
+                0.5392226576805115,
+                0.7075337767601013,
+                0.20865114033222198,
+                0.267586350440979,
+                0.00794998463243246,
+                0.5598666071891785,
+                0.5499152541160583
+              ],
+              "dominant_label": "calm",
+              "intensity": 0.2837135129321038,
+              "signed_valence": 0.03043484246839812
+            },
+            "stress": 0.28413594303297995,
+            "expectation": 0.5283547839579082,
+            "influence_score": 0.6500000000000001,
+            "schemas": {
+              "support_tendency": 0.5070506481270631,
+              "threat_sensitivity": 0.5855106771000491,
+              "self_efficacy": 0.5968739334512242
+            },
+            "schema_flexibility": 0.5,
+            "equilibrium": 0.5841949639504663,
+            "last_cognitive_mode": "assimilation",
+            "dominant_emotion_label": "calm",
+            "last_appraisal": {
+              "relevance": 0.3007500897624098,
+              "valence": 0.07812559671576114,
+              "goal_congruence": 0.6779557619232972,
+              "controllability": 0.5392226498639232,
+              "agency": "external",
+              "certainty": 0.7075337993660514,
+              "novelty": 0.3121199047288643,
+              "coping_potential": 0.5631280478381522,
+              "dominant_emotion": "calm",
+              "emotion_intensity": 0.2837135129321038,
+              "cognitive_mode": "assimilation"
+            },
+            "appraisal_history": [
+              {
+                "relevance": 0.1934085999507969,
+                "valence": 0.006375785368476581,
+                "goal_congruence": 0.7280966462786014,
+                "controllability": 0.5421212886679644,
+                "agency": "external",
+                "certainty": 0.7088720086854502,
+                "novelty": 0.17873099152257577,
+                "coping_potential": 0.5406937849074986,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.17094817151742345,
+                "cognitive_mode": "equilibrium"
+              },
+              {
+                "relevance": 0.2830429824539994,
+                "valence": 0.06750322802906417,
+                "goal_congruence": 0.6808434330964926,
+                "controllability": 0.5402265497900214,
+                "agency": "external",
+                "certainty": 0.7022841404100628,
+                "novelty": 0.29555740819261045,
+                "coping_potential": 0.5592768507727914,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.2695386312965643,
+                "cognitive_mode": "assimilation"
+              },
+              {
+                "relevance": 0.3007500897624098,
+                "valence": 0.07812559671576114,
+                "goal_congruence": 0.6779557619232972,
+                "controllability": 0.5392226498639232,
+                "agency": "external",
+                "certainty": 0.7075337993660514,
+                "novelty": 0.3121199047288643,
+                "coping_potential": 0.5631280478381522,
+                "dominant_emotion": "calm",
+                "emotion_intensity": 0.2837135129321038,
+                "cognitive_mode": "assimilation"
+              }
+            ],
+            "last_contagion_pad": [
+              0.20865114153992495,
+              0.26758633930712744,
+              0.21821397607524814
+            ],
+            "last_contagion_vector": [
+              0.20865114159955905,
+              0.2675863388187984,
+              0.21821397651785623,
+              0.3015261623464471,
+              0.26178038031257433,
+              0.30614622564078825,
+              0.11292750530821732,
+              0.5237619671914812,
+              0.2221468593308983,
+              0.35855484255803133,
+              0.40668587691062696,
+              0.06558546493721262,
+              0.08073218940590983,
+              0.001312837242602164,
+              0.5134095207482577,
+              0.5163057582510058
+            ],
+            "appraisal_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "latent_runtime": {
+              "mode": "fallback",
+              "provider": "local",
+              "model": null,
+              "source": "local",
+              "fallback_used": true,
+              "fallback_reason": "provider_unavailable"
+            },
+            "memory": [
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.185893248
+              },
+              {
+                "round_index": 0,
+                "source": "feed",
+                "content": "Alex starts discussing the current social issue.",
+                "valence": 0.0144
+              },
+              {
+                "round_index": 0,
+                "source": "self_post",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.03101415359258899
+              },
+              {
+                "round_index": 1,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.5950433796916073
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.2115307645551978
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.19761936713640949
+              },
+              {
+                "round_index": 1,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.185893248
+              },
+              {
+                "round_index": 1,
+                "source": "self_post",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.03007577778592044
+              },
+              {
+                "round_index": 2,
+                "source": "scenario",
+                "content": "News topic: Overseas aid package. The government announces a new overseas aid package. Agents should react based on emotion, stress, expectation, and what they observe on the platform. Context: Public opinion is divided. Users can post, browse, reply, and influence each other.",
+                "valence": 0.6263421279765224
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.21047018751284202
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Bea shares a measured take on the scenario from the artist perspective.",
+                "valence": 0.2043411759084827
+              },
+              {
+                "round_index": 2,
+                "source": "feed",
+                "content": "Alex shares a measured take on the scenario from the journalist perspective.",
+                "valence": 0.2115307645551978
+              },
+              {
+                "round_index": 2,
+                "source": "self_post",
+                "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+                "valence": 0.03043484246839812
+              }
+            ]
+          },
+          "decision": {
+            "action": "create_post",
+            "content": "Chen shares a measured take on the scenario from the programmer perspective.",
+            "target_post_id": null,
+            "target_agent_id": null,
+            "metadata": {},
+            "influence_delta": 0.03851140538796311,
+            "reason": "Congruent appraisal with enough control favors posting."
+          }
+        }
+      }
+    }
+  ]
+}
