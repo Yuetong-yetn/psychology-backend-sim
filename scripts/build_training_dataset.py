@@ -23,7 +23,7 @@ def appraisal_vector(appraisal: Dict[str, Any]) -> List[float]:
     return [
         float(appraisal.get("relevance", 0.0)),
         float(appraisal.get("valence", 0.0)),
-        float(appraisal.get("goal_congruence", 0.5)),
+        float(appraisal.get("goal_conduciveness", appraisal.get("goal_congruence", 0.5))),
         float(appraisal.get("controllability", 0.5)),
         float(appraisal.get("certainty", 0.5)),
         float(appraisal.get("coping_potential", 0.5)),
@@ -107,7 +107,7 @@ def build_samples(snapshot: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "emotion_probs": dict(emotion_state.get("emotion_probs", {})),
                 },
                 "stress": float(state.get("stress", 0.0)),
-                "equilibrium": float(state.get("equilibrium", 0.5)),
+                "equilibrium_index": float(state.get("equilibrium_index", state.get("delta_eq", state.get("equilibrium", 0.5)))),
                 "feed_features": infer_feed_features(state),
                 "contagion_features": {
                     "sentiment": float((state.get("last_contagion_pad", [0.0, 0.0, 0.0]) or [0.0])[0]),

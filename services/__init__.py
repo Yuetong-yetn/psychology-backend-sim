@@ -6,13 +6,16 @@ from Backend.services.llm_provider import (
     LLMProvider,
     LLMProviderConfig,
 )
-from Backend.services.volcengine_client import VolcengineClient, VolcengineConfig
+from Backend.services.deepseek_client import DeepSeekClient, DeepSeekConfig
+from Backend.services.ollama_client import OllamaClient, OllamaConfig
 
 __all__ = [
     "CognitiveMoEProvider",
     "CognitiveMoEConfig",
     "LLMProvider",
     "LLMProviderConfig",
-    "VolcengineClient",
-    "VolcengineConfig",
+    "OllamaClient",
+    "OllamaConfig",
+    "DeepSeekClient",
+    "DeepSeekConfig",
 ]

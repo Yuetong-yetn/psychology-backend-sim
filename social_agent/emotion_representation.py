@@ -17,7 +17,7 @@ LATENT_DIM = 16
 @dataclass
 class EmotionRepresentationConfig:
     mode: str = "moe"
-    llm_provider_name: Optional[str] = "volcengine"
+    llm_provider_name: Optional[str] = "ollama"
     enable_fallback: bool = True
     latent_dim: int = LATENT_DIM
     checkpoint_dir: Optional[str] = None

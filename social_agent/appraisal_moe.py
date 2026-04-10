@@ -11,7 +11,7 @@ from Backend.services.llm_provider import CognitiveMoEProvider
 APPRAISAL_KEYS = [
     "relevance",
     "valence",
-    "goal_congruence",
+    "goal_conduciveness",
     "controllability",
     "certainty",
     "coping_potential",
@@ -22,7 +22,7 @@ APPRAISAL_KEYS = [
 class ExpertOutput:
     relevance: float = 0.0
     valence: float = 0.0
-    goal_congruence: float = 0.5
+    goal_conduciveness: float = 0.5
     controllability: float = 0.5
     certainty: float = 0.5
     coping_potential: float = 0.5
@@ -31,17 +31,21 @@ class ExpertOutput:
         return {
             "relevance": self.relevance,
             "valence": self.valence,
-            "goal_congruence": self.goal_congruence,
+            "goal_conduciveness": self.goal_conduciveness,
             "controllability": self.controllability,
             "certainty": self.certainty,
             "coping_potential": self.coping_potential,
         }
 
+    @property
+    def goal_congruence(self) -> float:
+        return self.goal_conduciveness
+
 
 @dataclass
 class AppraisalMoEConfig:
     mode: str = "moe"
-    llm_provider_name: Optional[str] = "volcengine"
+    llm_provider_name: Optional[str] = "ollama"
     enable_fallback: bool = True
     checkpoint_dir: Optional[str] = None
 
@@ -64,7 +68,7 @@ class ThreatExpert:
         return ExpertOutput(
             relevance=_clamp(risk * 0.42 + novelty * 0.2 + arousal * 0.14 + contagion_negativity * 0.16 + social_arousal * 0.08),
             valence=_clamp_signed(-(risk * 0.48 + threat_sensitivity * 0.2 + contagion_negativity * 0.2 + stress * 0.12)),
-            goal_congruence=_clamp(1.0 - (risk * 0.28 + novelty * 0.18 + contagion_negativity * 0.18)),
+            goal_conduciveness=_clamp(1.0 - (risk * 0.28 + novelty * 0.18 + contagion_negativity * 0.18)),
             controllability=_clamp(1.0 - (risk * 0.36 + arousal * 0.14 + social_arousal * 0.08 + stress * 0.08)),
             certainty=_clamp(1.0 - novelty * 0.45 - social_arousal * 0.08 - contagion_features.get("dispersion", 0.0) * 0.08),
             coping_potential=_clamp(1.0 - (risk * 0.28 + threat_sensitivity * 0.14 + contagion_negativity * 0.14 + stress * 0.1)),
@@ -90,7 +94,7 @@ class SupportExpert:
         return ExpertOutput(
             relevance=_clamp(abs(feed_direction) * 0.22 + support * 0.2 + abs(pleasure) * 0.16 + feed_features.get("exposure_pressure", 0.0) * 0.16 + memory_coherence * 0.12),
             valence=_clamp_signed(feed_direction * 0.42 + schema_direction * 0.2 + pleasure * 0.18 + memory_bias * 0.12),
-            goal_congruence=goal,
+            goal_conduciveness=goal,
             controllability=_clamp(0.42 + max(0.0, pleasure) * 0.12 + goal * 0.24 + memory_coherence * 0.08),
             certainty=_clamp(event["consistency"] * 0.44 + goal * 0.24 + memory_coherence * 0.16 + (1 - feed_features.get("dispersion", 0.0)) * 0.08),
             coping_potential=_clamp(0.42 + goal * 0.18 + max(0.0, pleasure) * 0.14 + memory_bias * 0.06),
@@ -113,7 +117,7 @@ class CopingExpert:
         return ExpertOutput(
             relevance=_clamp(event["risk"] * 0.12 + stress * 0.18 + abs(dominance) * 0.08 + memory_summary.get("salience", 0.0) * 0.1),
             valence=_clamp_signed(dominance * 0.28 - stress * 0.12 + recovered * 0.06),
-            goal_congruence=_clamp(0.44 + efficacy * 0.18 - stress * 0.08 + recovered * 0.06),
+            goal_conduciveness=_clamp(0.44 + efficacy * 0.18 - stress * 0.08 + recovered * 0.06),
             controllability=_clamp(efficacy * 0.34 + equilibrium * 0.24 + max(0.0, dominance) * 0.14 + recovered * 0.08),
             certainty=_clamp((1 - event["novelty"]) * 0.2 + equilibrium * 0.24 + (1 - stress) * 0.22 + memory_summary.get("coherence", 0.0) * 0.12),
             coping_potential=_clamp(efficacy * 0.4 + equilibrium * 0.18 + max(0.0, dominance) * 0.14 + (1 - stress) * 0.08 + recovered * 0.08),
@@ -139,7 +143,7 @@ class SocialAmplificationExpert:
         return ExpertOutput(
             relevance=_clamp(exposure_pressure * 0.28 + abs(exposure_polarity) * 0.14 + social_arousal * 0.18 + abs(social_sentiment) * 0.14 + memory_sociality * 0.1),
             valence=_clamp_signed(exposure_polarity * 0.3 + social_sentiment * 0.3 + pleasure * 0.08 - feed_features.get("dispersion", 0.0) * 0.08),
-            goal_congruence=_clamp(0.5 + exposure_polarity * 0.14 + social_sentiment * 0.12 + (schemas["support_tendency"] * 2 - 1) * 0.08),
+            goal_conduciveness=_clamp(0.5 + exposure_polarity * 0.14 + social_sentiment * 0.12 + (schemas["support_tendency"] * 2 - 1) * 0.08),
             controllability=_clamp(0.42 - social_arousal * 0.08 - exposure_pressure * 0.06 + max(0.0, _pad_at(emotion_state, 2)) * 0.08),
             certainty=_clamp(0.46 + feed_features.get("consensus", 0.0) * 0.18 - feed_features.get("dispersion", 0.0) * 0.14 - social_arousal * 0.06),
             coping_potential=_clamp(0.44 + max(0.0, _pad_at(emotion_state, 2)) * 0.08 - exposure_pressure * 0.06 - social_arousal * 0.06 + memory_summary.get("self_generated_ratio", 0.0) * 0.04),
@@ -242,7 +246,12 @@ class AppraisalRouter:
         return {
             "relevance": _clamp(result.get("relevance", fallback_result["relevance"])),
             "valence": _clamp_signed(result.get("valence", fallback_result["valence"])),
-            "goal_congruence": _clamp(result.get("goal_congruence", fallback_result["goal_congruence"])),
+            "goal_conduciveness": _clamp(
+                result.get(
+                    "goal_conduciveness",
+                    result.get("goal_congruence", fallback_result["goal_conduciveness"]),
+                )
+            ),
             "controllability": _clamp(result.get("controllability", fallback_result["controllability"])),
             "certainty": _clamp(result.get("certainty", fallback_result["certainty"])),
             "coping_potential": _clamp(result.get("coping_potential", fallback_result["coping_potential"])),
@@ -281,7 +290,7 @@ class AppraisalRouter:
             expert_value = sum(weights[name] * getattr(outputs[name], key) for name in outputs)
             fused[key] = prior[key] * 0.3 + expert_value * 0.7
         fused["relevance"] = _clamp(fused["relevance"])
-        fused["goal_congruence"] = _clamp(fused["goal_congruence"])
+        fused["goal_conduciveness"] = _clamp(fused["goal_conduciveness"])
         fused["controllability"] = _clamp(fused["controllability"])
         fused["certainty"] = _clamp(fused["certainty"])
         fused["coping_potential"] = _clamp(fused["coping_potential"])

@@ -28,7 +28,7 @@ class Platform:
     influence_events: List[dict] = field(default_factory=list)
     traces: List[dict] = field(default_factory=list)
     mode: str = "moe"
-    llm_provider: str = "volcengine"
+    llm_provider: str = "ollama"
     enable_fallback: bool = True
     emotion_detector: BaseEmotionDetector = field(default_factory=CompositeEmotionDetector)
     _post_id_seq: int = 1

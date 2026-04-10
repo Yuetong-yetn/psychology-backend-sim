@@ -9,10 +9,13 @@
 
 from __future__ import annotations
 
+import hashlib
+import math
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Optional
 
 from Backend.social_agent.appraisal_moe import AppraisalMoEConfig, AppraisalRouter
+from Backend.social_agent.cam_memory import CAMMemoryGraph
 from Backend.social_agent.emotion_representation import (
     LATENT_DIM,
     EmotionRepresentationConfig,
@@ -31,6 +34,22 @@ EMOTION_SENTIMENT = {
     "confidence": 0.7,
     "relief": 0.35,
     "calm": 0.0,
+}
+
+E_CAM_T_EMBED_DIM = 16
+
+_OASIS_ACTION_SUMMARY = {
+    "refresh": "Refresh the feed and continue observing socially salient content.",
+    "create_post": "Publish a new public post aligned with the current topic.",
+    "create_comment": "Write a direct public reply under a visible post.",
+    "repost": "Repost a visible post to amplify its reach.",
+    "quote_post": "Share a visible post with added commentary.",
+    "like_post": "Endorse a visible post through a lightweight action.",
+    "follow": "Increase engagement with the source account or topic.",
+    "search_posts": "Search for additional context before acting strongly.",
+    "unfollow": "Reduce engagement with a stressful source.",
+    "mute": "Suppress a stressful topic or account from attention.",
+    "do_nothing": "Avoid public interaction for this step.",
 }
 
 class EmotionLatentEncoder:
@@ -126,15 +145,23 @@ class AppraisalRecord:
 
     relevance: float
     valence: float
-    goal_congruence: float
+    goal_conduciveness: float
     controllability: float
     agency: str
     certainty: float
     novelty: float
     coping_potential: float
+    unpredictability: float
+    goal_relevance_signal: float
+    performance: float
+    confirmation: float
     dominant_emotion: str
     emotion_intensity: float
     cognitive_mode: str
+
+    @property
+    def goal_congruence(self) -> float:
+        return self.goal_conduciveness
 
 
 @dataclass
@@ -156,6 +183,9 @@ class AgentState:
     emotion_state: Optional[EmotionState] = None
     stress: float = 0.0
     expectation: float = 0.5
+    satisfaction: float = 0.0
+    dopamine_level: float = 0.5
+    performance_prediction: float = 0.5
     influence_score: float = 0.5
     schemas: Dict[str, float] = field(
         default_factory=lambda: {
@@ -166,8 +196,26 @@ class AgentState:
     )
     schema_flexibility: float = 0.5
     equilibrium: float = 0.7
+    equilibrium_index: float = 0.7
     last_cognitive_mode: str = "equilibrium"
     dominant_emotion_label: str = "calm"
+    empathy_level: float = 0.55
+    empathized_negative_emotion: float = 0.0
+    dopamine_prediction_error: float = 0.0
+    moral_reward: float = 0.5
+    social_influence_reward: float = 0.0
+    semantic_similarity: float = 0.0
+    explicit_tom_triggered: bool = False
+    belief_embeddings: List[float] = field(default_factory=list)
+    beliefs: Dict[str, float] = field(default_factory=dict)
+    desires: Dict[str, float] = field(default_factory=dict)
+    intentions: Dict[str, float] = field(default_factory=dict)
+    knowledge: Dict[str, object] = field(default_factory=dict)
+    epsilon: float = 0.0
+    zeta: float = 0.0
+    coping_potential: float = 0.5
+    performance: float = 0.5
+    confirmation: float = 0.0
     last_appraisal: Optional[AppraisalRecord] = None
     appraisal_history: List[AppraisalRecord] = field(default_factory=list)
     last_contagion_pad: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
@@ -175,6 +223,7 @@ class AgentState:
     appraisal_runtime: Dict[str, object] = field(default_factory=dict)
     latent_runtime: Dict[str, object] = field(default_factory=dict)
     memory: List[MemoryItem] = field(default_factory=list)
+    schemata_graph: CAMMemoryGraph = field(default_factory=CAMMemoryGraph)
 
     def __post_init__(self) -> None:
         if self.emotion_state is None:
@@ -187,6 +236,86 @@ class AgentState:
         else:
             self.emotion = _clamp_signed(self.emotion_state.signed_valence)
             self.dominant_emotion_label = self.emotion_state.dominant_label
+        self.equilibrium_index = _clamp(self.equilibrium_index if self.equilibrium_index else self.equilibrium)
+        if not self.belief_embeddings:
+            self.belief_embeddings = [0.0] * E_CAM_T_EMBED_DIM
+        if not self.desires:
+            self.desires = {
+                "affiliation": 0.55,
+                "self_expression": 0.55,
+                "stability": 0.5,
+                "information_gain": 0.5,
+            }
+        if not self.beliefs:
+            self.beliefs = {
+                "environment_valence": 0.0,
+                "social_pressure": 0.0,
+                "goal_alignment": 0.5,
+                "self_efficacy": self.schemas.get("self_efficacy", 0.5),
+            }
+        if not self.intentions:
+            self.intentions = {
+                "observe": 0.5,
+                "participate": 0.5,
+                "amplify": 0.5,
+                "withdraw": 0.0,
+                "support_others": 0.5,
+            }
+        if not self.knowledge:
+            self.knowledge = {
+                "topic_consensus": 0.5,
+                "topic_polarization": 0.0,
+                "salient_author_id": None,
+                "salient_cluster_summaries": [],
+            }
+
+    @property
+    def belief_embedding(self) -> List[float]:
+        return self.belief_embeddings
+
+    @belief_embedding.setter
+    def belief_embedding(self, value: List[float]) -> None:
+        self.belief_embeddings = value
+
+    @property
+    def last_unpredictability(self) -> float:
+        return self.epsilon
+
+    @last_unpredictability.setter
+    def last_unpredictability(self, value: float) -> None:
+        self.epsilon = value
+
+    @property
+    def last_goal_conduciveness(self) -> float:
+        return self.zeta
+
+    @last_goal_conduciveness.setter
+    def last_goal_conduciveness(self, value: float) -> None:
+        self.zeta = value
+
+    @property
+    def last_coping_potential(self) -> float:
+        return self.coping_potential
+
+    @last_coping_potential.setter
+    def last_coping_potential(self, value: float) -> None:
+        self.coping_potential = value
+
+    @property
+    def last_performance(self) -> float:
+        return self.performance
+
+    @last_performance.setter
+    def last_performance(self, value: float) -> None:
+        self.performance = value
+
+    @property
+    def last_confirmation(self) -> float:
+        return self.confirmation
+
+    @last_confirmation.setter
+    def last_confirmation(self, value: float) -> None:
+        self.confirmation = value
 
 
 @dataclass
@@ -200,6 +329,8 @@ class AgentDecision:
     metadata: Dict[str, object] = field(default_factory=dict)
     influence_delta: float = 0.0
     reason: str = ""
+    suggested_action: str = "refresh"
+    suggested_actions: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -209,6 +340,7 @@ class AgentRoundResult:
     profile: AgentProfile
     state: AgentState
     decision: AgentDecision
+    behavior_output: Dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -218,12 +350,33 @@ class AgentRoundResult:
                 "emotion_state": asdict(self.state.emotion_state),
                 "stress": self.state.stress,
                 "expectation": self.state.expectation,
+                "satisfaction": self.state.satisfaction,
+                "dopamine_level": self.state.dopamine_level,
+                "performance_prediction": self.state.performance_prediction,
                 "influence_score": self.state.influence_score,
                 "schemas": self.state.schemas,
                 "schema_flexibility": self.state.schema_flexibility,
-                "equilibrium": self.state.equilibrium,
+                "equilibrium_index": self.state.equilibrium_index,
+                "delta_eq": self.state.equilibrium_index,
                 "last_cognitive_mode": self.state.last_cognitive_mode,
                 "dominant_emotion_label": self.state.dominant_emotion_label,
+                "empathy_level": self.state.empathy_level,
+                "empathized_negative_emotion": self.state.empathized_negative_emotion,
+                "dopamine_prediction_error": self.state.dopamine_prediction_error,
+                "moral_reward": self.state.moral_reward,
+                "social_influence_reward": self.state.social_influence_reward,
+                "semantic_similarity": self.state.semantic_similarity,
+                "explicit_tom_triggered": self.state.explicit_tom_triggered,
+                "belief_embeddings": self.state.belief_embeddings,
+                "beliefs": self.state.beliefs,
+                "desires": self.state.desires,
+                "intentions": self.state.intentions,
+                "knowledge": self.state.knowledge,
+                "epsilon": self.state.epsilon,
+                "zeta": self.state.zeta,
+                "coping_potential": self.state.coping_potential,
+                "performance": self.state.performance,
+                "confirmation": self.state.confirmation,
                 "last_appraisal": (
                     asdict(self.state.last_appraisal)
                     if self.state.last_appraisal is not None
@@ -237,8 +390,10 @@ class AgentRoundResult:
                 "appraisal_runtime": dict(self.state.appraisal_runtime),
                 "latent_runtime": dict(self.state.latent_runtime),
                 "memory": [asdict(item) for item in self.state.memory],
+                "schemata_graph": self.state.schemata_graph.to_dict(),
             },
             "decision": asdict(self.decision),
+            "behavior_output": dict(self.behavior_output),
         }
 
 
@@ -252,19 +407,29 @@ class SimulatedAgent:
     emotion_control_bias: float = 0.18
     contagion_threat_gain: float = 0.08
     contagion_efficacy_loss: float = 0.06
+    ect_eta: float = 0.35
+    ect_alpha: float = 0.25
+    dopamine_gamma: float = 0.22
+    prediction_lambda: float = 0.35
+    dopamine_goal_gain: float = 0.12
+    tau_unpredictability: float = 0.72
+    equilibrium_penalty: float = 0.08
+    equilibrium_recovery: float = 0.02
 
     def __init__(
         self,
         profile: AgentProfile,
         state: AgentState | None = None,
         mode: str = "moe",
-        llm_provider: str = "volcengine",
+        llm_provider: str = "ollama",
         enable_fallback: bool = True,
         checkpoint_dir: Optional[str] = None,
     ):
         self.agent_id = profile.agent_id
         self.profile = profile
         self.state = state or AgentState()
+        self.state.desires = self._initialize_desires(self.state.desires)
+        self.state.empathy_level = self._initialize_empathy_level(self.state.empathy_level)
         public_mode = "fallback" if mode == "fallback" else "moe"
 
         self.appraisal_router = AppraisalRouter(
@@ -332,9 +497,12 @@ class SimulatedAgent:
         """按固定顺序更新内部状态。"""
         event = self._extract_environment_signal(feed, scenario_prompt)
         appraisal = self._build_appraisal(event, feed)
+        self._update_cam_memory(event)
+        self._update_ecam_t_state(appraisal, event, feed)
         self._update_emotion(appraisal)
         self._update_schema(appraisal)
         self._rebalance(appraisal)
+        self._update_beliefs_and_intentions(appraisal, feed)
         self.state.last_appraisal = appraisal
         self.state.appraisal_history.append(appraisal)
         self.state.appraisal_history = self.state.appraisal_history[-8:]
@@ -347,12 +515,16 @@ class SimulatedAgent:
             appraisal = AppraisalRecord(
                 relevance=0.0,
                 valence=0.0,
-                goal_congruence=0.5,
+                goal_conduciveness=0.5,
                 controllability=0.5,
                 agency="external",
                 certainty=0.5,
                 novelty=0.0,
                 coping_potential=0.5,
+                unpredictability=0.0,
+                goal_relevance_signal=0.0,
+                performance=0.5,
+                confirmation=0.0,
                 dominant_emotion="calm",
                 emotion_intensity=0.0,
                 cognitive_mode=self.state.last_cognitive_mode,
@@ -366,12 +538,25 @@ class SimulatedAgent:
         emotion_intensity = max(self._emotion_intensity(), emotion_state.intensity)
         pleasure, arousal, dominance = emotion_state.pad
         latent = emotion_state.latent
+        altruistic_drive = self._clamp(
+            self.state.empathized_negative_emotion * self.state.empathy_level
+        )
+        social_influence_reward = self._clamp(self.state.social_influence_reward)
+        tom_observation_bias = 0.12 if self.state.explicit_tom_triggered else 0.0
+        suggested_action, suggested_actions = self._suggest_oasis_actions(
+            self.state.epsilon,
+            self.state.zeta,
+            self.state.coping_potential,
+            self.state.satisfaction,
+        )
         if not feed:
             return AgentDecision(
                 action="create_post",
                 content=self._build_post_content(opening=True),
                 influence_delta=0.03 + emotion_intensity * 0.04,
                 reason="No visible posts, so the agent opens the discussion.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
             )
 
         hottest = feed[0]
@@ -382,28 +567,32 @@ class SimulatedAgent:
             + (1 - appraisal.certainty) * 0.25
             + self.state.stress * 0.2
             + arousal * 0.08
+            + tom_observation_bias
             + (0.15 if appraisal.dominant_emotion in {"anxiety", "fear", "guilt", "shame"} else 0.0)
         )
         create_score = self._clamp(
-            appraisal.goal_congruence * 0.32
+            appraisal.goal_conduciveness * 0.32
             + appraisal.controllability * 0.22
             + self.state.expectation * 0.16
             + self.state.equilibrium * 0.12
             + max(0.0, pleasure) * 0.14
             + max(0.0, dominance) * 0.04
             + max(0.0, latent[8]) * 0.04
+            + social_influence_reward * 0.18
+            + altruistic_drive * 0.08
         )
         reply_score = self._clamp(
             appraisal.relevance * 0.18
-            + (1 - appraisal.goal_congruence) * 0.18
+            + (1 - appraisal.goal_conduciveness) * 0.18
             + self.state.stress * 0.22
             + emotion_intensity * 0.16
             + max(0.0, arousal - 0.2) * 0.06
             + max(0.0, latent[11]) * 0.04
+            + altruistic_drive * 0.28
             + (0.2 if appraisal.dominant_emotion in {"anger", "frustration"} else 0.0)
         )
         like_score = self._clamp(
-            appraisal.goal_congruence * 0.28
+            appraisal.goal_conduciveness * 0.28
             + appraisal.certainty * 0.18
             + max(0.0, pleasure) * 0.18
             + max(0.0, latent[5] - latent[6]) * 0.06
@@ -411,13 +600,42 @@ class SimulatedAgent:
         )
         share_score = self._clamp(
             appraisal.relevance * 0.2
-            + appraisal.goal_congruence * 0.24
+            + appraisal.goal_conduciveness * 0.24
             + self.state.influence_score * 0.14
             + emotion_intensity * 0.12
             + hottest.get("intensity", 0.0) * 0.14
             + max(0.0, arousal - 0.2) * 0.08
             + max(0.0, latent[12]) * 0.04
+            + social_influence_reward * 0.22
         )
+        if self.state.explicit_tom_triggered and altruistic_drive < 0.25:
+            create_score = self._clamp(create_score - 0.06)
+            reply_score = self._clamp(reply_score - 0.03)
+        if suggested_action in {"unfollow", "mute", "do_nothing"}:
+            browse_score = self._clamp(browse_score + 0.18)
+            create_score = self._clamp(create_score - 0.12)
+            reply_score = self._clamp(reply_score - 0.08)
+            share_score = self._clamp(share_score - 0.1)
+        elif suggested_action in {"create_post", "create_comment", "quote_post", "repost"}:
+            create_score = self._clamp(create_score + 0.15)
+            reply_score = self._clamp(reply_score + 0.08)
+            share_score = self._clamp(share_score + 0.08)
+        elif suggested_action in {"refresh", "search_posts"}:
+            browse_score = self._clamp(browse_score + 0.1)
+
+        self.state.intentions = {
+            "observe": self._clamp(browse_score),
+            "participate": self._clamp(max(create_score, reply_score, like_score)),
+            "amplify": self._clamp(share_score),
+            "withdraw": self._clamp(
+                max(
+                    0.0,
+                    -self.state.satisfaction,
+                    self.state.epsilon - self.state.coping_potential,
+                )
+            ),
+            "support_others": self._clamp(altruistic_drive),
+        }
 
         best_score = max(browse_score, create_score, reply_score, like_score, share_score)
 
@@ -428,7 +646,14 @@ class SimulatedAgent:
                 target_post_id=hottest["post_id"],
                 target_agent_id=target_agent_id,
                 influence_delta=0.01 + emotion_intensity * 0.02,
-                reason="Low certainty or low equilibrium favors observation.",
+                reason="Low certainty or explicit ToM observation favors gathering more context.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
+                metadata={
+                    "moral_reward": self.state.moral_reward,
+                    "social_influence_reward": self.state.social_influence_reward,
+                    "explicit_tom_triggered": self.state.explicit_tom_triggered,
+                },
             )
 
         if reply_score >= best_score:
@@ -436,22 +661,31 @@ class SimulatedAgent:
             reply_delta *= 1 + emotion_intensity
             return AgentDecision(
                 action="reply_post",
-                content=f"{self.profile.name} responds directly to the current discussion.",
+                content=self._build_reply_content(feed, altruistic_drive),
                 target_post_id=hottest["post_id"],
                 target_agent_id=target_agent_id,
                 influence_delta=reply_delta,
-                reason="High emotional activation and relevance favor direct response.",
+                reason="Empathic tension or strong relevance favors a direct social response.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
+                metadata={
+                    "moral_reward": self.state.moral_reward,
+                    "social_influence_reward": self.state.social_influence_reward,
+                    "explicit_tom_triggered": self.state.explicit_tom_triggered,
+                },
             )
 
         if share_score >= best_score:
             return AgentDecision(
                 action="share_post",
-                content=f"{self.profile.name} amplifies a post aligned with the current view.",
+                content=self._build_share_content(feed),
                 target_post_id=hottest["post_id"],
                 target_agent_id=target_agent_id,
                 influence_delta=0.04 + emotion_intensity * 0.04,
                 metadata={"shared_post_id": hottest["post_id"]},
-                reason="High relevance plus congruence favors amplification through sharing.",
+                reason="Predicted social influence reward favors amplification through sharing.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
             )
 
         if like_score >= best_score:
@@ -462,13 +696,22 @@ class SimulatedAgent:
                 target_agent_id=target_agent_id,
                 influence_delta=0.02 + emotion_intensity * 0.02,
                 reason="Congruent appraisal with low action cost favors liking.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
             )
 
         return AgentDecision(
             action="create_post",
-            content=self._build_post_content(opening=False),
+            content=self._build_post_content(opening=False, altruistic=altruistic_drive > 0.28),
             influence_delta=0.03 + emotion_intensity * 0.03,
-            reason="Congruent appraisal with enough control favors posting.",
+            reason="Goal-conducive appraisal and expected social influence favor posting.",
+            suggested_action=suggested_action,
+            suggested_actions=suggested_actions,
+            metadata={
+                "moral_reward": self.state.moral_reward,
+                "social_influence_reward": self.state.social_influence_reward,
+                "explicit_tom_triggered": self.state.explicit_tom_triggered,
+            },
         )
 
     def act(self, decision: AgentDecision, platform) -> None:
@@ -583,11 +826,18 @@ class SimulatedAgent:
         self.receive_information(round_index, scenario_prompt, feed)
         self.update_state(feed, scenario_prompt)
         decision = self.decide_action(feed)
+        behavior_output = self._build_behavior_output(
+            decision,
+            feed=feed,
+            scenario_prompt=scenario_prompt,
+            round_index=round_index,
+        )
         self.act(decision, platform)
         return AgentRoundResult(
             profile=self.profile,
             state=self.state,
             decision=decision,
+            behavior_output=behavior_output,
         )
 
     def snapshot(self) -> dict:
@@ -599,12 +849,33 @@ class SimulatedAgent:
                 "emotion_state": asdict(self.state.emotion_state),
                 "stress": self.state.stress,
                 "expectation": self.state.expectation,
+                "satisfaction": self.state.satisfaction,
+                "dopamine_level": self.state.dopamine_level,
+                "performance_prediction": self.state.performance_prediction,
                 "influence_score": self.state.influence_score,
                 "schemas": self.state.schemas,
                 "schema_flexibility": self.state.schema_flexibility,
-                "equilibrium": self.state.equilibrium,
+                "equilibrium_index": self.state.equilibrium_index,
+                "delta_eq": self.state.equilibrium_index,
                 "last_cognitive_mode": self.state.last_cognitive_mode,
                 "dominant_emotion_label": self.state.dominant_emotion_label,
+                "empathy_level": self.state.empathy_level,
+                "empathized_negative_emotion": self.state.empathized_negative_emotion,
+                "dopamine_prediction_error": self.state.dopamine_prediction_error,
+                "moral_reward": self.state.moral_reward,
+                "social_influence_reward": self.state.social_influence_reward,
+                "semantic_similarity": self.state.semantic_similarity,
+                "explicit_tom_triggered": self.state.explicit_tom_triggered,
+                "belief_embeddings": self.state.belief_embeddings,
+                "beliefs": self.state.beliefs,
+                "desires": self.state.desires,
+                "intentions": self.state.intentions,
+                "knowledge": self.state.knowledge,
+                "epsilon": self.state.epsilon,
+                "zeta": self.state.zeta,
+                "coping_potential": self.state.coping_potential,
+                "performance": self.state.performance,
+                "confirmation": self.state.confirmation,
                 "last_appraisal": (
                     asdict(self.state.last_appraisal)
                     if self.state.last_appraisal is not None
@@ -616,16 +887,19 @@ class SimulatedAgent:
                 "latent_runtime": dict(self.state.latent_runtime),
                 "memory_size": len(self.state.memory),
                 "appraisal_count": len(self.state.appraisal_history),
+                "schemata_graph": self.state.schemata_graph.to_dict(),
             },
         }
 
-    def _build_post_content(self, opening: bool) -> str:
+    def _build_post_content(self, opening: bool, altruistic: bool = False) -> str:
         """根据当前主导情绪生成最小发帖文案。"""
         if opening:
             return f"{self.profile.name} starts discussing the current social issue."
 
         emotion_label = self.state.dominant_emotion_label
-        if emotion_label in {"anger", "frustration"}:
+        if altruistic:
+            tone = "supportive"
+        elif emotion_label in {"anger", "frustration"}:
             tone = "critical"
         elif emotion_label in {"anxiety", "fear"}:
             tone = "uncertain"
@@ -639,11 +913,32 @@ class SimulatedAgent:
             f"from the {self.profile.role} perspective."
         )
 
+    def _build_reply_content(self, feed: List[dict], altruistic_drive: float) -> str:
+        if altruistic_drive > 0.28:
+            return (
+                f"{self.profile.name} responds with reassurance, attempting to reduce tension "
+                "and support the people affected by the discussion."
+            )
+        if self.state.explicit_tom_triggered:
+            return (
+                f"{self.profile.name} asks a clarifying follow-up that tests what others "
+                "currently believe before escalating the conversation."
+            )
+        return f"{self.profile.name} responds directly to the current discussion."
+
+    def _build_share_content(self, feed: List[dict]) -> str:
+        if self.state.social_influence_reward > 0.22:
+            return (
+                f"{self.profile.name} amplifies the post because it is likely to shift "
+                "other agents' beliefs in a meaningful way."
+            )
+        return f"{self.profile.name} amplifies a post aligned with the current view."
+
     def _extract_environment_signal(
         self,
         feed: List[dict],
         scenario_prompt: str,
-    ) -> Dict[str, float]:
+    ) -> Dict[str, object]:
         """把外部输入压缩成一个最小 event 表示。"""
         feed_window = feed[:3]
         risk = sum(abs(item.get("sentiment", 0.0)) for item in feed_window)
@@ -666,16 +961,41 @@ class SimulatedAgent:
             spread = max(sentiments) - min(sentiments)
             consistency = self._clamp(1.0 - spread)
 
+        observation_text = self._compose_observation_text(feed, scenario_prompt)
+        event_embedding = self._text_to_embedding_hash(observation_text)
+        observed_round_index = self.state.memory[-1].round_index if self.state.memory else 0
+        graph_match = self.state.schemata_graph.best_match(event_embedding, observed_round_index)
+        semantic_similarity = self._clamp(float(graph_match.get("best_similarity", 0.0)))
+        if self.state.schemata_graph.nodes:
+            epsilon = self._clamp(1.0 - semantic_similarity)
+        elif self.state.belief_embeddings:
+            epsilon = self._clamp(
+                1.0 - self._cosine_sim(event_embedding, self.state.belief_embeddings)
+            )
+        else:
+            epsilon = novelty
+        empathized_negative_emotion = self._estimate_empathized_negative_emotion(feed_window)
+
         return {
             "direction": direction,
             "risk": risk,
             "novelty": novelty,
             "consistency": consistency,
+            "observation_text": observation_text,
+            "event_embedding": event_embedding,
+            "unpredictability": epsilon,
+            "semantic_similarity": semantic_similarity,
+            "neighbor_candidates": list(graph_match.get("candidates", [])),
+            "observed_round_index": observed_round_index,
+            "empathized_negative_emotion": empathized_negative_emotion,
+            "observed_agent_ids": [
+                int(item["author_id"]) for item in feed_window if item.get("author_id") is not None
+            ],
         }
 
     def _build_appraisal(
         self,
-        event: Dict[str, float],
+        event: Dict[str, object],
         feed: List[dict],
     ) -> AppraisalRecord:
         """构建带 schema 条件和情绪偏置的 appraisal。"""
@@ -742,7 +1062,7 @@ class SimulatedAgent:
         prior = {
             "relevance": prior_relevance,
             "valence": prior_valence,
-            "goal_congruence": prior_goal_congruence,
+            "goal_conduciveness": prior_goal_congruence,
             "controllability": prior_controllability,
             "certainty": prior_certainty,
             "coping_potential": prior_coping_potential,
@@ -777,15 +1097,25 @@ class SimulatedAgent:
         self.state.appraisal_runtime = dict(self.appraisal_router.last_run_metadata)
         relevance = fused["relevance"]
         valence = fused["valence"]
-        goal_congruence = fused["goal_congruence"]
+        goal_conduciveness = fused["goal_conduciveness"]
         controllability = fused["controllability"]
         certainty = fused["certainty"]
         coping_potential = fused["coping_potential"]
+        unpredictability = self._clamp(float(event.get("unpredictability", event["novelty"])))
+        goal_relevance_signal = self._clamp_signed(goal_conduciveness * 2 - 1)
+        performance = self._estimate_performance(
+            valence=valence,
+            goal_conduciveness=goal_conduciveness,
+            certainty=certainty,
+            coping_potential=coping_potential,
+            feed=feed,
+        )
+        confirmation = performance - self.state.expectation
 
         agency = self._infer_agency(feed, valence)
         dominant_emotion = self._map_emotion(
             valence=valence,
-            goal_congruence=goal_congruence,
+            goal_conduciveness=goal_conduciveness,
             agency=agency,
             controllability=controllability,
             certainty=certainty,
@@ -803,12 +1133,16 @@ class SimulatedAgent:
         return AppraisalRecord(
             relevance=relevance,
             valence=valence,
-            goal_congruence=goal_congruence,
+            goal_conduciveness=goal_conduciveness,
             controllability=controllability,
             agency=agency,
             certainty=certainty,
             novelty=event["novelty"],
             coping_potential=coping_potential,
+            unpredictability=unpredictability,
+            goal_relevance_signal=goal_relevance_signal,
+            performance=performance,
+            confirmation=confirmation,
             dominant_emotion=dominant_emotion,
             emotion_intensity=emotion_intensity,
             cognitive_mode=self.state.last_cognitive_mode,
@@ -830,12 +1164,6 @@ class SimulatedAgent:
             + appraisal.novelty * 0.12
             + (1 - appraisal.controllability) * 0.1
             + max(0.0, -appraisal.valence) * 0.08
-        )
-        self.state.expectation = self._clamp(
-            self.state.expectation * 0.68
-            + appraisal.goal_congruence * 0.12
-            + appraisal.coping_potential * 0.12
-            + max(0.0, appraisal.valence) * 0.08
         )
         dominance = _clamp_signed(
             appraisal.controllability + appraisal.coping_potential - 1.0
@@ -897,7 +1225,7 @@ class SimulatedAgent:
         )
         accommodation_strength = self._clamp(
             appraisal.novelty
-            * (1 - appraisal.goal_congruence)
+            * (1 - appraisal.goal_conduciveness)
             * (1 - appraisal.certainty)
             * (0.6 + self.state.schema_flexibility * 0.8)
             * (0.75 + emotion_intensity * 0.5)
@@ -905,7 +1233,7 @@ class SimulatedAgent:
         assimilation_strength = self._clamp(update_rate * (1 - accommodation_strength))
         accommodation_rate = self._clamp(update_rate * accommodation_strength)
 
-        direction = self._clamp_signed(appraisal.goal_congruence * 2 - 1)
+        direction = self._clamp_signed(appraisal.goal_conduciveness * 2 - 1)
         support_shift = (
             direction * update_rate
             + emotion_pad[0] * 0.06
@@ -989,7 +1317,7 @@ class SimulatedAgent:
             appraisal.controllability * 0.24
             + appraisal.coping_potential * 0.22
             + appraisal.certainty * 0.18
-            + appraisal.goal_congruence * 0.16
+            + appraisal.goal_conduciveness * 0.16
             + (1 - self.state.stress) * 0.12
             + self.state.schemas["self_efficacy"] * 0.08
             + max(0.0, emotion_state.pad[2]) * 0.03
@@ -1000,13 +1328,284 @@ class SimulatedAgent:
             - appraisal.novelty * 0.08
             - emotion_penalty
         )
-        self.state.expectation = self._clamp(
-            self.state.expectation * 0.8
-            + self.state.equilibrium * 0.1
-            + appraisal.coping_potential * 0.1
+        self.state.equilibrium = self._clamp(
+            self.state.equilibrium * 0.7 + self.state.equilibrium_index * 0.3
+        )
+        self.state.equilibrium_index = self._clamp(
+            self.state.equilibrium_index * 0.7 + self.state.equilibrium * 0.3
         )
         if self.state.equilibrium > 0.72 and self._emotion_intensity() < 0.35:
             self.state.last_cognitive_mode = "equilibrium"
+
+    def _update_cam_memory(self, event: Dict[str, object]) -> None:
+        round_index = int(event.get("observed_round_index", 0))
+        update = self.state.schemata_graph.add_event(
+            round_index=round_index,
+            source="observation",
+            content=str(event.get("observation_text", "")),
+            embedding=list(event.get("event_embedding", [])),
+            valence=float(event.get("direction", 0.0)),
+            conflict_penalty=self.equilibrium_penalty,
+        )
+        self.state.semantic_similarity = self._clamp(
+            float(update.get("semantic_similarity", event.get("semantic_similarity", 0.0)))
+        )
+        self.state.equilibrium_index = self._clamp(
+            self.state.equilibrium_index + float(update.get("conflict_delta", 0.0))
+        )
+        graph_embedding = self.state.schemata_graph.global_embedding()
+        if graph_embedding:
+            self.state.belief_embeddings = graph_embedding
+
+        salient_node_id = int(update.get("node_id", 0) or 0)
+        self.state.knowledge["salient_cluster_summaries"] = (
+            self.state.schemata_graph.cluster_summary_for_node(salient_node_id)
+        )
+        self.state.knowledge["cam_candidates"] = list(update.get("candidate_ids", []))
+        self.state.knowledge["cam_replicated_nodes"] = list(update.get("replicated_ids", []))
+
+    def _update_ecam_t_state(
+        self,
+        appraisal: AppraisalRecord,
+        event: Dict[str, object],
+        feed: List[dict],
+    ) -> None:
+        epsilon = self._clamp(float(event.get("unpredictability", appraisal.novelty)))
+        zeta = self._clamp_signed(appraisal.goal_relevance_signal)
+        performance = self._clamp(appraisal.performance)
+        confirmation = performance - self.state.expectation
+        empathized_negative_emotion = self._clamp(
+            float(event.get("empathized_negative_emotion", 0.0))
+        )
+        firing_rate = self._clamp(
+            performance
+            - empathized_negative_emotion * self.state.empathy_level * 0.35
+            + max(0.0, zeta) * 0.12
+        )
+
+        old_expectation = self.state.expectation
+        self.state.expectation = self._clamp(
+            (1 - self.ect_alpha) * old_expectation + self.ect_alpha * performance
+        )
+        self.state.satisfaction = self._clamp_signed(
+            self.state.satisfaction + self.ect_eta * confirmation
+        )
+
+        delta_da = firing_rate - self.state.performance_prediction
+        self.state.performance_prediction = self._clamp(
+            self.state.performance_prediction + self.prediction_lambda * delta_da
+        )
+        self.state.dopamine_level = self._clamp(
+            self.state.dopamine_level
+            + self.dopamine_gamma * delta_da
+            + self.dopamine_goal_gain * zeta
+        )
+        altruistic_drive = self._clamp(
+            empathized_negative_emotion * self.state.empathy_level * (1.2 - self.state.dopamine_level)
+        )
+        self.state.moral_reward = self._clamp(
+            performance + self.state.empathy_level * altruistic_drive
+        )
+
+        if epsilon > self.tau_unpredictability:
+            self.state.equilibrium_index = self._clamp(
+                self.state.equilibrium_index - self.equilibrium_penalty
+            )
+        else:
+            self.state.equilibrium_index = self._clamp(
+                self.state.equilibrium_index + self.equilibrium_recovery
+            )
+
+        self.state.epsilon = epsilon
+        self.state.zeta = zeta
+        self.state.coping_potential = appraisal.coping_potential
+        self.state.performance = performance
+        self.state.confirmation = confirmation
+        self.state.empathized_negative_emotion = empathized_negative_emotion
+        self.state.dopamine_prediction_error = delta_da
+        self.state.semantic_similarity = self._clamp(
+            float(event.get("semantic_similarity", self.state.semantic_similarity))
+        )
+
+    def _update_beliefs_and_intentions(
+        self,
+        appraisal: AppraisalRecord,
+        feed: List[dict],
+    ) -> None:
+        feed_summary = self._summarize_feed_for_appraisal(feed)
+        social_influence_reward = self._estimate_social_influence_reward(feed)
+        self.state.social_influence_reward = social_influence_reward
+        explicit_tom_triggered = self.state.epsilon > self.tau_unpredictability
+        if not explicit_tom_triggered:
+            explicit_tom_triggered = feed_summary.get("dispersion", 0.0) > 0.55
+        self.state.explicit_tom_triggered = bool(explicit_tom_triggered)
+        support_signal = self._clamp(
+            self.state.empathized_negative_emotion * self.state.empathy_level
+        )
+        self.state.beliefs = {
+            "environment_valence": self._clamp_signed(appraisal.valence),
+            "social_pressure": self._clamp(feed_summary.get("exposure_pressure", 0.0)),
+            "goal_alignment": self._clamp(appraisal.goal_conduciveness),
+            "self_efficacy": self._clamp(self.state.schemas.get("self_efficacy", 0.5)),
+            "others_need_support": support_signal,
+            "social_influence_reward": social_influence_reward,
+            "semantic_similarity": self.state.semantic_similarity,
+        }
+        self.state.knowledge = {
+            **self.state.knowledge,
+            "topic_consensus": self._clamp(feed_summary.get("consensus", 0.0)),
+            "topic_polarization": self._clamp(feed_summary.get("dispersion", 0.0)),
+            "salient_author_id": feed[0].get("author_id") if feed else None,
+            "explicit_tom_target_ids": [
+                int(item["author_id"])
+                for item in feed[:3]
+                if item.get("author_id") is not None and item.get("author_id") != self.agent_id
+            ],
+        }
+        self.state.intentions = {
+            "observe": self._clamp(
+                0.45 + (0.22 if explicit_tom_triggered else 0.0) + (1 - appraisal.certainty) * 0.15
+            ),
+            "participate": self._clamp(
+                0.35 + self.state.moral_reward * 0.18 + max(0.0, self.state.zeta) * 0.12
+            ),
+            "amplify": self._clamp(0.22 + social_influence_reward * 0.4),
+            "withdraw": self._clamp(max(0.0, -self.state.satisfaction, self.state.epsilon - appraisal.coping_potential)),
+            "support_others": self._clamp(0.25 + support_signal * 0.55),
+        }
+
+    def _initialize_desires(self, current: Dict[str, float]) -> Dict[str, float]:
+        desires = dict(current)
+        style = self.profile.communication_style.lower()
+        role = self.profile.role.lower()
+        desires.setdefault("affiliation", 0.6 if "balanced" in style else 0.5)
+        desires.setdefault("self_expression", 0.72 if style in {"expressive", "direct"} else 0.55)
+        desires.setdefault("stability", 0.66 if self.profile.ideology.lower() == "moderate" else 0.52)
+        desires.setdefault("information_gain", 0.7 if role in {"journalist", "programmer"} else 0.55)
+        return {key: self._clamp(value) for key, value in desires.items()}
+
+    def _initialize_empathy_level(self, current: float) -> float:
+        style = self.profile.communication_style.lower()
+        role = self.profile.role.lower()
+        baseline = current if current > 0 else 0.55
+        if style in {"balanced", "expressive"}:
+            baseline += 0.08
+        if role in {"artist", "journalist", "teacher", "caregiver"}:
+            baseline += 0.06
+        return self._clamp(baseline)
+
+    def _estimate_performance(
+        self,
+        *,
+        valence: float,
+        goal_conduciveness: float,
+        certainty: float,
+        coping_potential: float,
+        feed: List[dict],
+    ) -> float:
+        top_intensity = max((float(item.get("intensity", 0.0)) for item in feed[:3]), default=0.0)
+        return self._clamp(
+            0.35
+            + goal_conduciveness * 0.25
+            + certainty * 0.2
+            + coping_potential * 0.12
+            + max(0.0, valence) * 0.08
+            + top_intensity * 0.04
+        )
+
+    def _suggest_oasis_actions(
+        self,
+        epsilon: float,
+        zeta: float,
+        coping_potential: float,
+        satisfaction: float,
+    ) -> tuple[str, List[str]]:
+        if satisfaction < -0.35 and epsilon > self.tau_unpredictability:
+            actions = [
+                "unfollow",
+                "mute",
+                "do_nothing",
+                "dislike_post",
+                "report_post",
+                "exit",
+                "unlike_post",
+                "undo_dislike_post",
+            ]
+            return actions[0], actions
+        if zeta > 0.25 and coping_potential > 0.45:
+            actions = [
+                "create_post",
+                "create_comment",
+                "repost",
+                "quote_post",
+                "like_post",
+                "like_comment",
+                "follow",
+                "search_posts",
+            ]
+            return actions[0], actions
+        if epsilon > 0.85:
+            actions = [
+                "do_nothing",
+                "refresh",
+                "search_posts",
+                "search_user",
+                "trend",
+                "listen_from_group",
+            ]
+            return actions[0], actions
+        actions = [
+            "refresh",
+            "like_post",
+            "create_comment",
+            "search_posts",
+            "trend",
+            "follow",
+            "do_nothing",
+            "search_user",
+            "join_group",
+            "listen_from_group",
+            "repost",
+            "quote_post",
+        ]
+        return actions[0], actions
+
+    def _build_behavior_output(
+        self,
+        decision: AgentDecision,
+        *,
+        feed: List[dict],
+        scenario_prompt: str,
+        round_index: int,
+    ) -> Dict[str, object]:
+        stimulus = feed[0]["content"] if feed else scenario_prompt
+        if len(stimulus) > 120:
+            stimulus = stimulus[:120] + "..."
+        summary = _OASIS_ACTION_SUMMARY.get(
+            decision.suggested_action,
+            f"Execute platform action {decision.suggested_action}.",
+        )
+        simulated_public_content = None
+        if decision.action in {"create_post", "reply_post", "share_post"}:
+            simulated_public_content = decision.content
+        return {
+            "primary_action": decision.suggested_action,
+            "stimulus_excerpt": stimulus,
+            "public_behavior_summary": summary,
+            "simulated_public_content": simulated_public_content,
+            "state_hint": {
+                "satisfaction": round(self.state.satisfaction, 4),
+                "zeta": round(self.state.zeta, 4),
+                "epsilon": round(self.state.epsilon, 4),
+                "dopamine_level": round(self.state.dopamine_level, 4),
+                "moral_reward": round(self.state.moral_reward, 4),
+                "social_influence_reward": round(self.state.social_influence_reward, 4),
+            },
+            "cam_summary": list(self.state.knowledge.get("salient_cluster_summaries", [])),
+            "explicit_tom_triggered": self.state.explicit_tom_triggered,
+            "backend_action": decision.action,
+            "round_index": round_index,
+        }
 
     def _apply_emotion_contagion(self, feed: List[dict]) -> None:
         """按 exposure_score 加权聚合 feed 中的情绪 PAD/latent。"""
@@ -1111,6 +1710,11 @@ class SimulatedAgent:
             - self.contagion_efficacy_loss * max(abs(avg_pad[0]), avg_pad[1])
             + max(0.0, avg_pad[2]) * 0.01
         )
+        self.state.dopamine_level = self._clamp(
+            self.state.dopamine_level
+            - max(0.0, -avg_neighbor_sentiment) * 0.06
+            + max(0.0, avg_neighbor_sentiment) * 0.03
+        )
         self.state.dominant_emotion_label = self.state.emotion_state.dominant_label
 
     def _infer_agency(self, feed: List[dict], valence: float) -> str:
@@ -1126,7 +1730,7 @@ class SimulatedAgent:
     def _map_emotion(
         self,
         valence: float,
-        goal_congruence: float,
+        goal_conduciveness: float,
         agency: str,
         controllability: float,
         certainty: float,
@@ -1143,7 +1747,7 @@ class SimulatedAgent:
             return "guilt"
         if valence > 0.35 and coping_potential > 0.55 and controllability > 0.5:
             return "confidence"
-        if valence > 0.15 and goal_congruence > 0.55:
+        if valence > 0.15 and goal_conduciveness > 0.55:
             return "hope"
         if abs(valence) < 0.12 and certainty > 0.55:
             return "calm"
@@ -1169,7 +1773,7 @@ class SimulatedAgent:
         return [
             appraisal.relevance,
             appraisal.valence,
-            appraisal.goal_congruence,
+            appraisal.goal_conduciveness,
             appraisal.controllability,
             appraisal.certainty,
             appraisal.coping_potential,
@@ -1194,6 +1798,42 @@ class SimulatedAgent:
             "latent": [float(value) for value in latent[:LATENT_DIM]],
             "weight": float(max(0.05, item.get("exposure_score", 1.0))),
         }
+
+    def _estimate_empathized_negative_emotion(self, feed_window: List[dict]) -> float:
+        signals = []
+        for item in feed_window:
+            if item.get("author_id") == self.agent_id:
+                continue
+            negative_valence = max(0.0, -float(item.get("sentiment", 0.0)))
+            intensity = float(item.get("intensity", abs(item.get("sentiment", 0.0))))
+            exposure = float(item.get("exposure_score", 1.0))
+            signals.append(negative_valence * (0.6 + intensity * 0.25) * min(1.0, exposure))
+        if not signals:
+            return 0.0
+        return self._clamp(sum(signals) / len(signals))
+
+    def _estimate_social_influence_reward(self, feed: List[dict]) -> float:
+        if not feed or not self.state.belief_embeddings:
+            return 0.0
+        reward = 0.0
+        for item in feed[:3]:
+            if item.get("author_id") == self.agent_id:
+                continue
+            baseline = self._text_to_embedding_hash(str(item.get("content", "")))
+            shift_weight = self._clamp(
+                0.22
+                + max(0.0, self.state.zeta) * 0.18
+                + self.state.coping_potential * 0.12
+                + self.state.empathy_level * 0.08
+            )
+            predicted_after = self._normalize_vector(
+                [
+                    (1 - shift_weight) * base + shift_weight * belief
+                    for base, belief in zip(baseline, self.state.belief_embeddings)
+                ]
+            )
+            reward += 1.0 - self._cosine_sim(predicted_after, baseline)
+        return self._clamp(reward)
 
     def _summarize_feed_for_appraisal(self, feed: List[dict]) -> Dict[str, float]:
         """把当前 feed 压缩成供 router/expert 使用的社会场景摘要。"""
@@ -1323,13 +1963,43 @@ class SimulatedAgent:
             "emotion_latent": [float(item) for item in state.latent],
         }
 
+    def _compose_observation_text(self, feed: List[dict], scenario_prompt: str) -> str:
+        parts = [scenario_prompt.strip()]
+        for item in feed[:3]:
+            parts.append(str(item.get("content", "")).strip())
+        return " ".join(part for part in parts if part)
+
+    def _text_to_embedding_hash(self, text: str) -> List[float]:
+        values: List[float] = []
+        for index in range(E_CAM_T_EMBED_DIM):
+            digest = hashlib.sha256(f"{text}:{index}".encode("utf-8")).digest()
+            values.append(int.from_bytes(digest[:8], "big") / float(2**64))
+        return self._normalize_vector(values)
+
+    def _normalize_vector(self, values: List[float]) -> List[float]:
+        norm = math.sqrt(sum(value * value for value in values))
+        if norm <= 1e-12:
+            return [0.0 for _ in values]
+        return [float(value / norm) for value in values]
+
+    def _cosine_sim(self, left: List[float], right: List[float]) -> float:
+        if not left or not right:
+            return 0.0
+        size = min(len(left), len(right))
+        numerator = sum(left[i] * right[i] for i in range(size))
+        left_norm = math.sqrt(sum(left[i] * left[i] for i in range(size)))
+        right_norm = math.sqrt(sum(right[i] * right[i] for i in range(size)))
+        if left_norm <= 1e-12 or right_norm <= 1e-12:
+            return 0.0
+        return float(numerator / (left_norm * right_norm))
+
     @staticmethod
     def _clamp(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
-        return max(minimum, min(maximum, float(value)))
+        return _clamp(value, minimum=minimum, maximum=maximum)
 
     @staticmethod
     def _clamp_signed(value: float, limit: float = 1.0) -> float:
-        return max(-limit, min(limit, float(value)))
+        return _clamp_signed(value, limit=limit)
 
 
 def _build_emotion_probs(

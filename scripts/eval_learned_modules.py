@@ -26,10 +26,13 @@ def load_samples(path: str) -> List[Dict[str, Any]]:
 
 def routed_vector(routed: Dict[str, Any]) -> np.ndarray:
     values = []
-    for key in ["relevance", "valence", "goal_congruence", "controllability", "certainty", "coping_potential"]:
+    for key in ["relevance", "valence", "goal_conduciveness", "controllability", "certainty", "coping_potential"]:
         total = 0.0
         for expert_name, expert_weight in routed["weights"].items():
-            total += float(expert_weight) * float(getattr(routed["outputs"][expert_name], key))
+            source = routed["outputs"][expert_name]
+            total += float(expert_weight) * float(
+                getattr(source, key, getattr(source, "goal_congruence", 0.5) if key == "goal_conduciveness" else 0.0)
+            )
         values.append(total)
     return np.asarray(values, dtype=np.float32)
 
@@ -61,7 +64,7 @@ def main() -> None:
             schemas=sample.get("schemas", {}),
             emotion_state=EmotionProxy(),
             stress=float(sample.get("stress", 0.0)),
-            equilibrium=float(sample.get("equilibrium", 0.5)),
+            equilibrium=float(sample.get("equilibrium_index", sample.get("delta_eq", sample.get("equilibrium", 0.5)))),
             feed_features=sample.get("feed_features", {}),
             contagion_features=sample.get("contagion_features", {}),
             memory_summary=sample.get("memory_summary", {}),
@@ -71,7 +74,7 @@ def main() -> None:
             schemas=sample.get("schemas", {}),
             emotion_state=EmotionProxy(),
             stress=float(sample.get("stress", 0.0)),
-            equilibrium=float(sample.get("equilibrium", 0.5)),
+            equilibrium=float(sample.get("equilibrium_index", sample.get("delta_eq", sample.get("equilibrium", 0.5)))),
             feed_features=sample.get("feed_features", {}),
             contagion_features=sample.get("contagion_features", {}),
             memory_summary=sample.get("memory_summary", {}),

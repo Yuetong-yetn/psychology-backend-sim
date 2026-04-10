@@ -1,0 +1,254 @@
+{
+  "meta": {
+    "description": "当前后端原生输入数据，用于环境、平台与多 agent 仿真测试。",
+    "num_agents": 8,
+    "rounds": 4,
+    "seed_posts": 6,
+    "seed": 42
+  },
+  "runtime": {
+    "mode": "fallback",
+    "llm_provider": "ollama",
+    "enable_fallback": true,
+    "feed_limit": 5
+  },
+  "scenario": {
+    "scenario_id": "scenario_42",
+    "title": "社会议题：新能源车补贴变化",
+    "description": "围绕“新能源车补贴变化”的线上公共讨论持续升温，用户在信息流中不断接触分化观点并做出反应。",
+    "environment_context": [
+      "Public opinion is divided.",
+      "Some users seek consensus while others amplify conflict.",
+      "Posts with strong emotion receive higher visibility.",
+      "Users can post, browse, reply, like, share, and influence each other."
+    ]
+  },
+  "agents": [
+    {
+      "agent_id": 0,
+      "name": "Alex_0",
+      "role": "journalist",
+      "ideology": "moderate",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.1384,
+        "stress": 0.4367,
+        "expectation": 0.623,
+        "satisfaction": 0.0984,
+        "dopamine_level": 0.4426,
+        "influence_score": 0.4688,
+        "schema_flexibility": 0.3604,
+        "empathy_level": 0.4831,
+        "schemas": {
+          "support_tendency": 0.6058,
+          "threat_sensitivity": 0.2613,
+          "self_efficacy": 0.4738
+        }
+      }
+    },
+    {
+      "agent_id": 1,
+      "name": "Bea_1",
+      "role": "artist",
+      "ideology": "progressive",
+      "communication_style": "expressive",
+      "initial_state": {
+        "emotion": -0.137,
+        "stress": 0.2251,
+        "expectation": 0.6399,
+        "satisfaction": 0.019,
+        "dopamine_level": 0.5687,
+        "influence_score": 0.6048,
+        "schema_flexibility": 0.5553,
+        "empathy_level": 0.7197,
+        "schemas": {
+          "support_tendency": 0.7125,
+          "threat_sensitivity": 0.6331,
+          "self_efficacy": 0.3706
+        }
+      }
+    },
+    {
+      "agent_id": 2,
+      "name": "Chen_2",
+      "role": "programmer",
+      "ideology": "conservative",
+      "communication_style": "direct",
+      "initial_state": {
+        "emotion": -0.0581,
+        "stress": 0.3689,
+        "expectation": 0.4396,
+        "satisfaction": -0.0598,
+        "dopamine_level": 0.6097,
+        "influence_score": 0.6323,
+        "schema_flexibility": 0.4461,
+        "empathy_level": 0.7104,
+        "schemas": {
+          "support_tendency": 0.7285,
+          "threat_sensitivity": 0.6049,
+          "self_efficacy": 0.656
+        }
+      }
+    },
+    {
+      "agent_id": 3,
+      "name": "Dana_3",
+      "role": "teacher",
+      "ideology": "moderate",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": -0.1991,
+        "stress": 0.2781,
+        "expectation": 0.7068,
+        "satisfaction": -0.0501,
+        "dopamine_level": 0.4932,
+        "influence_score": 0.5687,
+        "schema_flexibility": 0.4529,
+        "empathy_level": 0.6552,
+        "schemas": {
+          "support_tendency": 0.6583,
+          "threat_sensitivity": 0.2526,
+          "self_efficacy": 0.7998
+        }
+      }
+    },
+    {
+      "agent_id": 4,
+      "name": "Evan_4",
+      "role": "researcher",
+      "ideology": "progressive",
+      "communication_style": "measured",
+      "initial_state": {
+        "emotion": 0.0588,
+        "stress": 0.2125,
+        "expectation": 0.462,
+        "satisfaction": 0.007,
+        "dopamine_level": 0.4717,
+        "influence_score": 0.4537,
+        "schema_flexibility": 0.5534,
+        "empathy_level": 0.5045,
+        "schemas": {
+          "support_tendency": 0.6649,
+          "threat_sensitivity": 0.5945,
+          "self_efficacy": 0.6572
+        }
+      }
+    },
+    {
+      "agent_id": 5,
+      "name": "Faye_5",
+      "role": "designer",
+      "ideology": "moderate",
+      "communication_style": "expressive",
+      "initial_state": {
+        "emotion": -0.0059,
+        "stress": 0.302,
+        "expectation": 0.588,
+        "satisfaction": 0.0116,
+        "dopamine_level": 0.4971,
+        "influence_score": 0.6437,
+        "schema_flexibility": 0.5879,
+        "empathy_level": 0.676,
+        "schemas": {
+          "support_tendency": 0.3681,
+          "threat_sensitivity": 0.5665,
+          "self_efficacy": 0.4915
+        }
+      }
+    },
+    {
+      "agent_id": 6,
+      "name": "Gao_6",
+      "role": "engineer",
+      "ideology": "conservative",
+      "communication_style": "direct",
+      "initial_state": {
+        "emotion": 0.1351,
+        "stress": 0.2193,
+        "expectation": 0.5437,
+        "satisfaction": 0.0617,
+        "dopamine_level": 0.5091,
+        "influence_score": 0.6247,
+        "schema_flexibility": 0.5233,
+        "empathy_level": 0.6253,
+        "schemas": {
+          "support_tendency": 0.6068,
+          "threat_sensitivity": 0.5067,
+          "self_efficacy": 0.5964
+        }
+      }
+    },
+    {
+      "agent_id": 7,
+      "name": "Hana_7",
+      "role": "caregiver",
+      "ideology": "progressive",
+      "communication_style": "supportive",
+      "initial_state": {
+        "emotion": 0.0703,
+        "stress": 0.3054,
+        "expectation": 0.7152,
+        "satisfaction": 0.108,
+        "dopamine_level": 0.4251,
+        "influence_score": 0.652,
+        "schema_flexibility": 0.6878,
+        "empathy_level": 0.7633,
+        "schemas": {
+          "support_tendency": 0.6542,
+          "threat_sensitivity": 0.554,
+          "self_efficacy": 0.551
+        }
+      }
+    }
+  ],
+  "seed_posts": [
+    {
+      "author_id": 0,
+      "content": "如果只看情绪表态，新能源车补贴变化 的讨论会越来越极端。",
+      "emotion": "confidence",
+      "intensity": 0.2429,
+      "sentiment": 0.2452,
+      "round_index": 0
+    },
+    {
+      "author_id": 1,
+      "content": "如果只看情绪表态，新能源车补贴变化 的讨论会越来越极端。",
+      "emotion": "anger",
+      "intensity": 0.4439,
+      "sentiment": -0.4272,
+      "round_index": 0
+    },
+    {
+      "author_id": 2,
+      "content": "新能源车补贴变化 这件事正在引发越来越明显的立场分化。",
+      "emotion": "calm",
+      "intensity": 0.0846,
+      "sentiment": -0.0032,
+      "round_index": 0
+    },
+    {
+      "author_id": 3,
+      "content": "如果只看情绪表态，新能源车补贴变化 的讨论会越来越极端。",
+      "emotion": "confidence",
+      "intensity": 0.5003,
+      "sentiment": 0.6348,
+      "round_index": 0
+    },
+    {
+      "author_id": 4,
+      "content": "新能源车补贴变化 这件事正在引发越来越明显的立场分化。",
+      "emotion": "confidence",
+      "intensity": 0.5216,
+      "sentiment": 0.6019,
+      "round_index": 0
+    },
+    {
+      "author_id": 5,
+      "content": "如果只看情绪表态，新能源车补贴变化 的讨论会越来越极端。",
+      "emotion": "confidence",
+      "intensity": 0.4975,
+      "sentiment": 0.6157,
+      "round_index": 0
+    }
+  ]
+}

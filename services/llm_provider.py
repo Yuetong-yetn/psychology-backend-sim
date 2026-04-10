@@ -8,7 +8,8 @@ import os
 from dataclasses import dataclass
 from typing import Callable, Dict, Optional
 
-from Backend.services.volcengine_client import VolcengineClient, VolcengineConfig
+from Backend.services.deepseek_client import DeepSeekClient, DeepSeekConfig
+from Backend.services.ollama_client import OllamaClient, OllamaConfig
 
 
 Payload = Dict[str, object]
@@ -18,7 +19,7 @@ FallbackFn = Callable[[Payload], Payload]
 @dataclass
 class CognitiveMoEConfig:
     mode: str = "moe"
-    llm_provider: str = "volcengine"
+    llm_provider: str = "ollama"
     enable_fallback: bool = True
     cache_dir: str = ""
     use_cache: bool = True
@@ -35,7 +36,7 @@ class CognitiveMoEConfig:
         cache_dir = os.path.join(cache_root, "llm_cache") if cache_root else ""
         return cls(
             mode=mode or os.getenv("COGNITIVE_MODE", "moe"),
-            llm_provider=llm_provider or os.getenv("LLM_PROVIDER_NAME", "volcengine"),
+            llm_provider=llm_provider or os.getenv("LLM_PROVIDER_NAME", "ollama"),
             enable_fallback=(
                 enable_fallback
                 if enable_fallback is not None
@@ -58,7 +59,7 @@ class LocalFallbackProvider:
         return {
             "relevance": 0.0,
             "valence": 0.0,
-            "goal_congruence": 0.5,
+            "goal_conduciveness": 0.5,
             "controllability": 0.5,
             "certainty": 0.5,
             "coping_potential": 0.5,
@@ -106,7 +107,7 @@ class CognitiveMoEProvider:
             mode=mode,
             enable_fallback=enable_fallback,
         )
-        self.client = VolcengineClient(VolcengineConfig.from_env())
+        self.client = self._build_client()
         self.local_provider = LocalFallbackProvider()
 
     def generate_appraisal(
@@ -119,8 +120,8 @@ class CognitiveMoEProvider:
             "Top-level keys: router, experts, appraisal. "
             "router must contain weights for threat, support, coping, social. "
             "experts must contain threat, support, coping, social objects, each with keys "
-            "relevance, valence, goal_congruence, controllability, certainty, coping_potential. "
-            "appraisal must contain relevance, valence, goal_congruence, controllability, "
+            "relevance, valence, goal_conduciveness, controllability, certainty, coping_potential. "
+            "appraisal must contain relevance, valence, goal_conduciveness, controllability, "
             "certainty, coping_potential, agency."
         )
         return self._request_with_fallback(
@@ -283,7 +284,7 @@ class CognitiveMoEProvider:
         result["_provider_meta"] = {
             "mode": mode,
             "provider": provider,
-            "model": self.client.config.model_name if provider == self.config.llm_provider else None,
+            "model": self._current_model_name() if provider == self.config.llm_provider else None,
             "source": source,
             "fallback_used": fallback_used,
             "fallback_reason": fallback_reason,
@@ -291,6 +292,21 @@ class CognitiveMoEProvider:
             "cache_hit": cache_hit,
         }
         return result
+
+    def _build_client(self):
+        provider = self.config.llm_provider.lower()
+        if provider == "deepseek":
+            return DeepSeekClient(DeepSeekConfig.from_env())
+        if provider == "ollama":
+            return OllamaClient(OllamaConfig.from_env())
+        raise ValueError(
+            f"Unsupported llm_provider={self.config.llm_provider!r}. "
+            "Use 'ollama' or 'deepseek'."
+        )
+
+    def _current_model_name(self) -> Optional[str]:
+        config = getattr(self.client, "config", None)
+        return getattr(config, "model_name", None)
 
     def _cache_key(self, task_name: str, payload: Payload) -> str:
         digest = hashlib.sha256(
