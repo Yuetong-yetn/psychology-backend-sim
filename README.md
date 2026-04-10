@@ -1,406 +1,289 @@
-`Backend` 是项目中的后端仿真层，负责组织环境、平台、agent 认知过程、行为执行与结果导出。
+# Backend
 
-## 1. 目录结构
+本目录实现社交网络沙盒仿真的后端系统，核心处理链路为：
 
-`Backend` 主要分成三层：
+`Observation -> Appraisal -> CAM -> ECT/DA -> Emotion/Schema -> ToM/BDI -> Decision/Output`
 
-1. `social_platform`
-   负责平台状态、帖子、回复、点赞、转发、曝光分发、影响事件与 trace。
-2. `social_agent`
-   负责 agent 的画像、内部状态、记忆、appraisal、emotion、schema 更新与行为决策。
-3. `environment`
-   负责把 scenario、platform 与多个 agent 串起来运行多轮仿真。
+## 架构
 
-补充模块：
+后端由三层组成：
 
-- `social_platform/storage.py`
-  导出仿真结果为 JSON。
-- `social_platform/emotion_detector.py`
-  本地文本情绪分析器，作为 fallback 使用。
-- `social_agent/appraisal_moe.py`
-  appraisal 的 MoE 引擎。
-- `social_agent/emotion_representation.py`
-  情绪高维表示模块。
-- `services/volcengine_client.py`
-  火山引擎 API client。
-- `services/llm_provider.py`
-  统一认知 provider，负责调度 experts、调用火山引擎并在失败时自动 fallback。
-- `environment/scenario.py`
-  场景与环境上下文定义。
-- `examples/start.py`
-  最小可运行示例。
+- `social_platform`
+  负责帖子、回复、点赞、转发、曝光与影响事件。
+- `social_agent`
+  负责心理状态、Appraisal、CAM 记忆、ECT 满意度、多巴胺代理、ToM/BDI 与行为决策。
+- `environment`
+  负责场景、平台和多 agent 的多轮仿真调度。
 
-## 2. 主执行链路
+## E-CAM-T 主链
 
-环境调度由 `environment/env.py` 负责，主顺序是：
-
-1. `platform.get_feed_for_agent(agent.agent_id)`
-2. `agent.run_round(round_index, scenario_prompt, feed, platform)`
-3. `platform.commit_round(round_index, round_results)`
-4. `history.append({"round_index": ..., "results": result.to_dict()})`
-
-`SimulatedAgent.run_round()` 的内部顺序是：
-
-1. `receive_information()`
-2. `update_state()`
-3. `decide_action()`
-4. `act()`
-
-`update_state()` 的内部顺序是：
-
-1. `_extract_environment_signal()`
-2. `_build_appraisal()`
-3. `_update_emotion()`
-4. `_update_schema()`
-5. `_rebalance()`
-
-## 3. 运行模式
-
-对外只保留两种模式：
-
-- `moe`
-  系统默认主路径。认知处理以“专家分解 + 聚合”为核心设计。
-- `fallback`
-  当外部 provider 不可用、专家输出不可解析、聚合失败或模式被显式关闭时，系统切到本地逻辑继续运行。
-
-## 4. 认知闭环
-
-当前系统的核心闭环是：
+`SimulatedAgent.run_round()` 的执行顺序为：
 
 ```text
-emotion_state / emotion
-        ↓
-moe appraisal
-        ↓
-emotion update
-        ↓
-schema update
-        ↓
-equilibrium
-        ↓
-behavior
-        ↓
-platform
-        ↓
-emotion contagion
-        ↓
-next-round appraisal
+receive_information
+-> update_state
+-> decide_action
+-> build_behavior_output
+-> act
 ```
 
-平台同时提供情绪信号和曝光信号，因此传播和认知都建立在“可见内容”之上，而不是原始文本的简单平均。
+`update_state()` 的处理顺序为：
 
-## 5. Emotion 表示
+```text
+extract_environment_signal
+-> build_appraisal
+-> update_cam_memory
+-> update_ecam_t_state
+-> update_emotion
+-> update_schema
+-> rebalance
+-> update_beliefs_and_intentions
+```
 
-### 5.1 `EmotionState`
+## 变量命名
 
-`social_agent/agent.py` 中的 `EmotionState` 表示 agent 的多维情绪状态，字段包括：
+系统采用 `E-CAM-T参数与变量设计.md` 中的核心命名。
 
-- `emotion_probs: Dict[str, float]`
-  离散情绪分布，各类情绪占比。
-- `pad: List[float]`
-  三维情绪坐标，顺序是 `[pleasure, arousal, dominance]`。
-- `latent: List[float]`
-  高维情绪表示，供传播、schema 更新和行为决策读取。
-- `dominant_label: str`
-  主导离散情绪标签。
-- `intensity: float`
-  情绪强度。
-- `signed_valence: float`
-  带符号情绪值，总体情绪偏向正面还是负面。
+输入与中间信号：
 
-### 5.2 模式
+- `epsilon`
+- `zeta`
+- `coping_potential`
+- `performance`
+- `confirmation`
+- `semantic_similarity`
+- `empathized_negative_emotion`
 
-情绪与 latent 的生成只有两种状态：
+持久状态：
 
-- `moe`
-  由情绪相关 experts 共同给出结构化语义特征，再映射为固定维度 latent。
-- `fallback`
-  使用本地 detector 和本地 latent 构造逻辑。
+- `expectation`
+- `satisfaction`
+- `dopamine_level`
+- `dopamine_prediction_error`
+- `performance_prediction`
+- `belief_embeddings`
+- `equilibrium_index`
+- `schemata_graph`
+- `beliefs`
+- `desires`
+- `intentions`
+- `knowledge`
 
-## 6. Appraisal
+决策相关：
 
-### 6.1 输入
+- `moral_reward`
+- `social_influence_reward`
+- `explicit_tom_triggered`
+- `suggested_action`
+- `suggested_actions`
+- `behavior_output`
 
-环境输入会先压缩为一个 `event`，包括：
+## 规则与机制
+
+### CAM 记忆
+
+`social_agent/cam_memory.py` 提供 `CAMMemoryGraph`，包含：
+
+- 事件节点 `CAMNode`
+- 边连接与邻居搜索
+- 语义相似度与时间高斯衰减的加权相似度
+- `Accommodation`
+- `Assimilation`
+- bridge node 复制
+- cluster 重算
+- cluster summary 与 centroid 更新
+
+状态导出包含 `schemata_graph`。
+
+### 共情与利他驱动
+
+系统显式计算：
+
+- `empathized_negative_emotion`
+- `dopamine_prediction_error`
+- `moral_reward`
+
+处理逻辑为：
+
+- 从可见 `feed` 中提取他人负向情绪强度
+- 负向共情压低 `firing_rate`
+- `dopamine_prediction_error = firing_rate - performance_prediction`
+- 多巴胺下降时提高 `support_others` 与回复倾向
+
+### ECT 满意度链
+
+ECT 更新公式为：
+
+```text
+confirmation = performance - expectation
+satisfaction = satisfaction + eta * confirmation
+expectation = (1 - alpha_E) * expectation + alpha_E * performance
+```
+
+当 `satisfaction` 较低且 `epsilon` 较高时，系统会给出 `Behavioral_Shift` 风格的 OASIS 建议动作，例如 `unfollow`、`mute`、`do_nothing`。
+
+### LG-ToM 社交影响奖励
+
+系统通过轻量信念变化近似构造 `social_influence_reward`：
+
+- 用可见帖子内容 `embedding` 近似对方当前外显信念
+- 用 `belief_embeddings` 近似发送信息后的条件信念
+- 用两者余弦差异构造奖励
+
+该奖励影响 `create_post`、`share_post`、`reply_post` 的分值与解释输出。
+
+## 输入结构
+
+agent 输入由两部分构成：
+
+- `scenario_prompt`
+- `feed`
+
+`feed item` 的关键字段包括：
+
+- `content`
+- `sentiment`
+- `pad`
+- `emotion_latent`
+- `exposure_score`
+- `intensity`
+- `author_id`
+
+系统会将这些输入压缩为单轮事件信号，包括：
 
 - `direction`
-  当前可见内容整体偏正向还是偏负向。
 - `risk`
-  当前输入带来的风险或压力水平。
 - `novelty`
-  当前输入与既有认知结构的偏离程度。
 - `consistency`
-  当前输入内部是否一致、是否相互冲突。
+- `observation_text`
+- `event_embedding`
+- `semantic_similarity`
+- `unpredictability`
+- `empathized_negative_emotion`
 
-agent 的当前 schema 包括三个维度：
+## API 配置
 
-- `support_tendency`
-  agent 默认更支持还是更反对当前议题。
-- `threat_sensitivity`
-  agent 把外部输入理解为威胁的倾向。
-- `self_efficacy`
-  agent 认为自己是否有能力应对局面。
+认知相关 API 通过 `services/llm_provider.py` 统一调度，支持两种 provider：
 
-此外，appraisal 还会读取：
+- `ollama`
+- `deepseek`
 
-- `emotion_state`
-  当前多维情绪状态。
-- `stress`
-  当前压力水平。
-- `equilibrium`
-  当前认知稳定程度。
-- `feed_features`
-  当前 feed 摘要出的社会传播特征。
-- `contagion_features`
-  最近传播结果的摘要特征。
-- `memory_summary`
-  从最近记忆中提取的压缩摘要。
+通过环境变量选择：
 
-### 6.2 输出
+```bash
+LLM_PROVIDER_NAME=ollama
+```
 
-`_build_appraisal()` 返回 `AppraisalRecord`，字段包括：
+或：
 
-- `relevance`
-  当前事件与 agent 目标的相关程度。
-- `valence`
-  当前事件整体偏正向还是偏负向。
-- `goal_congruence`
-  当前事件是否符合 agent 的目标或图式。
-- `controllability`
-  agent 感到当前情境是否可控。
-- `agency`
-  agent 对责任归属的判断。
-- `certainty`
-  agent 对当前判断的确定程度。
-- `novelty`
-  当前输入的新异程度。
-- `coping_potential`
-  agent 认为自己能否应对当前情况。
-- `dominant_emotion`
-  appraisal 对应的主导情绪。
-- `emotion_intensity`
-  appraisal 对应的情绪强度。
-- `cognitive_mode`
-  当前认知更新的模式标签。
+```bash
+LLM_PROVIDER_NAME=deepseek
+```
 
-### 6.3 MoE 结构
+### Ollama
 
-appraisal 的主设计是 MoE。当前引擎至少包括：
+填写位置：
 
-- `Router / Aggregator`
-  负责组合 expert 输出。
-- `ThreatExpert`
-  处理风险、威胁与负向线索。
-- `SupportExpert`
-  处理支持、一致性与正向线索。
-- `CopingExpert`
-  处理控制感和应对能力线索。
-- `SocialAmplificationExpert`
-  处理曝光压力和群体传播线索。
+- `OLLAMA_BASE_URL`
+- `OLLAMA_MODEL`
 
-某些 experts 可以由火山引擎 LLM 提供结构化结果，但系统最终仍由本地聚合层完成统一输出。
+示例：
 
-## 7. 平台与文本情绪识别
+```bash
+OLLAMA_ENABLED=1
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=llama3.1:8b-instruct
+```
 
-平台层由 `social_platform/platform.py` 管理。
+### DeepSeek
 
-平台中的帖子和回复会写入：
+填写位置：
 
-- `emotion`
-  直观的情绪标签。
-- `dominant_emotion`
-  当前帖子或回复的主导情绪。
-- `intensity`
-  当前文本或状态表达出的情绪强度。
-- `sentiment`
-  带符号情绪值，用于聚合与传播。
-- `emotion_probs`
-  各类离散情绪的分布情况。
-- `pad`
-  当前情绪在 pleasure / arousal / dominance 三维上的坐标。
-- `emotion_latent`
-  供内部计算使用的高维情绪表示。
-- `like_count`
-  当前帖子收到的点赞数量。
-- `share_count`
-  当前帖子被转发的次数。
-- `shared_post_id`
-  若当前帖子由转发生成，则指向原始帖子 id。
+- `DEEPSEEK_BASE_URL`
+- `DEEPSEEK_API_KEY`
+- `DEEPSEEK_MODEL`
 
-平台写入情绪字段时遵循两层策略：
+示例：
 
-- 优先使用 `moe` provider 做情绪语义分析
-- 若失败，则调用本地 detector 作为 `fallback`
+```bash
+DEEPSEEK_ENABLED=1
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_API_KEY=your_api_key_here
+DEEPSEEK_MODEL=deepseek-chat
+```
 
-## 8. Exposure Scoring
+如果未配置外部 API，系统会按 `enable_fallback` 设置回退到本地规则。
 
-`Platform.get_feed_for_agent()` 会为每条 feed item 计算：
+## 输出结构
 
-- `exposure_score`
-  内容在当前 feed 中的曝光强度。
-- `exposure_features`
-  组成曝光分数的各项特征。
-
-当前 `exposure_features` 包括：
-
-- `recency`
-  内容距离当前轮次有多近。
-- `emotion_salience`
-  内容情绪有多显著。
-- `engagement`
-  内容当前获得的互动强度。
-- `share_boost`
-  转发内容获得的额外放大权重。
-- `novelty_hint`
-  内容值得继续分发的新颖性提示。
-- `self_author_penalty`
-  对 agent 自己发的内容做的降权项。
-
-这些字段直接影响情绪传播和后续认知加工。
-
-## 9. 情绪传播与 Schema 更新
-
-### 9.1 情绪传播
-
-`_apply_emotion_contagion()` 会按 `exposure_score` 加权聚合可见内容的：
-
-- `sentiment`
-  带符号情绪值。
-- `pad`
-  低维情绪坐标。
-- `latent`
-  高维情绪表示。
-
-传播结果保存在：
-
-- `last_contagion_pad`
-  最近一轮群体情绪传播后的 PAD 聚合结果。
-- `last_contagion_vector`
-  最近一轮群体情绪传播后的高维聚合向量。
-
-### 9.2 Schema 更新
-
-schema 维度包括：
-
-- `support_tendency`
-  对当前议题偏支持还是偏反对。
-- `threat_sensitivity`
-  把外界理解为威胁的倾向。
-- `self_efficacy`
-  认为自己有能力应对情境的程度。
-
-`_update_schema()` 会综合读取：
-
-- appraisal vector
-- `emotion_state.pad`
-- `emotion_state.latent`
-- `last_contagion_pad`
-- `last_contagion_vector`
-
-## 10. 行为决策
-
-系统输出五类动作：
+平台执行动作包括：
 
 - `browse_feed`
-  继续浏览内容，不立即执行更强动作。
-- `reply_post`
-  对某条帖子直接回复。
 - `create_post`
-  主动发布新帖子。
+- `reply_post`
 - `like_post`
-  对目标帖子点赞。
 - `share_post`
-  转发或放大某条帖子。
+- `apply_influence`
+- `do_nothing`
 
-决策会综合读取：
+心理解释层输出包括：
 
-- appraisal
-- `emotion_state.pad`
-- `emotion_state.intensity`
-- `emotion_state.latent`
-- stress
-- equilibrium
-- schemas
+- `suggested_action`
+- `suggested_actions`
+- `behavior_output`
 
-## 11. Provider 层
+`suggested_actions` 按 OASIS 风格候选动作组织，例如：
 
-`services/llm_provider.py` 对上层暴露统一接口：
+- 退缩类：`unfollow` `mute` `do_nothing` `dislike_post`
+- 高一致高应对类：`create_post` `create_comment` `repost` `quote_post`
+- 高突发观察类：`refresh` `search_posts` `search_user` `trend`
 
-- `generate_appraisal(...)`
-  生成结构化 appraisal 结果。
-- `analyze_emotion(...)`
-  分析文本或内部状态对应的情绪语义。
-- `build_latent(...)`
-  生成供内部使用的高维情绪表示。
+`behavior_output` 包括：
 
-当前统一调度层是：
+- `primary_action`
+- `stimulus_excerpt`
+- `public_behavior_summary`
+- `simulated_public_content`
+- `state_hint`
+- `cam_summary`
+- `explicit_tom_triggered`
+- `backend_action`
+- `round_index`
 
-- `CognitiveMoEProvider`
-  负责调度 experts、必要时调用火山引擎、聚合结果并处理 fallback。
+## 关键文件
 
-provider 统一导出以下元信息：
+- `social_agent/agent.py`
+  E-CAM-T 主链与 agent 决策。
+- `social_agent/cam_memory.py`
+  CAM 图记忆实现。
+- `social_agent/appraisal_moe.py`
+  appraisal MoE。
+- `social_platform/platform.py`
+  平台动作与日志。
+- `agent.md`
+  agent 层详细说明。
 
-- `mode`
-  当前实际运行的模式，`moe` 或 `fallback`。
-- `provider`
-  当前使用的 provider 名称。
-- `model`
-  当前使用的模型名称。
-- `source`
-  当前结果来自哪类 expert / 本地路径。
-- `fallback_used`
-  是否发生了回退。
-- `fallback_reason`
-  本次回退的原因。
-
-## 12. 运行元信息与导出
-
-`AgentState` 中包含：
-
-- `appraisal_runtime`
-  记录本轮 appraisal 实际使用了哪种运行路径。
-- `latent_runtime`
-  记录本轮 latent 实际使用了哪种运行路径。
-
-导出链路包括：
-
-- `AgentRoundResult.to_dict()`
-- `SimulatedAgent.snapshot()`
-- `SimulationEnv.snapshot()`
-- `SimulationStorage.save_json()`
-
-所有新增字段都保持为 JSON 可序列化类型。
-
-## 13. 配置
-
-当前对外只保留三类核心配置：
-
-- `mode: "moe" | "fallback"`
-  指定系统主路径。
-- `llm_provider: str`
-  当前选择的 provider 名称，默认 `volcengine`。
-- `enable_fallback: bool`
-  当外部 provider 不可用时是否自动使用本地逻辑。
-
-火山引擎相关环境变量包括：
-
-- `VOLCENGINE_ENABLED`
-  是否启用火山引擎 provider。
-- `VOLCENGINE_API_KEY`
-  火山引擎 API 密钥。
-- `VOLCENGINE_BASE_URL`
-  火山引擎请求地址。
-- `VOLCENGINE_MODEL`
-  调用的火山引擎模型名称。
-- `VOLCENGINE_TIMEOUT`
-  单次请求的超时时间。
-- `VOLCENGINE_RETRY`
-  请求失败后的重试次数。
-
-## 14. 常用命令
+## 运行
 
 最小示例：
 
 ```bash
 python d:\Design\Psychology\Backend\examples\start.py
 ```
+
+生成后端原生虚拟输入数据：
+
+```bash
+python d:\Design\Psychology\Backend\generate_backend_input.py -o examples/backend_sample_input.json
+```
+
+从输入 JSON 直接运行后端：
+
+```bash
+python d:\Design\Psychology\Backend\run_backend_input.py -i examples/backend_sample_input.json -o outputs/backend_sample_output.json
+```
+
+访问：
+
+- API 文档: `http://localhost:8000/docs`
+- 调试页: `http://localhost:8000/debug/viewer`
