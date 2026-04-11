@@ -1,4 +1,7 @@
-"""Volcengine API client with graceful fallback behavior."""
+"""火山引擎客户端封装。
+
+提供带超时、重试和元信息记录的最小 HTTP 调用层。
+"""
 
 from __future__ import annotations
 
@@ -13,6 +16,8 @@ import requests
 
 @dataclass
 class VolcengineConfig:
+    """火山引擎接口所需的配置。"""
+
     enabled: bool = False
     api_key: str = ""
     base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
@@ -22,6 +27,8 @@ class VolcengineConfig:
 
     @classmethod
     def from_env(cls) -> "VolcengineConfig":
+        """从环境变量构造火山引擎配置。"""
+
         enabled = os.getenv("VOLCENGINE_ENABLED", "0").lower() in {"1", "true", "yes"}
         return cls(
             enabled=enabled,
@@ -34,12 +41,16 @@ class VolcengineConfig:
 
 
 class VolcengineClient:
-    """Tiny HTTP client wrapper with timeout/retry and metadata."""
+    """火山引擎的简易 HTTP 客户端。"""
 
     def __init__(self, config: Optional[VolcengineConfig] = None) -> None:
+        """初始化客户端；默认从环境变量读取配置。"""
+
         self.config = config or VolcengineConfig.from_env()
 
     def is_available(self) -> bool:
+        """判断当前配置是否足以发起请求。"""
+
         return bool(
             self.config.enabled
             and self.config.api_key
@@ -48,6 +59,8 @@ class VolcengineClient:
         )
 
     def chat_json(self, system_prompt: str, user_payload: Dict[str, object]) -> Dict[str, object]:
+        """向火山引擎发送一次 JSON 对话请求。"""
+
         if not self.is_available():
             raise RuntimeError("Volcengine client is not configured.")
 

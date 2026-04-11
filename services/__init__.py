@@ -1,4 +1,4 @@
-"""Service layer for cognitive providers."""
+"""服务层对外导出。"""
 
 from Backend.services.llm_provider import (
     CognitiveMoEConfig,

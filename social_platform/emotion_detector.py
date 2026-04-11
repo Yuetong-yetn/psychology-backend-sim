@@ -1,11 +1,9 @@
-"""Lightweight local emotion detectors.
+"""轻量级本地情绪检测器。
 
-This module keeps the Backend fully offline while exposing a pluggable
-emotion-detection interface. The current stack is:
-
-- RuleBasedEmotionDetector: keyword fallback baseline
-- HeuristicContextEmotionDetector: lightweight context-sensitive heuristic
-- CompositeEmotionDetector: fuses text detection with optional internal signal
+这个模块让 Backend 在完全离线时也能运行，同时暴露可插拔的情绪分析接口：
+- `RuleBasedEmotionDetector`：关键词规则基线
+- `HeuristicContextEmotionDetector`：带上下文启发式的轻量分析器
+- `CompositeEmotionDetector`：融合文本结果和内部信号
 """
 
 from __future__ import annotations
@@ -54,6 +52,7 @@ EMOTION_KEYWORDS = {
     "relief": ["relief", "finally", "safe", "better", "solved"],
 }
 
+# 启发式探测器会用到的语气词和风险词典。
 NEGATION_WORDS = ["not", "never", "no", "hardly", "rarely", "without"]
 INTENSIFIERS = ["very", "really", "extremely", "highly", "deeply", "so"]
 UNCERTAINTY_WORDS = ["maybe", "perhaps", "unclear", "uncertain", "possibly", "seems"]
@@ -63,7 +62,7 @@ SUPPORT_WORDS = ["support", "agree", "benefit", "help", "progress", "improve"]
 
 @dataclass
 class EmotionAnalysis:
-    """Serializable emotion detection payload."""
+    """可序列化的情绪分析结果。"""
 
     emotion_probs: Dict[str, float] = field(default_factory=dict)
     dominant_emotion: str = "calm"
@@ -77,7 +76,7 @@ class EmotionAnalysis:
 
 
 class BaseEmotionDetector:
-    """Pluggable detector interface."""
+    """情绪检测器的统一接口。"""
 
     def analyze_text(
         self,
@@ -88,7 +87,7 @@ class BaseEmotionDetector:
 
 
 class RuleBasedEmotionDetector(BaseEmotionDetector):
-    """Offline baseline detector used as fallback."""
+    """基于关键词的离线基线检测器。"""
 
     def analyze_text(
         self,
@@ -97,6 +96,7 @@ class RuleBasedEmotionDetector(BaseEmotionDetector):
     ) -> EmotionAnalysis:
         overrides = overrides or {}
         lowered = (text or "").lower()
+        # 先按关键词命中次数做一个最粗的情绪分布估计。
         counts = {label: 0.0 for label in EMOTION_LABELS}
 
         for label, keywords in EMOTION_KEYWORDS.items():
@@ -168,11 +168,7 @@ class RuleBasedEmotionDetector(BaseEmotionDetector):
 
 
 class HeuristicContextEmotionDetector(BaseEmotionDetector):
-    """Lightweight context-sensitive heuristic detector.
-
-    This baseline tries to read style, modality and uncertainty from text
-    without relying on a model.
-    """
+    """带上下文启发式的轻量检测器。"""
 
     def analyze_text(
         self,
@@ -184,6 +180,7 @@ class HeuristicContextEmotionDetector(BaseEmotionDetector):
         tokens = [token.strip(".,!?;:\"'()[]{}") for token in lowered.split()]
         token_count = max(1, len(tokens))
 
+        # 这些计数近似表达语气强度、不确定性和社会支持/威胁线索。
         exclamations = lowered.count("!")
         questions = lowered.count("?")
         negations = sum(1 for token in tokens if token in NEGATION_WORDS)
@@ -214,6 +211,7 @@ class HeuristicContextEmotionDetector(BaseEmotionDetector):
         )
         intensity = _clamp(abs(sentiment) * 0.45 + arousal * 0.45 + min(0.2, token_count / 40))
 
+        # 先给每个情绪一个很小的先验，再逐项叠加启发式增量。
         probs = {label: 0.02 for label in EMOTION_LABELS}
         probs["anger"] += max(0.0, threat * 0.08 + exclamations * 0.04 - support * 0.03)
         probs["frustration"] += max(0.0, negations * 0.06 + questions * 0.03)
@@ -245,12 +243,7 @@ class HeuristicContextEmotionDetector(BaseEmotionDetector):
 
 
 class CompositeEmotionDetector(BaseEmotionDetector):
-    """Composite detector with fallback and internal-signal fusion.
-
-    The platform should not fully trust agent-provided emotion payloads.
-    Instead, the composite detector first estimates emotion from text and then
-    blends it with the optional internal signal supplied by the agent.
-    """
+    """融合文本情绪和内部信号的组合检测器。"""
 
     def __init__(
         self,
@@ -274,6 +267,7 @@ class CompositeEmotionDetector(BaseEmotionDetector):
         except Exception:
             heuristic_result = rule_result
 
+        # 先融合两个文本分析器，再视情况叠加 agent 内部信号。
         fused_text = self._blend_results(rule_result, heuristic_result, left_weight=0.45)
         final_result = fused_text
 
@@ -345,6 +339,7 @@ def _merge_with_overrides(
     overrides: Dict[str, object],
     trust_overrides: bool = False,
 ) -> EmotionAnalysis:
+    """按需信任覆盖字段；默认不直接相信外部覆盖值。"""
     if not trust_overrides:
         return analysis
 
@@ -374,6 +369,7 @@ def _merge_with_overrides(
 
 
 def _normalize_internal_signal(signal: object) -> Optional[Dict[str, object]]:
+    """把 agent 自报的内部情绪信号整理成统一格式。"""
     if not isinstance(signal, dict):
         return None
 
@@ -463,6 +459,7 @@ def _project_latent(
     pad: List[float],
     intensity: float,
 ) -> List[float]:
+    """把情绪分布和 PAD 映射到固定长度 latent。"""
     positive_mass = probs["hope"] + probs["confidence"] + probs["relief"]
     negative_mass = (
         probs["anger"]

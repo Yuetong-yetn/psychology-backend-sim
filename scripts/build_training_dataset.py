@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""把仿真快照整理成可训练数据集。"""
+
 import argparse
 import json
 import os
@@ -15,11 +17,13 @@ if PARENT_ROOT not in sys.path:
 
 
 def load_snapshot(path: str) -> Dict[str, Any]:
+    """读取导出的仿真快照。"""
     with open(path, "r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
 def appraisal_vector(appraisal: Dict[str, Any]) -> List[float]:
+    """把 appraisal 字典压成固定顺序的监督向量。"""
     return [
         float(appraisal.get("relevance", 0.0)),
         float(appraisal.get("valence", 0.0)),
@@ -31,6 +35,7 @@ def appraisal_vector(appraisal: Dict[str, Any]) -> List[float]:
 
 
 def infer_event_from_appraisal(appraisal: Dict[str, Any]) -> Dict[str, float]:
+    """从 appraisal 反推事件特征，供训练脚本复用。"""
     valence = float(appraisal.get("valence", 0.0))
     novelty = float(appraisal.get("novelty", 0.0))
     relevance = float(appraisal.get("relevance", 0.0))
@@ -44,6 +49,7 @@ def infer_event_from_appraisal(appraisal: Dict[str, Any]) -> Dict[str, float]:
 
 
 def infer_feed_features(state: Dict[str, Any]) -> Dict[str, float]:
+    """从状态快照中近似恢复信息流特征。"""
     contagion_pad = state.get("last_contagion_pad", [0.0, 0.0, 0.0])
     contagion_vector = state.get("last_contagion_vector", [0.0] * 16)
     return {
@@ -57,6 +63,7 @@ def infer_feed_features(state: Dict[str, Any]) -> Dict[str, float]:
 
 
 def infer_memory_summary(state: Dict[str, Any]) -> Dict[str, float]:
+    """从状态快照中提取简化记忆摘要。"""
     memory = state.get("memory", [])
     if not memory:
         return {
@@ -80,6 +87,7 @@ def infer_memory_summary(state: Dict[str, Any]) -> Dict[str, float]:
 
 
 def build_samples(snapshot: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """把整份快照展开成逐 agent、逐轮次的训练样本。"""
     samples: List[Dict[str, Any]] = []
     history = snapshot.get("history", [])
     for round_entry in history:

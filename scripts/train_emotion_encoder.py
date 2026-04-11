@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""训练本地情绪编码器。"""
+
 import argparse
 import json
 import os
@@ -18,12 +20,14 @@ from Backend.social_agent.emotion_representation import EmotionRepresentationCon
 
 
 def load_samples(path: str) -> List[Dict[str, Any]]:
+    """读取训练样本。"""
     with open(path, "r", encoding="utf-8") as handle:
         payload = json.load(handle)
     return payload.get("samples", payload)
 
 
 def fit_linear(x: np.ndarray, y: np.ndarray, ridge: float = 1e-3) -> tuple[np.ndarray, np.ndarray]:
+    """用带 ridge 的线性回归拟合编码器参数。"""
     x_aug = np.concatenate([x, np.ones((x.shape[0], 1), dtype=np.float32)], axis=1)
     eye = np.eye(x_aug.shape[1], dtype=np.float32) * ridge
     weights = np.linalg.solve(x_aug.T @ x_aug + eye, x_aug.T @ y)
@@ -31,6 +35,7 @@ def fit_linear(x: np.ndarray, y: np.ndarray, ridge: float = 1e-3) -> tuple[np.nd
 
 
 def main() -> None:
+    """命令行入口：训练并保存情绪编码器参数。"""
     parser = argparse.ArgumentParser(description="Train local emotion encoder scaffold.")
     parser.add_argument("--input", required=True, help="Dataset JSON from build_training_dataset.py")
     parser.add_argument("--checkpoint-dir", required=True, help="Directory to save emotion encoder checkpoint")

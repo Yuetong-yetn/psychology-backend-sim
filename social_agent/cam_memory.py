@@ -1,4 +1,4 @@
-"""Graph-based CAM memory helpers for the social agent backend."""
+"""基于图结构的 CAM 记忆辅助模块。"""
 
 from __future__ import annotations
 
@@ -8,10 +8,12 @@ from typing import Dict, List, Optional, Set
 
 
 def _clamp(value: float, lower: float = 0.0, upper: float = 1.0) -> float:
+    """把数值截断到给定区间。"""
     return max(lower, min(upper, value))
 
 
 def _normalize(vector: List[float]) -> List[float]:
+    """对向量做 L2 归一化。"""
     norm = math.sqrt(sum(item * item for item in vector))
     if norm <= 1e-8:
         return [0.0 for _ in vector]
@@ -19,6 +21,7 @@ def _normalize(vector: List[float]) -> List[float]:
 
 
 def _cosine_sim(left: List[float], right: List[float]) -> float:
+    """计算两个向量的余弦相似度。"""
     if not left or not right or len(left) != len(right):
         return 0.0
     dot = sum(a * b for a, b in zip(left, right))
@@ -31,6 +34,8 @@ def _cosine_sim(left: List[float], right: List[float]) -> float:
 
 @dataclass
 class CAMNode:
+    """记忆图中的单个事件节点。"""
+
     node_id: int
     round_index: int
     source: str
@@ -43,6 +48,8 @@ class CAMNode:
 
 @dataclass
 class CAMCluster:
+    """记忆图中的聚类簇。"""
+
     cluster_id: int
     node_ids: List[int] = field(default_factory=list)
     summary: str = ""
@@ -51,6 +58,8 @@ class CAMCluster:
 
 @dataclass
 class CAMMemoryGraph:
+    """维护记忆节点、邻接边和聚类结果的图结构。"""
+
     semantic_weight: float = 0.72
     time_sigma: float = 3.0
     neighbor_threshold: float = 0.7
@@ -62,6 +71,8 @@ class CAMMemoryGraph:
     _next_cluster_id: int = 1
 
     def best_match(self, embedding: List[float], round_index: int) -> Dict[str, object]:
+        """寻找与当前事件最接近的历史记忆节点。"""
+
         scores = []
         for node in self.nodes.values():
             score = self._similarity(node.embedding, embedding, node.round_index, round_index)
@@ -85,6 +96,8 @@ class CAMMemoryGraph:
         valence: float,
         conflict_penalty: float,
     ) -> Dict[str, object]:
+        """把一个新事件写入记忆图，并更新聚类。"""
+
         match = self.best_match(embedding, round_index)
         candidate_ids = list(match["candidates"])
         node_id = self._add_node(
@@ -114,6 +127,7 @@ class CAMMemoryGraph:
         }
 
     def global_embedding(self) -> List[float]:
+        """计算整张记忆图的平均嵌入表示。"""
         if not self.nodes:
             return []
         dim = len(next(iter(self.nodes.values())).embedding)
@@ -188,6 +202,8 @@ class CAMMemoryGraph:
         return _clamp(self.semantic_weight * semantic + (1 - self.semantic_weight) * temporal)
 
     def _replicate_bridge_node(self, node_id: int) -> List[int]:
+        """必要时复制桥接节点，避免多个簇被单点强行串联。"""
+
         neighbors = list(self.edges.get(node_id, set()))
         if len(neighbors) < 2:
             return []

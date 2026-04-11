@@ -1,4 +1,7 @@
-"""Ollama API client for local chat-based JSON generation."""
+"""Ollama 客户端封装。
+
+用于访问本地 Ollama 服务，并要求模型返回 JSON 结构。
+"""
 
 from __future__ import annotations
 
@@ -13,6 +16,8 @@ import requests
 
 @dataclass
 class OllamaConfig:
+    """Ollama 服务的连接配置。"""
+
     enabled: bool = False
     base_url: str = "http://127.0.0.1:11434"
     model_name: str = "llama3.1:8b-instruct"
@@ -21,6 +26,8 @@ class OllamaConfig:
 
     @classmethod
     def from_env(cls) -> "OllamaConfig":
+        """从环境变量构造 Ollama 配置。"""
+
         return cls(
             enabled=os.getenv("OLLAMA_ENABLED", "0").lower() in {"1", "true", "yes"},
             base_url=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
@@ -31,15 +38,21 @@ class OllamaConfig:
 
 
 class OllamaClient:
-    """Tiny HTTP wrapper for Ollama `/api/chat`."""
+    """Ollama 的简易 HTTP 客户端。"""
 
     def __init__(self, config: Optional[OllamaConfig] = None) -> None:
+        """初始化客户端；默认从环境变量读取配置。"""
+
         self.config = config or OllamaConfig.from_env()
 
     def is_available(self) -> bool:
+        """判断当前配置是否可用于请求本地服务。"""
+
         return bool(self.config.enabled and self.config.base_url and self.config.model_name)
 
     def chat_json(self, system_prompt: str, user_payload: Dict[str, object]) -> Dict[str, object]:
+        """向 Ollama 发起一次 JSON 对话请求。"""
+
         if not self.is_available():
             raise RuntimeError("Ollama client is not configured.")
 

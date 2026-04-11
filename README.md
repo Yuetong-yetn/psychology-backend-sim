@@ -1,289 +1,261 @@
-# Backend
+# Psychology Backend
 
-本目录实现社交网络沙盒仿真的后端系统，核心处理链路为：
+Psychology Backend 是一个面向“社会议题传播-情绪演化-平台交互行为”场景的仿真后端，用于生成可分析、可导出的多智能体社会心理仿真快照。
 
-`Observation -> Appraisal -> CAM -> ECT/DA -> Emotion/Schema -> ToM/BDI -> Decision/Output`
+它当前围绕一条完整的异步仿真链路展开：
+- `scenario`：定义议题标题、描述与环境上下文
+- `agents`：定义考察对象的静态画像与初始心理状态
+- `platform`：模拟信息流、发帖、回复、点赞、转发与影响传播
+- `environment`：负责多轮调度、并发执行、平台提交与结果导出
 
-## 架构
+系统当前采用“认知模式 + 外部 provider + 本地 fallback”的三层运行结构，并输出 `snapshot` JSON 供调试页、脚本或后续分析直接消费。当前版本重点落在以下工程能力上：
+- 异步环境调度（`asyncio`）与多 agent 并发轮次执行
+- 社会平台交互闭环（post / reply / like / share / influence）
+- 情绪、appraisal、latent 表示与 contagion 的联动更新
+- 调试接口与浏览页联动（示例输入、运行样例、读取最新快照）
 
-后端由三层组成：
+## 我们做了什么（完整回顾）
 
-- `social_platform`
-  负责帖子、回复、点赞、转发、曝光与影响事件。
-- `social_agent`
-  负责心理状态、Appraisal、CAM 记忆、ECT 满意度、多巴胺代理、ToM/BDI 与行为决策。
-- `environment`
-  负责场景、平台和多 agent 的多轮仿真调度。
+这一版并不是单纯把 agent 跑起来，而是逐步把“单体 demo”整理成“可生成输入、可运行、可导出、可可视化检查”的后端实验链路：
 
-## E-CAM-T 主链
+1. 项目骨架与基础运行链路
+- 建立 `environment`、`social_agent`、`social_platform`、`services`、`scripts`、`examples`、`outputs` 等目录。
+- 提供 `run_backend_input.py` 作为后端原生输入的主运行入口。
+- 提供 `examples/start.py` 作为最小异步运行示例。
 
-`SimulatedAgent.run_round()` 的执行顺序为：
+2. 后端原生输入格式打通
+- 新增 `generate_backend_input.py`，支持按参数生成示例 payload。
+- 输入结构覆盖 `meta`、`runtime`、`scenario`、`agents`、`relationships`、`seed_posts`。
+- `run_backend_input.py` 可直接读取该 payload 并完成一次完整仿真。
 
-```text
-receive_information
--> update_state
--> decide_action
--> build_behavior_output
--> act
-```
+3. 环境与平台执行链路闭环
+- `SimulationEnv` 负责 `areset -> astep/arun -> export -> snapshot -> aclose` 生命周期。
+- `Platform` 负责注册 agent、平台动作分发、信息流排序与行为日志记录。
+- `SimulationStorage` 负责把快照导出到 `outputs/` 下的 JSON 文件。
 
-`update_state()` 的处理顺序为：
+4. agent 心理与行为模型迭代
+- `social_agent/agent.py` 实现了 profile、state、memory、appraisal、emotion state、decision、round result 等核心结构。
+- 单轮过程包含 observation、appraisal、emotion contagion、schema 更新与行为决策。
+- 输出中保留了较完整的心理状态、记忆、runtime metadata 与行为结果，便于分析。
 
-```text
-extract_environment_signal
--> build_appraisal
--> update_cam_memory
--> update_ecam_t_state
--> update_emotion
--> update_schema
--> rebalance
--> update_beliefs_and_intentions
-```
+5. 认知模式与 provider 接口接入
+- `services/llm_provider.py` 提供统一 Cognitive MoE dispatcher。
+- 上层通过 `mode` 决定认知运行方式，下层通过 `provider` 选择外部模型后端。
+- 当前支持 `ollama` 与 `deepseek` 两类 provider，并带有本地 fallback。
+- 增加缓存、provider metadata、异常降级与无外部服务可用时的本地回退路径。
 
-## 变量命名
+6. 调试 API 与页面
+- `webapp.py` 提供 `FastAPI` 调试服务。
+- 支持 `/api/debug/status`、`/api/debug/run-sample`、`/api/debug/snapshot` 与 `/debug/viewer`。
+- 默认会自动生成示例输入，并在没有输出时补跑一轮示例仿真。
 
-系统采用 `E-CAM-T参数与变量设计.md` 中的核心命名。
+## 迭代重点（按问题线索）
 
-输入与中间信号：
+- 从最小示例到后端原生输入
+  - 不再只依赖硬编码示例 agent，而是支持从 JSON payload 直接构建场景、关系与种子帖子。
+- 从单 agent 逻辑到多 agent 异步并发
+  - `SimulationEnv` 内部通过 `asyncio.gather` 并发执行每轮 agent 决策。
+- 从简单 sentiment 到更完整的情绪表征
+  - 平台内容与 agent 状态都保留 `emotion_probs`、`pad`、`emotion_latent` 等结构。
+- 从纯本地规则到可选外部 provider
+  - provider 可用时走外部调用，不可用时自动 fallback，保证仿真不中断。
+- 从脚本输出到调试闭环
+  - 既支持命令行运行，也支持浏览器查看最新快照与样例结果。
 
-- `epsilon`
-- `zeta`
-- `coping_potential`
-- `performance`
-- `confirmation`
-- `semantic_similarity`
-- `empathized_negative_emotion`
+## 当前核心能力
 
-持久状态：
+- 仿真输入
+  - 支持 `scenario`、`agents`、`relationships`、`seed_posts` 的完整 payload
 
-- `expectation`
-- `satisfaction`
-- `dopamine_level`
-- `dopamine_prediction_error`
-- `performance_prediction`
-- `belief_embeddings`
-- `equilibrium_index`
-- `schemata_graph`
-- `beliefs`
-- `desires`
-- `intentions`
-- `knowledge`
+- 认知模式
+  - `mode=moe`：启用 MoE-first 认知路径，优先尝试外部 provider
+  - `mode=fallback`：强制本地回退，不依赖外部 provider
 
-决策相关：
+- 外部 provider
+  - `ollama`
+  - `deepseek`
 
-- `moral_reward`
-- `social_influence_reward`
-- `explicit_tom_triggered`
-- `suggested_action`
-- `suggested_actions`
-- `behavior_output`
+- fallback
+  - provider 不可用或调用失败时，退回本地 engineered / rule-based 路径
 
-## 规则与机制
+- 平台交互
+  - 发帖、回复、点赞、转发、浏览 feed、记录影响事件
 
-### CAM 记忆
+- 导出
+  - 输出当前 round、scenario、platform snapshot、agent graph、agent snapshot、history
 
-`social_agent/cam_memory.py` 提供 `CAMMemoryGraph`，包含：
+## 接口
 
-- 事件节点 `CAMNode`
-- 边连接与邻居搜索
-- 语义相似度与时间高斯衰减的加权相似度
-- `Accommodation`
-- `Assimilation`
-- bridge node 复制
-- cluster 重算
-- cluster summary 与 centroid 更新
+- `GET /`
+- `GET /debug/viewer`
+- `GET /api/debug/status`
+- `POST /api/debug/run-sample`
+- `GET /api/debug/snapshot`
 
-状态导出包含 `schemata_graph`。
+### `POST /api/debug/run-sample`
 
-### 共情与利他驱动
+说明：
+- 服务会优先读取 `examples/backend_sample_input.json`
+- 如果示例输入不存在，会自动调用 `build_payload(num_agents=8, rounds=4, seed_posts=6, seed=42)` 生成
+- 运行完成后，会把结果写入 `outputs/backend_sample_output.json`
 
-系统显式计算：
+### `GET /api/debug/status`
 
-- `empathized_negative_emotion`
-- `dopamine_prediction_error`
-- `moral_reward`
+返回信息包括：
+- `docs_url`
+- `viewer_url`
+- `default_input_path`
+- `latest_output_path`
 
-处理逻辑为：
+## 默认样例规模
 
-- 从可见 `feed` 中提取他人负向情绪强度
-- 负向共情压低 `firing_rate`
-- `dopamine_prediction_error = firing_rate - performance_prediction`
-- 多巴胺下降时提高 `support_others` 与回复倾向
+当前默认调试样例如下：
+- `num_agents = 8`
+- `rounds = 4`
+- `seed_posts = 6`
+- `seed = 42`
+- `feed_limit = 5`
 
-### ECT 满意度链
+这组参数主要用于快速验证输入构造、平台行为与调试页面联动，而不是大规模压测配置。
 
-ECT 更新公式为：
-
-```text
-confirmation = performance - expectation
-satisfaction = satisfaction + eta * confirmation
-expectation = (1 - alpha_E) * expectation + alpha_E * performance
-```
-
-当 `satisfaction` 较低且 `epsilon` 较高时，系统会给出 `Behavioral_Shift` 风格的 OASIS 建议动作，例如 `unfollow`、`mute`、`do_nothing`。
-
-### LG-ToM 社交影响奖励
-
-系统通过轻量信念变化近似构造 `social_influence_reward`：
-
-- 用可见帖子内容 `embedding` 近似对方当前外显信念
-- 用 `belief_embeddings` 近似发送信息后的条件信念
-- 用两者余弦差异构造奖励
-
-该奖励影响 `create_post`、`share_post`、`reply_post` 的分值与解释输出。
-
-## 输入结构
-
-agent 输入由两部分构成：
-
-- `scenario_prompt`
-- `feed`
-
-`feed item` 的关键字段包括：
-
-- `content`
-- `sentiment`
-- `pad`
-- `emotion_latent`
-- `exposure_score`
-- `intensity`
-- `author_id`
-
-系统会将这些输入压缩为单轮事件信号，包括：
-
-- `direction`
-- `risk`
-- `novelty`
-- `consistency`
-- `observation_text`
-- `event_embedding`
-- `semantic_similarity`
-- `unpredictability`
-- `empathized_negative_emotion`
-
-## API 配置
-
-认知相关 API 通过 `services/llm_provider.py` 统一调度，支持两种 provider：
-
-- `ollama`
-- `deepseek`
-
-通过环境变量选择：
+## 快速启动
 
 ```bash
-LLM_PROVIDER_NAME=ollama
+# 生成示例输入
+python generate_backend_input.py
+
+# 直接运行一次仿真
+python run_backend_input.py -i examples/backend_sample_input.json
+
+# 启动调试服务
+uvicorn webapp:app --reload --port 8000
 ```
-
-或：
-
-```bash
-LLM_PROVIDER_NAME=deepseek
-```
-
-### Ollama
-
-填写位置：
-
-- `OLLAMA_BASE_URL`
-- `OLLAMA_MODEL`
-
-示例：
-
-```bash
-OLLAMA_ENABLED=1
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=llama3.1:8b-instruct
-```
-
-### DeepSeek
-
-填写位置：
-
-- `DEEPSEEK_BASE_URL`
-- `DEEPSEEK_API_KEY`
-- `DEEPSEEK_MODEL`
-
-示例：
-
-```bash
-DEEPSEEK_ENABLED=1
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_API_KEY=your_api_key_here
-DEEPSEEK_MODEL=deepseek-chat
-```
-
-如果未配置外部 API，系统会按 `enable_fallback` 设置回退到本地规则。
-
-## 输出结构
-
-平台执行动作包括：
-
-- `browse_feed`
-- `create_post`
-- `reply_post`
-- `like_post`
-- `share_post`
-- `apply_influence`
-- `do_nothing`
-
-心理解释层输出包括：
-
-- `suggested_action`
-- `suggested_actions`
-- `behavior_output`
-
-`suggested_actions` 按 OASIS 风格候选动作组织，例如：
-
-- 退缩类：`unfollow` `mute` `do_nothing` `dislike_post`
-- 高一致高应对类：`create_post` `create_comment` `repost` `quote_post`
-- 高突发观察类：`refresh` `search_posts` `search_user` `trend`
-
-`behavior_output` 包括：
-
-- `primary_action`
-- `stimulus_excerpt`
-- `public_behavior_summary`
-- `simulated_public_content`
-- `state_hint`
-- `cam_summary`
-- `explicit_tom_triggered`
-- `backend_action`
-- `round_index`
-
-## 关键文件
-
-- `social_agent/agent.py`
-  E-CAM-T 主链与 agent 决策。
-- `social_agent/cam_memory.py`
-  CAM 图记忆实现。
-- `social_agent/appraisal_moe.py`
-  appraisal MoE。
-- `social_platform/platform.py`
-  平台动作与日志。
-- `agent.md`
-  agent 层详细说明。
-
-## 运行
-
-最小示例：
-
-```bash
-python d:\Design\Psychology\Backend\examples\start.py
-```
-
-生成后端原生虚拟输入数据：
-
-```bash
-python d:\Design\Psychology\Backend\generate_backend_input.py -o examples/backend_sample_input.json
-```
-
-从输入 JSON 直接运行后端：
-
-```bash
-python d:\Design\Psychology\Backend\run_backend_input.py -i examples/backend_sample_input.json -o outputs/backend_sample_output.json
-```
-
 访问：
+- API 文档：http://localhost:8000/docs
+- 调试页：http://localhost:8000/debug/viewer
 
-- API 文档: `http://localhost:8000/docs`
-- 调试页: `http://localhost:8000/debug/viewer`
+## 关键环境变量
+
+当前代码会读取以下环境变量：
+
+```bash
+COGNITIVE_MODE=moe
+LLM_PROVIDER_NAME=ollama
+LLM_ENABLE_FALLBACK=1
+LLM_PROVIDER_USE_CACHE=1
+BACKEND_CHECKPOINT_DIR=./checkpoints
+
+# 按 provider 选择性配置
+DEEPSEEK_API_KEY=xxxx
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+说明：
+- `COGNITIVE_MODE` 控制认知模式，而不是直接指定模型。
+- `COGNITIVE_MODE=fallback` 时会跳过外部调用，直接使用本地 fallback。
+- `LLM_PROVIDER_NAME` 用于指定外部 provider，当前支持 `ollama` 与 `deepseek`。
+- 如果 provider 不可用且 `LLM_ENABLE_FALLBACK=1`，系统会自动退回本地逻辑。
+- 若配置 `BACKEND_CHECKPOINT_DIR`，provider cache 会写入其中的 `llm_cache/`。
+
+## 数据与脚本
+
+- `examples/backend_sample_input.json`：示例后端输入
+- `outputs/`：导出的仿真快照目录
+- `generate_backend_input.py`：按参数生成后端原生输入
+- `run_backend_input.py`：从输入 payload 执行完整仿真
+- `examples/start.py`：最小异步运行示例
+- `scripts/build_training_dataset.py`：构建训练数据
+- `scripts/build_llm_teacher_labels.py`：构建 teacher labels
+- `scripts/train_appraisal_moe.py`：训练 appraisal MoE
+- `scripts/train_emotion_encoder.py`：训练 emotion encoder
+- `scripts/eval_learned_modules.py`：评估已学习模块
+
+常用命令：
+
+```bash
+python generate_backend_input.py --agents 12 --rounds 6 --seed-posts 8 --seed 42
+python run_backend_input.py -i examples/backend_sample_input.json
+python examples/start.py
+```
+
+## 调试与排查
+
+如果调试页打开但没有最新结果：
+- 先访问 `POST /api/debug/run-sample` 触发一次样例运行。
+- 再访问 `GET /api/debug/snapshot` 或刷新 `/debug/viewer`。
+
+如果外部 provider 没有真正参与：
+- 检查 `LLM_PROVIDER_NAME` 是否设置正确。
+- 检查对应 provider 的可用性，例如 `DEEPSEEK_API_KEY` 或本地 `Ollama` 服务。
+- 检查是否把 `COGNITIVE_MODE` 设成了 `fallback`。
+
+如果怀疑缓存影响结果：
+- 检查 `BACKEND_CHECKPOINT_DIR/llm_cache/` 是否存在缓存文件。
+- 关闭 `LLM_PROVIDER_USE_CACHE` 或更换输入 payload 再次运行。
+
+如果对 `MoE` 和 `LLM` 的关系有疑问：
+- 当前项目里，`MoE` 指的是上层认知分解与调度方式。
+- `LLM provider` 指的是该认知路径可选使用的外部执行后端。
+- 二者不是同一个概念，但在 `mode=moe` 下通常会一起出现，因此文档中会同时提到。
+
+## 架构说明
+
+详细开发约束与模块职责见 `agent.md`。
+
+## 本次更新补充
+
+基于最近一轮实现，调试接口与参数配置方式有以下增量变化：
+
+### 调试页为什么在没有 API Key 时也可能有结果
+
+- 当前后端支持本地 `fallback` 路径，不依赖外部 provider 也可以完成仿真。
+- 当 `mode=fallback` 时，仿真会直接走本地逻辑。
+- 当 `mode=moe` 但外部 provider 不可用且 `enable_fallback=true` 时，也会自动退回本地路径。
+- 此外，`outputs/` 目录下如果已经存在历史快照，调试页也会直接显示这些已有结果。
+
+### 调试接口行为更新
+
+当前调试接口为：
+- `GET /api/debug/status`
+- `GET /api/debug/options`
+- `POST /api/debug/run-sample`
+- `GET /api/debug/snapshot`
+
+补充说明：
+- `GET /api/debug/options` 用于给前端返回可选超参数、默认值、范围和枚举选项。
+- `GET /api/debug/snapshot` 现在只读取最新快照，不会再在没有结果时偷偷自动跑样例。
+- 如果当前没有快照，`GET /api/debug/snapshot` 会返回 404，并提示先调用 `POST /api/debug/run-sample`。
+- `POST /api/debug/run-sample` 现在支持前端传入调试参数，而不再只依赖固定样例。
+
+### 前端已预留的可选超参数
+
+当前已通过调试 API 和调试页预留给前端的参数包括：
+- `num_agents`
+- `rounds`
+- `seed_posts`
+- `seed`
+- `feed_limit`
+- `mode`
+- `llm_provider`
+- `enable_fallback`
+
+其中：
+- `mode` 控制认知路径是 `moe` 还是 `fallback`
+- `llm_provider` 控制外部 provider 类型，当前支持 `ollama` 和 `deepseek`
+- `enable_fallback` 控制当外部 provider 不可用时是否允许自动回退到本地逻辑
+
+### 后端固定参数的集中配置
+
+本轮已新增 `config/` 目录，用于区分“前端可选参数”和“后端内部固定参数”：
+
+- `config/frontend_settings.py`
+  - 定义前端暴露参数的默认值、范围和可选项
+- `config/backend_settings.py`
+  - 定义当前后端内部固定参数，例如：
+  - agent 生成分布与 topic/persona 池
+  - 关系生成概率
+  - 环境并发参数
+  - agent 动力学常数
+  - 输入输出默认文件名
+
+当前代码已经接入这些配置文件，后续如果要调研究参数，优先修改 `config/backend_settings.py`；如果要调前端可选项与范围，优先修改 `config/frontend_settings.py`。

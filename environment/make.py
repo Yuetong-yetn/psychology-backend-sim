@@ -1,11 +1,13 @@
 """环境工厂入口。
-把环境构造统一收口到一个函数里。
-这样调用方不需要直接实例化 ``SimulationEnv``。
+
+把 `SimulationEnv` 的构造统一收口到一个函数，
+便于外部脚本保持和 Gym/OASIS 类似的调用方式。
 """
 
 from Backend.environment.env import SimulationEnv
 
 
 def make(*args, **kwargs) -> SimulationEnv:
-    """仿照 OASIS 的 make 入口，统一创建环境对象。"""
+    """按约定创建一个仿真环境实例。"""
+
     return SimulationEnv(*args, **kwargs)

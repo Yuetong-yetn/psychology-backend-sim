@@ -1,13 +1,13 @@
-"""平台层公共类型。
+"""平台层公共类型定义。
 
-这里集中定义平台动作枚举，方便 environment 和 agent 共享一套动作语义。
+这里集中定义平台动作枚举，方便 environment 和 agent 共用同一套动作语义。
 """
 
 from enum import Enum
 
 
 class ActionType(str, Enum):
-    """最小互动动作集合。"""
+    """平台支持的最小动作集合。"""
 
     BROWSE_FEED = "browse_feed"
     CREATE_POST = "create_post"

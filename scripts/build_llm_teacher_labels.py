@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""为训练样本补充 LLM 教师标签。"""
+
 import argparse
 import json
 import os
@@ -16,12 +18,14 @@ from Backend.services.llm_provider import LLMProvider
 
 
 def load_samples(path: str) -> List[Dict[str, Any]]:
+    """读取样本列表，兼容外层包裹 `samples` 字段的格式。"""
     with open(path, "r", encoding="utf-8") as handle:
         payload = json.load(handle)
     return payload.get("samples", payload)
 
 
 def main() -> None:
+    """命令行入口：批量生成教师标签。"""
     parser = argparse.ArgumentParser(description="Build cached LLM teacher labels for appraisal/emotion samples.")
     parser.add_argument("--input", required=True, help="Dataset JSON from build_training_dataset.py")
     parser.add_argument("--output", required=True, help="Path to write teacher labels JSON")

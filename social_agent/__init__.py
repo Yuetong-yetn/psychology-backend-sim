@@ -1,17 +1,22 @@
-"""agent 层。
-
-这一层负责定义用户画像、动态状态、记忆和行为决策。
-"""
+"""智能体层对外导出。"""
 
 from Backend.social_agent.agent import (
     AppraisalRecord,
     AgentDecision,
-    EmotionState,
     AgentProfile,
     AgentRoundResult,
     AgentState,
+    EmotionState,
     MemoryItem,
     SimulatedAgent,
+)
+from Backend.social_agent.agent_action import PlatformActionRequest, SocialAction
+from Backend.social_agent.agent_environment import SocialEnvironment
+from Backend.social_agent.agent_graph import AgentGraph
+from Backend.social_agent.agents_generator import (
+    connect_platform_channel,
+    generate_backend_agent_graph,
+    generate_custom_agents,
 )
 from Backend.social_agent.appraisal_moe import AppraisalMoEConfig, AppraisalRouter
 from Backend.social_agent.emotion_representation import (
@@ -19,7 +24,6 @@ from Backend.social_agent.emotion_representation import (
     EmotionRepresentationModule,
 )
 
-# 对外暴露 agent 层中最常用的数据结构和核心类。
 __all__ = [
     "AppraisalRecord",
     "AgentDecision",
@@ -29,8 +33,15 @@ __all__ = [
     "AgentState",
     "MemoryItem",
     "SimulatedAgent",
+    "PlatformActionRequest",
+    "SocialAction",
+    "SocialEnvironment",
     "AppraisalMoEConfig",
     "AppraisalRouter",
+    "AgentGraph",
+    "connect_platform_channel",
+    "generate_backend_agent_graph",
+    "generate_custom_agents",
     "EmotionRepresentationConfig",
     "EmotionRepresentationModule",
 ]

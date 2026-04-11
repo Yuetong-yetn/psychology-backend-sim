@@ -1,21 +1,24 @@
-"""In-memory platform used by the social simulation backend."""
+"""仿真后端使用的内存平台。"""
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+from Backend.social_platform.action_dispatcher import PlatformActionDispatcher
 from Backend.social_platform.emotion_detector import (
     BaseEmotionDetector,
     CompositeEmotionDetector,
-    LATENT_DIM,
 )
+from Backend.social_platform.channel import Channel
+from Backend.social_platform.platform_utils import PlatformUtils
 from Backend.services.llm_provider import LLMProvider
 
 
 @dataclass
 class Platform:
-    """Minimal platform state and interaction log."""
+    """维护帖子、互动和 trace 的平台状态容器。"""
 
     feed_limit: int = 5
     current_round: int = 0
@@ -30,6 +33,7 @@ class Platform:
     mode: str = "moe"
     llm_provider: str = "ollama"
     enable_fallback: bool = True
+    channel: Channel | None = None
     emotion_detector: BaseEmotionDetector = field(default_factory=CompositeEmotionDetector)
     _post_id_seq: int = 1
     _reply_id_seq: int = 1
@@ -37,13 +41,22 @@ class Platform:
     _share_id_seq: int = 1
 
     def __post_init__(self) -> None:
+        # 平台内部也可能需要调用情绪分析和认知 provider。
         self.cognitive_provider = LLMProvider(
             llm_provider=self.llm_provider,
             mode=self.mode,
             enable_fallback=self.enable_fallback,
         )
+        self.channel = self.channel or Channel()
+        self.platform_utils = PlatformUtils(
+            emotion_detector=self.emotion_detector,
+            cognitive_provider=self.cognitive_provider,
+        )
+        self.action_dispatcher = PlatformActionDispatcher(self)
+        self._action_lock = asyncio.Lock()
 
     def reset(self, scenario_prompt: str) -> None:
+        """重置平台状态，为新一轮仿真做准备。"""
         self.current_round = 0
         self.scenario_prompt = scenario_prompt
         self.agents.clear()
@@ -58,16 +71,64 @@ class Platform:
         self._like_id_seq = 1
         self._share_id_seq = 1
 
-    def register_agent(self, agent) -> None:
-        self.agents[agent.agent_id] = agent.profile.name
+    def register_agent(self, agent=None, agent_id: int | None = None, agent_name: str | None = None) -> dict:
+        """登记平台可见的 agent 身份。"""
+        if agent is not None:
+            agent_id = int(agent.agent_id)
+            agent_name = str(agent.profile.name)
+        if agent_id is None:
+            raise ValueError("agent_id is required when agent is not provided.")
+        self.agents[int(agent_id)] = str(agent_name or f"agent_{agent_id}")
         self.traces.append(
             {
                 "round_index": self.current_round,
                 "type": "register_agent",
-                "agent_id": agent.agent_id,
-                "agent_name": agent.profile.name,
+                "agent_id": int(agent_id),
+                "agent_name": str(agent_name or f"agent_{agent_id}"),
             }
         )
+        return {"success": True, "agent_id": int(agent_id), "agent_name": self.agents[int(agent_id)]}
+
+    async def sign_up(self, agent_id: int, user_message: tuple[str, str] | tuple[str, str, str] | str) -> dict:
+        """兼容旧接口的注册入口。"""
+        if isinstance(user_message, str):
+            return self.register_agent(agent_id=agent_id, agent_name=user_message)
+        if isinstance(user_message, tuple):
+            if len(user_message) >= 2:
+                return self.register_agent(agent_id=agent_id, agent_name=str(user_message[1]))
+            if len(user_message) == 1:
+                return self.register_agent(agent_id=agent_id, agent_name=str(user_message[0]))
+        return self.register_agent(agent_id=agent_id, agent_name=f"agent_{agent_id}")
+
+    def browse_feed(self, agent_id: int) -> dict:
+        """返回某个 agent 当前可见的信息流。"""
+        return {"success": True, "feed": self.get_feed_for_agent(agent_id)}
+
+    async def running(self) -> None:
+        """持续消费通道中的平台动作请求。"""
+        while True:
+            message_id, data = await self.channel.receive_from()
+            if not isinstance(data, tuple) or len(data) < 3:
+                await self.channel.send_to((message_id, None, {"success": False, "error": "Invalid message"}))
+                continue
+
+            agent_id, message, action = data
+            action_name = str(action)
+            if action_name == "__exit__":
+                await self.channel.send_to((message_id, agent_id, {"success": True}))
+                break
+
+            try:
+                async with self._action_lock:
+                    # 平台状态是共享资源，因此串行处理动作以避免竞态条件。
+                    result = await self.action_dispatcher.dispatch(
+                        agent_id=int(agent_id) if agent_id is not None else -1,
+                        action_name=action_name,
+                        message=message,
+                    )
+            except Exception as exc:
+                result = {"success": False, "error": str(exc)}
+            await self.channel.send_to((message_id, agent_id, result))
 
     def create_post(
         self,
@@ -78,7 +139,8 @@ class Platform:
         sentiment: float,
         emotion_analysis: Optional[dict] = None,
     ) -> dict:
-        emotion_payload = self._resolve_emotion_payload(
+        """创建一条新帖子，并补齐平台侧情绪分析字段。"""
+        emotion_payload = self.platform_utils.resolve_emotion_payload(
             content=content,
             emotion=emotion,
             intensity=intensity,
@@ -116,7 +178,8 @@ class Platform:
         sentiment: float,
         emotion_analysis: Optional[dict] = None,
     ) -> dict:
-        emotion_payload = self._resolve_emotion_payload(
+        """在指定帖子下创建回复。"""
+        emotion_payload = self.platform_utils.resolve_emotion_payload(
             content=content,
             emotion=emotion,
             intensity=intensity,
@@ -143,6 +206,7 @@ class Platform:
         return reply
 
     def like_post(self, agent_id: int, post_id: int) -> dict:
+        """记录点赞；同一 agent 对同一帖子只保留一条记录。"""
         existing = next(
             (
                 item
@@ -163,7 +227,7 @@ class Platform:
         self._like_id_seq += 1
         self.likes.append(like)
 
-        post = self._find_post(post_id)
+        post = self.platform_utils.find_post(self.posts, post_id)
         if post is not None:
             post["like_count"] += 1
 
@@ -180,7 +244,8 @@ class Platform:
         content: str | None = None,
         emotion_analysis: Optional[dict] = None,
     ) -> dict:
-        original_post = self._find_post(post_id)
+        """转发原帖，并额外生成一条新的分享帖子。"""
+        original_post = self.platform_utils.find_post(self.posts, post_id)
         if original_post is None:
             raise ValueError(f"Post {post_id} not found for sharing.")
 
@@ -194,7 +259,7 @@ class Platform:
         self.shares.append(share)
         original_post["share_count"] += 1
         share_content = content or f"Shared post #{post_id}: {original_post['content']}"
-        emotion_payload = self._resolve_emotion_payload(
+        emotion_payload = self.platform_utils.resolve_emotion_payload(
             content=share_content,
             emotion=emotion,
             intensity=intensity,
@@ -233,6 +298,7 @@ class Platform:
         delta: float,
         reason: str,
     ) -> dict:
+        """记录一次社会影响事件。"""
         event = {
             "round_index": self.current_round,
             "source_agent_id": source_agent_id,
@@ -245,6 +311,7 @@ class Platform:
         return event
 
     def record_idle(self, agent_id: int, reason: str) -> None:
+        """记录本轮未执行公开动作。"""
         self.traces.append(
             {
                 "round_index": self.current_round,
@@ -255,14 +322,16 @@ class Platform:
         )
 
     def get_feed_for_agent(self, agent_id: int) -> List[dict]:
+        """为指定 agent 计算带曝光分的信息流。"""
         scored_items = []
         for item in self.posts:
-            exposure = self._score_exposure(item, agent_id)
+            exposure = self.platform_utils.score_exposure(item, agent_id, self.current_round)
             feed_item = dict(item)
             feed_item["exposure_score"] = exposure["score"]
             feed_item["exposure_features"] = exposure["features"]
             scored_items.append(feed_item)
 
+        # 先按曝光分排序，再用轮次、强度和情绪极性作为次级排序条件。
         ordered = sorted(
             scored_items,
             key=lambda item: (
@@ -277,6 +346,7 @@ class Platform:
         return ordered[: self.feed_limit]
 
     def commit_round(self, round_index: int, round_results: Dict[int, object]) -> None:
+        """提交一轮结束后的统计信息，并推进平台轮次。"""
         self.traces.append(
             {
                 "round_index": round_index,
@@ -292,6 +362,7 @@ class Platform:
         self.current_round = round_index + 1
 
     def snapshot(self) -> dict:
+        """导出平台当前完整快照。"""
         return {
             "current_round": self.current_round,
             "scenario_prompt": self.scenario_prompt,
@@ -305,103 +376,3 @@ class Platform:
             "traces": self.traces,
             "trace_size": len(self.traces),
         }
-
-    def _find_post(self, post_id: int) -> dict | None:
-        return next((post for post in self.posts if post["post_id"] == post_id), None)
-
-    def _resolve_emotion_payload(
-        self,
-        content: str,
-        emotion: str,
-        intensity: float,
-        sentiment: float,
-        emotion_analysis: Optional[dict] = None,
-    ) -> dict:
-        internal_signal = self._build_internal_signal(
-            emotion=emotion,
-            intensity=intensity,
-            sentiment=sentiment,
-            emotion_analysis=emotion_analysis,
-        )
-        analysis = self.cognitive_provider.analyze_emotion(
-            {
-                "text": content,
-                "internal_signal": internal_signal,
-            },
-            fallback_fn=lambda payload: self.emotion_detector.analyze_text(
-                str(payload.get("text", "")),
-                overrides={"internal_signal": payload.get("internal_signal")},
-            ).to_dict(),
-        )
-
-        return {
-            "emotion": analysis.get("dominant_emotion", emotion),
-            "dominant_emotion": analysis.get("dominant_emotion", emotion),
-            "intensity": float(analysis.get("intensity", intensity)),
-            "sentiment": float(analysis.get("sentiment", sentiment)),
-            "emotion_probs": dict(analysis.get("emotion_probs", {})),
-            "pad": [float(item) for item in analysis.get("pad", [0.0, 0.0, 0.0])],
-            "emotion_latent": [
-                float(item) for item in analysis.get("emotion_latent", [0.0] * LATENT_DIM)
-            ],
-        }
-
-    def _build_internal_signal(
-        self,
-        emotion: str,
-        intensity: float,
-        sentiment: float,
-        emotion_analysis: Optional[dict],
-    ) -> dict:
-        payload = {
-            "emotion": emotion,
-            "dominant_emotion": emotion,
-            "intensity": float(intensity),
-            "sentiment": float(sentiment),
-            "emotion_probs": {},
-            "pad": [float(sentiment), float(max(0.0, min(1.0, intensity))), 0.0],
-            "emotion_latent": [0.0] * LATENT_DIM,
-        }
-        if isinstance(emotion_analysis, dict):
-            payload.update(dict(emotion_analysis))
-        return payload
-
-    def _score_exposure(self, item: dict, agent_id: int) -> dict:
-        round_gap = max(0, self.current_round - item.get("round_index", 0))
-        recency = self._clamp(1.0 - round_gap * 0.18)
-        emotion_salience = self._clamp(
-            item.get("intensity", 0.0) * 0.55 + abs(item.get("sentiment", 0.0)) * 0.45
-        )
-        engagement = self._clamp(
-            item.get("like_count", 0) * 0.08 + item.get("share_count", 0) * 0.14
-        )
-        share_boost = self._clamp(0.2 if item.get("shared_post_id") is not None else 0.0)
-        novelty_hint = self._clamp(
-            0.3 + abs(item.get("sentiment", 0.0)) * 0.3 + engagement * 0.2
-        )
-        self_author_penalty = self._clamp(
-            0.18 if item.get("author_id") == agent_id else 0.0
-        )
-        exposure_score = self._clamp(
-            recency * 0.34
-            + emotion_salience * 0.24
-            + engagement * 0.18
-            + share_boost * 0.1
-            + novelty_hint * 0.14
-            - self_author_penalty
-        )
-        return {
-            "score": exposure_score,
-            "features": {
-                "recency": recency,
-                "emotion_salience": emotion_salience,
-                "engagement": engagement,
-                "share_boost": share_boost,
-                "novelty_hint": novelty_hint,
-                "self_author_penalty": self_author_penalty,
-            },
-        }
-
-    @staticmethod
-    def _clamp(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
-        return max(minimum, min(maximum, float(value)))

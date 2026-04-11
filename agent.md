@@ -1,260 +1,159 @@
-# Agent
+# AGENT.md - Psychology Backend 开发约定
 
-`social_agent/agent.py` 是后端中承载 `E-CAM-T` 的核心模块，负责从观察输入到行为输出的完整心理处理链。
+## 项目定位
 
-## 主链
+Psychology Backend 是一个面向社会议题传播与群体心理仿真的后端工程。
+核心职责是在给定场景、agent 画像、关系网络与种子内容的前提下，模拟多轮平台互动、情绪演化与行为决策，并导出可分析的仿真快照。
 
-`SimulatedAgent.run_round()`：
+agent 之间没有显式对话协议，主要通过平台内容与曝光链路间接影响彼此：
 
-```text
-receive_information
--> update_state
--> decide_action
--> build_behavior_output
--> act
-```
+`浏览 feed -> appraisal -> 情绪/图式更新 -> 平台行为 -> 影响其他 agent`
 
-`update_state()`：
+## 架构分层
 
-```text
-extract_environment_signal
--> build_appraisal
--> update_cam_memory
--> update_ecam_t_state
--> update_emotion
--> update_schema
--> rebalance
--> update_beliefs_and_intentions
-```
+- `environment/`：环境生命周期、轮次调度、快照导出
+- `social_agent/`：agent 心理状态、appraisal、行为决策
+- `social_platform/`：平台状态、feed、动作分发、trace
+- `services/`：MoE / provider 调用与 fallback
+- `config/`：前后端参数配置
 
-这条链路对应五层结构：
+## 关键文件
 
-1. 感知输入层
-2. 认知评价层
-3. 预测与确认层
-4. 心理状态持久层
-5. 决策执行层
+- `social_agent/agent.py`：agent 主体，定义 profile、state、appraisal、decision、round result
+- `social_agent/agent_action.py`：把 agent 决策映射为平台动作
+- `social_agent/agent_environment.py`：将 scenario 和 feed 组织成观察文本
+- `social_platform/platform.py`：平台数据结构与交互入口
+- `environment/env.py`：多轮仿真调度
+- `run_backend_input.py`：从 JSON payload 直接运行仿真
+- `viewer.html`：调试结果查看器
 
-## AgentState
+## 单轮执行顺序
 
-`AgentState` 中与 E-CAM-T 对齐的核心成员包括：
+单个 agent 的一轮执行遵循以下顺序：
 
-### 输入与中间信号
+1. 读取当前 `feed` 与 `scenario_prompt`
+2. 将外部输入压缩为环境事件信号
+3. 进行 appraisal 融合
+4. 更新情绪状态、schema、CAM memory、equilibrium
+5. 形成 beliefs / intentions
+6. 产出决策并投影为平台动作
 
-- `epsilon`
-- `zeta`
+`agent.py` 的主入口是 `SimulatedAgent.run_round()`。
+
+## AgentState 约定
+
+`AgentState` 现在按“主状态 + 派生字段”组织。
+
+### 主状态字段
+
+- `emotion`：兼容旧输入/输出的标量情绪效价
+- `emotion_state`：规范的多维情绪状态，包含 `emotion_probs / pad / latent / dominant_label`
+- `stress`：当前压力水平
+- `expectation`：对本轮表现的滚动预期
+- `satisfaction`：跨轮累计的主观结果评价
+- `dopamine_level`：奖励驱动基线
+- `performance_prediction`：用于预测误差更新的表现预测
+- `influence_score`：平台影响力
+- `schemas`：支持倾向、威胁敏感、自我效能等图式
+- `schema_flexibility`：顺应新信息的倾向
+- `equilibrium`：当前整合后的心理稳态
+- `equilibrium_index`：更快的稳态扰动指标
+- `last_cognitive_mode`：最近一次主要认知模式
+- `empathy_level`：共情倾向
+- `empathized_negative_emotion`：对外部负面情绪的当前共情吸收
+- `dopamine_prediction_error`：最近一轮奖励预测误差
+- `moral_reward`：亲社会/规范一致带来的内部奖励
+- `social_influence_reward`：预期社会影响收益
+- `semantic_similarity`：当前事件与 CAM memory 的语义相似度
+- `explicit_tom_triggered`：是否触发显式 ToM 式观察
+- `beliefs / desires / intentions`：认知产物
+- `knowledge`：结构化情境知识与 CAM 摘要
+- `epsilon`：不可预测性 / surprise 信号
+- `zeta`：有符号目标相关性信号
+- `last_appraisal`：最近一轮 appraisal
+- `appraisal_history`：短窗口 appraisal 历史
+- `last_contagion_pad / last_contagion_vector`：最近一轮情绪传染缓存
+- `appraisal_runtime / latent_runtime`：模块运行元数据
+- `memory`：最近记忆窗口
+- `schemata_graph`：CAM memory graph
+
+### 已移除的冗余状态字段
+
+以下字段不再作为独立变量存储，而是改为即时推导：
+
+- `dominant_emotion_label`
+  由 `emotion_state.dominant_label` 推导
 - `coping_potential`
+  由 `last_appraisal.coping_potential` 推导
 - `performance`
+  由 `last_appraisal.performance` 推导
 - `confirmation`
-- `semantic_similarity`
-- `empathized_negative_emotion`
-
-### 持久心理状态
-
-- `expectation`
-- `satisfaction`
-- `dopamine_level`
-- `dopamine_prediction_error`
-- `performance_prediction`
+  由 `last_appraisal.confirmation` 推导
 - `belief_embeddings`
-- `equilibrium_index`
-- `schemata_graph`
-- `beliefs`
-- `desires`
-- `intentions`
-- `knowledge`
+  改为按需从 `schemata_graph.global_embedding()` 获取
+- `e_t`
+  当前事件向量不再作为冗余状态缓存
+- `m_t`
+  记忆向量不再作为冗余状态缓存
 
-### 决策与奖励
+这条约定的目标是：
 
-- `moral_reward`
-- `social_influence_reward`
-- `explicit_tom_triggered`
+- 一个心理量只保留一个主来源
+- 快照中允许导出派生值
+- 但派生值不再写回 `AgentState` 形成镜像字段
 
-## CAM
+## 输出与调试
 
-CAM 通过 `social_agent/cam_memory.py` 提供图结构：
+当前 agent 导出重点包括：
 
-- `CAMNode`
-  记录事件内容、embedding、时间步、情感效价与 cluster 归属。
-- `CAMMemoryGraph`
-  记录节点、边与 cluster。
-- `CAMCluster`
-  保存 cluster summary 与 centroid。
+- `emotion_state`
+- `appraisal_history`
+- `beliefs / desires / intentions`
+- `memory`
+- `appraisal_runtime`
+- `latent_runtime`
 
-CAM 更新过程包括：
+因此新增逻辑时，优先保证：
 
-1. 使用 `semantic_weight * cos_sim + (1 - semantic_weight) * gaussian_time_decay` 计算事件相似度。
-2. 若不存在高于阈值的邻居，则创建新节点并执行 `Accommodation`。
-3. 若存在匹配邻居，则新节点与匹配节点连边并执行 `Assimilation`。
-4. 若单个节点连接多个原本不连通的语义簇，则复制该节点，实现“一事多议”。
-5. 按连通分量更新 cluster。
-6. 根据 cluster 内的近期事件生成层级摘要。
+- 状态可解释
+- 快照可追踪
+- 导出字段与真实运行逻辑一致
 
-`schemata_graph` 会直接进入导出快照。
+## 平台动作约定
 
-## Appraisal
+当前主要平台动作包括：
 
-Appraisal 由 `AppraisalRouter` 与 `MoE experts` 驱动，输出字段包括：
-
-- `relevance`
-- `valence`
-- `goal_conduciveness`
-- `controllability`
-- `certainty`
-- `coping_potential`
-- `unpredictability`
-- `goal_relevance_signal`
-- `performance`
-- `confirmation`
-
-这些字段作为中间信号流入 ECT、CAM 与 ToM/BDI。
-
-## ECT 与多巴胺链
-
-`_update_ecam_t_state()` 负责将 appraisal 与事件信号转换为长期状态。
-
-### ECT
-
-更新公式为：
-
-```text
-confirmation = performance - expectation
-satisfaction = satisfaction + eta * confirmation
-expectation = (1 - alpha_E) * expectation + alpha_E * performance
-```
-
-### 共情利他与多巴胺
-
-更新公式为：
-
-```text
-firing_rate = performance - empathized_negative_emotion * empathy_level * k + positive_goal_bonus
-dopamine_prediction_error = firing_rate - performance_prediction
-performance_prediction = performance_prediction + lambda * dopamine_prediction_error
-dopamine_level = dopamine_level + gamma * dopamine_prediction_error + goal_gain * zeta
-moral_reward = performance + empathy_level * altruistic_drive
-```
-
-其中：
-
-- `empathized_negative_emotion` 来自可见 `feed` 中他人负向情绪的加权估计
-- 他人负向情绪增强时，`dopamine_prediction_error` 会下降
-- 该信号会提高 `support_others` 意图与回复倾向
-
-## LG-ToM 与显式 ToM
-
-`_update_beliefs_and_intentions()` 构造轻量 ToM/BDI：
-
-- `beliefs`
-  环境效价、社会压力、目标一致、他人是否需要支持、社会影响奖励等。
-- `desires`
-  从 persona 初始化的稳定偏好。
-- `intentions`
-  `observe / participate / amplify / withdraw / support_others`
-
-### 显式 ToM 触发
-
-满足以下任一条件时，`explicit_tom_triggered = true`：
-
-- `epsilon > tau_unpredictability`
-- 观察到的 `feed` 分歧度较高
-
-触发后，agent 会优先提高观察和澄清倾向。
-
-### Social Influence Reward
-
-`social_influence_reward` 的近似实现为：
-
-1. 用帖子文本 `embedding` 近似对方当前外显信念。
-2. 用 `belief_embeddings` 构造发送信息后的条件信念。
-3. 用两者余弦差异作为影响奖励。
-
-该奖励提升 `create_post`、`share_post`、`reply_post` 的分值。
-
-## 决策层
-
-`decide_action()` 由三类信号共同约束：
-
-- appraisal / emotion / schema 分数
-- `moral_reward`
-- `social_influence_reward`
-
-决策同时考虑：
-
-- 是否需要先观察
-- 是否需要支持其他 agent
-- 当前表达是否值得为了改变他人信念而发生
-
-## 输出
-
-agent 产生两层输出。
-
-### 平台执行动作
-
-- `browse_feed`
 - `create_post`
-- `reply_post`
+- `create_comment`
+- `repost`
+- `quote_post`
 - `like_post`
-- `share_post`
+- `follow`
+- `search_posts`
+- `unfollow`
+- `mute`
+- `do_nothing`
 
-### 心理解释层输出
+注意：
 
-- `suggested_action`
-- `suggested_actions`
-- `behavior_output`
+- agent 内部 `decision.action` 与平台建议动作 `suggested_action` 是两层语义
+- 新增平台动作时，要同步评估 trace、feed 可见性、snapshot 导出是否受影响
 
-`suggested_actions` 按 OASIS 风格规则组织。
+## Provider / Fallback 约定
 
-`behavior_output` 包括：
+- `mode='moe'`：优先走 MoE 路径，可调用外部 provider
+- `mode='fallback'`：直接走本地逻辑
+- `llm_provider='ollama|deepseek'`：仅指定外部 provider 类型，不改变上层 mode
 
-- `primary_action`
-- `stimulus_excerpt`
-- `public_behavior_summary`
-- `simulated_public_content`
-- `state_hint`
-- `cam_summary`
-- `explicit_tom_triggered`
-- `backend_action`
-- `round_index`
+新增 provider 或 expert 时，需要保证：
 
-访问：
+- 输入输出保持 JSON 友好
+- provider 失败时不阻断主仿真流程
+- 运行来源、fallback 状态等元信息可被记录
 
-- API 文档: `http://localhost:8000/docs`
-- 调试页: `http://localhost:8000/debug/viewer`
+## 开发要求
 
-## API Provider
-
-agent 的认知生成与情绪 latent 生成通过 `CognitiveMoEProvider` 调用外部 provider，支持：
-
-- `ollama`
-- `deepseek`
-
-provider 选择入口：
-
-```bash
-LLM_PROVIDER_NAME=ollama
-```
-
-或：
-
-```bash
-LLM_PROVIDER_NAME=deepseek
-```
-
-URL 填写位置：
-
-- Ollama: `OLLAMA_BASE_URL`
-- DeepSeek: `DEEPSEEK_BASE_URL`
-
-常用相关环境变量：
-
-```bash
-OLLAMA_ENABLED=1
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=llama3.1:8b-instruct
-
-DEEPSEEK_ENABLED=1
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_API_KEY=your_api_key_here
-DEEPSEEK_MODEL=deepseek-chat
-```
+- 新增心理变量时，必须同步考虑初始化、单轮更新、导出结构与调试可读性
+- 如果一个值能够稳定从另一个主状态字段推导出来，优先做派生字段，不要再加镜像状态
+- 修改 `AgentState` 后，必须同步更新 `agent.py` 的注释与本文件文档
+- 新增导出字段后，要确认 `viewer.html` 与调试接口不会因缺字段报错

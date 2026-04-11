@@ -14,6 +14,9 @@ import math
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Optional
 
+from Backend.config.backend_settings import AGENT_DYNAMICS
+from Backend.social_agent.agent_action import SocialAction
+from Backend.social_agent.agent_environment import SocialEnvironment
 from Backend.social_agent.appraisal_moe import AppraisalMoEConfig, AppraisalRouter
 from Backend.social_agent.cam_memory import CAMMemoryGraph
 from Backend.social_agent.emotion_representation import (
@@ -21,7 +24,9 @@ from Backend.social_agent.emotion_representation import (
     EmotionRepresentationConfig,
     EmotionRepresentationModule,
 )
+from Backend.social_platform.channel import Channel
 
+# 这些情绪标签与平台层保持一致，便于共享概率分布和 PAD 投影。
 
 EMOTION_SENTIMENT = {
     "anger": -0.8,
@@ -66,7 +71,23 @@ class EmotionLatentEncoder:
         schema_summary: Optional[Dict[str, float]] = None,
         text_context: Optional[Dict[str, object]] = None,
     ) -> List[float]:
+        """将多源情绪线索编码为统一潜在向量。
+
+        Args:
+            emotion_probs: 离散情绪概率分布。
+            pad: PAD 三维情绪投影。
+            sentiment: 带符号情感极性。
+            intensity: 情绪强度。
+            appraisal_summary: 可选 appraisal 摘要。
+            contagion_summary: 可选情绪感染摘要。
+            schema_summary: 可选 schema 摘要。
+            text_context: 可选文本上下文特征。
+
+        Returns:
+            List[float]: 归一化后的潜在向量。
+        """
         # 兼容旧调用点：静态编码器继续可用，但内部转发到新的可插拔表示模块。
+        # 兼容旧调用点：静态编码器继续可用，但内部转发到新的表示模块。
         module = EmotionRepresentationModule(EmotionRepresentationConfig(mode="fallback"))
         return module.encode(
             emotion_probs=emotion_probs,
@@ -114,6 +135,22 @@ class EmotionState:
         contagion_summary: Optional[Dict[str, float]] = None,
         schema_summary: Optional[Dict[str, float]] = None,
     ) -> "EmotionState":
+        """根据情绪投影信息构造标准化情绪状态。
+
+        Args:
+            signed_valence: 带符号情感极性。
+            intensity: 情绪强度。
+            dominant_label: 主导情绪标签。
+            pad: 可选 PAD 三维向量。
+            latent: 可选潜在情绪向量。
+            emotion_probs: 可选离散情绪分布。
+            appraisal_summary: appraisal 摘要。
+            contagion_summary: 感染摘要。
+            schema_summary: schema 摘要。
+
+        Returns:
+            EmotionState: 构造完成的情绪状态对象。
+        """
         probs = emotion_probs or _build_emotion_probs(dominant_label, signed_valence, intensity)
         resolved_pad = pad or [
             _clamp_signed(signed_valence),
@@ -161,7 +198,23 @@ class AppraisalRecord:
 
     @property
     def goal_congruence(self) -> float:
+        """返回与旧字段兼容的目标一致性值。"""
         return self.goal_conduciveness
+
+    @property
+    def epsilon_t(self) -> float:
+        """返回与旧字段兼容的 epsilon 值。"""
+        return self.unpredictability
+
+    @property
+    def zeta_t(self) -> float:
+        """返回与旧字段兼容的 zeta 值。"""
+        return self.goal_relevance_signal
+
+    @property
+    def P_t(self) -> float:
+        """返回与旧字段兼容的表现代理值。"""
+        return self.coping_potential
 
 
 @dataclass
@@ -177,57 +230,60 @@ class AgentProfile:
 
 @dataclass
 class AgentState:
+    # 核心字段速记：
+    # `emotion` 是标量情绪方向，`emotion_state` 是完整多维情绪表征。
+    # `schemas` 保存支持倾向 / 威胁敏感度 / 自我效能这三个核心图式参数。
+    # `equilibrium` / `equilibrium_index` 表示内部平衡程度。
+    # `epsilon` 表示不可预测性，`zeta` 表示目标相关显著性。
+    # `last_contagion_pad` / `last_contagion_vector` 记录最近一次情绪感染结果。
+    # `appraisal_runtime` / `latent_runtime` 记录 provider 或 fallback 的运行元信息。
     """agent 的动态心理状态。"""
 
-    emotion: float = 0.0
-    emotion_state: Optional[EmotionState] = None
-    stress: float = 0.0
-    expectation: float = 0.5
-    satisfaction: float = 0.0
-    dopamine_level: float = 0.5
-    performance_prediction: float = 0.5
-    influence_score: float = 0.5
+    emotion: float = 0.0  # 标量情绪值。
+    emotion_state: Optional[EmotionState] = None  # 多维情绪状态。
+    stress: float = 0.0  # 当前压力。
+    expectation: float = 0.5  # 当前预期。
+    satisfaction: float = 0.0  # 当前满意度。
+    dopamine_level: float = 0.5  # 当前多巴胺。
+    performance_prediction: float = 0.5  # 表现预测值。
+    influence_score: float = 0.5  # 当前影响力。
     schemas: Dict[str, float] = field(
         default_factory=lambda: {
             "support_tendency": 0.5,
             "threat_sensitivity": 0.5,
             "self_efficacy": 0.5,
         }
-    )
-    schema_flexibility: float = 0.5
-    equilibrium: float = 0.7
-    equilibrium_index: float = 0.7
-    last_cognitive_mode: str = "equilibrium"
-    dominant_emotion_label: str = "calm"
-    empathy_level: float = 0.55
-    empathized_negative_emotion: float = 0.0
-    dopamine_prediction_error: float = 0.0
-    moral_reward: float = 0.5
-    social_influence_reward: float = 0.0
-    semantic_similarity: float = 0.0
-    explicit_tom_triggered: bool = False
-    belief_embeddings: List[float] = field(default_factory=list)
-    beliefs: Dict[str, float] = field(default_factory=dict)
-    desires: Dict[str, float] = field(default_factory=dict)
-    intentions: Dict[str, float] = field(default_factory=dict)
-    knowledge: Dict[str, object] = field(default_factory=dict)
-    epsilon: float = 0.0
-    zeta: float = 0.0
-    coping_potential: float = 0.5
-    performance: float = 0.5
-    confirmation: float = 0.0
-    last_appraisal: Optional[AppraisalRecord] = None
-    appraisal_history: List[AppraisalRecord] = field(default_factory=list)
-    last_contagion_pad: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])
-    last_contagion_vector: List[float] = field(default_factory=lambda: [0.0] * LATENT_DIM)
-    appraisal_runtime: Dict[str, object] = field(default_factory=dict)
-    latent_runtime: Dict[str, object] = field(default_factory=dict)
-    memory: List[MemoryItem] = field(default_factory=list)
-    schemata_graph: CAMMemoryGraph = field(default_factory=CAMMemoryGraph)
+    )  # 当前图式。
+    schema_flexibility: float = 0.5  # 图式可塑性。
+    equilibrium: float = 0.7  # 当前稳态。
+    equilibrium_index: float = 0.7  # 快速稳态指标。
+    last_cognitive_mode: str = "equilibrium"  # 最近认知模式。
+    empathy_level: float = 0.55  # 共情水平。
+    empathized_negative_emotion: float = 0.0  # 共情到的负面情绪。
+    dopamine_prediction_error: float = 0.0  # 多巴胺预测误差。
+    moral_reward: float = 0.5  # 道德奖励。
+    social_influence_reward: float = 0.0  # 社会影响奖励。
+    semantic_similarity: float = 0.0  # 语义相似度。
+    explicit_tom_triggered: bool = False  # 是否触发显式 ToM。
+    beliefs: Dict[str, float] = field(default_factory=dict)  # 当前信念。
+    desires: Dict[str, float] = field(default_factory=dict)  # 稳定动机。
+    intentions: Dict[str, float] = field(default_factory=dict)  # 当前意图。
+    knowledge: Dict[str, object] = field(default_factory=dict)  # 当前知识摘要。
+    epsilon: float = 0.0  # 不可预测性。
+    zeta: float = 0.0  # 目标相关信号。
+    last_appraisal: Optional[AppraisalRecord] = None  # 最近 appraisal。
+    appraisal_history: List[AppraisalRecord] = field(default_factory=list)  # appraisal 历史。
+    last_contagion_pad: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0])  # 最近传染 PAD。
+    last_contagion_vector: List[float] = field(default_factory=lambda: [0.0] * LATENT_DIM)  # 最近传染 latent。
+    appraisal_runtime: Dict[str, object] = field(default_factory=dict)  # appraisal 运行信息。
+    latent_runtime: Dict[str, object] = field(default_factory=dict)  # latent 运行信息。
+    memory: List[MemoryItem] = field(default_factory=list)  # 最近记忆。
+    schemata_graph: CAMMemoryGraph = field(default_factory=CAMMemoryGraph)  # CAM 记忆图。
 
     def __post_init__(self) -> None:
+        """补齐状态缺省项，并对关键变量做初始化规范化。"""
         if self.emotion_state is None:
-            inferred_label = self.dominant_emotion_label or _infer_label_from_valence(self.emotion)
+            inferred_label = _infer_label_from_valence(self.emotion)
             self.emotion_state = EmotionState.from_projection(
                 signed_valence=self.emotion,
                 intensity=abs(self.emotion),
@@ -235,10 +291,7 @@ class AgentState:
             )
         else:
             self.emotion = _clamp_signed(self.emotion_state.signed_valence)
-            self.dominant_emotion_label = self.emotion_state.dominant_label
         self.equilibrium_index = _clamp(self.equilibrium_index if self.equilibrium_index else self.equilibrium)
-        if not self.belief_embeddings:
-            self.belief_embeddings = [0.0] * E_CAM_T_EMBED_DIM
         if not self.desires:
             self.desires = {
                 "affiliation": 0.55,
@@ -270,53 +323,32 @@ class AgentState:
             }
 
     @property
-    def belief_embedding(self) -> List[float]:
-        return self.belief_embeddings
-
-    @belief_embedding.setter
-    def belief_embedding(self, value: List[float]) -> None:
-        self.belief_embeddings = value
-
-    @property
-    def last_unpredictability(self) -> float:
-        return self.epsilon
-
-    @last_unpredictability.setter
-    def last_unpredictability(self, value: float) -> None:
-        self.epsilon = value
+    def dominant_emotion_label(self) -> str:
+        """返回当前主导情绪标签。"""
+        if self.emotion_state is not None:
+            return self.emotion_state.dominant_label
+        return _infer_label_from_valence(self.emotion)
 
     @property
-    def last_goal_conduciveness(self) -> float:
-        return self.zeta
-
-    @last_goal_conduciveness.setter
-    def last_goal_conduciveness(self, value: float) -> None:
-        self.zeta = value
-
-    @property
-    def last_coping_potential(self) -> float:
-        return self.coping_potential
-
-    @last_coping_potential.setter
-    def last_coping_potential(self, value: float) -> None:
-        self.coping_potential = value
+    def coping_potential(self) -> float:
+        """返回当前轮 appraisal 的应对潜力。"""
+        if self.last_appraisal is not None:
+            return _clamp(self.last_appraisal.coping_potential)
+        return 0.5
 
     @property
-    def last_performance(self) -> float:
-        return self.performance
-
-    @last_performance.setter
-    def last_performance(self, value: float) -> None:
-        self.performance = value
+    def performance(self) -> float:
+        """返回当前轮 appraisal 的表现估计。"""
+        if self.last_appraisal is not None:
+            return _clamp(self.last_appraisal.performance)
+        return 0.5
 
     @property
-    def last_confirmation(self) -> float:
-        return self.confirmation
-
-    @last_confirmation.setter
-    def last_confirmation(self, value: float) -> None:
-        self.confirmation = value
-
+    def confirmation(self) -> float:
+        """返回当前轮 confirmation 信号。"""
+        if self.last_appraisal is not None:
+            return _clamp_signed(self.last_appraisal.confirmation)
+        return 0.0
 
 @dataclass
 class AgentDecision:
@@ -343,6 +375,7 @@ class AgentRoundResult:
     behavior_output: Dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
+        """将单轮结果转换为可序列化字典。"""
         return {
             "profile": asdict(self.profile),
             "state": {
@@ -357,7 +390,6 @@ class AgentRoundResult:
                 "schemas": self.state.schemas,
                 "schema_flexibility": self.state.schema_flexibility,
                 "equilibrium_index": self.state.equilibrium_index,
-                "delta_eq": self.state.equilibrium_index,
                 "last_cognitive_mode": self.state.last_cognitive_mode,
                 "dominant_emotion_label": self.state.dominant_emotion_label,
                 "empathy_level": self.state.empathy_level,
@@ -367,7 +399,6 @@ class AgentRoundResult:
                 "social_influence_reward": self.state.social_influence_reward,
                 "semantic_similarity": self.state.semantic_similarity,
                 "explicit_tom_triggered": self.state.explicit_tom_triggered,
-                "belief_embeddings": self.state.belief_embeddings,
                 "beliefs": self.state.beliefs,
                 "desires": self.state.desires,
                 "intentions": self.state.intentions,
@@ -390,7 +421,6 @@ class AgentRoundResult:
                 "appraisal_runtime": dict(self.state.appraisal_runtime),
                 "latent_runtime": dict(self.state.latent_runtime),
                 "memory": [asdict(item) for item in self.state.memory],
-                "schemata_graph": self.state.schemata_graph.to_dict(),
             },
             "decision": asdict(self.decision),
             "behavior_output": dict(self.behavior_output),
@@ -400,21 +430,22 @@ class AgentRoundResult:
 class SimulatedAgent:
     """带认知-情绪耦合的最小 social agent。"""
 
-    contagion_weight: float = 0.18
-    base_schema_rate: float = 0.16
-    emotion_valence_bias: float = 0.28
-    emotion_uncertainty_bias: float = 0.22
-    emotion_control_bias: float = 0.18
-    contagion_threat_gain: float = 0.08
-    contagion_efficacy_loss: float = 0.06
-    ect_eta: float = 0.35
-    ect_alpha: float = 0.25
-    dopamine_gamma: float = 0.22
-    prediction_lambda: float = 0.35
-    dopamine_goal_gain: float = 0.12
-    tau_unpredictability: float = 0.72
-    equilibrium_penalty: float = 0.08
-    equilibrium_recovery: float = 0.02
+    contagion_weight: float = AGENT_DYNAMICS.contagion_weight
+    beta_m: float = AGENT_DYNAMICS.beta_m
+    emotion_valence_bias: float = AGENT_DYNAMICS.emotion_valence_bias
+    emotion_uncertainty_bias: float = AGENT_DYNAMICS.emotion_uncertainty_bias
+    emotion_control_bias: float = AGENT_DYNAMICS.emotion_control_bias
+    contagion_threat_gain: float = AGENT_DYNAMICS.contagion_threat_gain
+    contagion_efficacy_loss: float = AGENT_DYNAMICS.contagion_efficacy_loss
+    eta: float = AGENT_DYNAMICS.eta
+    alpha_E: float = AGENT_DYNAMICS.alpha_E
+    gamma_DA: float = AGENT_DYNAMICS.gamma_DA
+    lambda_pred: float = AGENT_DYNAMICS.lambda_pred
+    kappa_zeta: float = AGENT_DYNAMICS.kappa_zeta
+    tau_epsilon: float = AGENT_DYNAMICS.tau_epsilon
+    kappa_eq: float = AGENT_DYNAMICS.kappa_eq
+    eq_recovery: float = AGENT_DYNAMICS.eq_recovery
+    lambda_S: float = AGENT_DYNAMICS.lambda_S
 
     def __init__(
         self,
@@ -424,10 +455,18 @@ class SimulatedAgent:
         llm_provider: str = "ollama",
         enable_fallback: bool = True,
         checkpoint_dir: Optional[str] = None,
+        channel: Channel | None = None,
+        agent_graph: object | None = None,
     ):
+        """初始化智能体实例及其认知模块。"""
         self.agent_id = profile.agent_id
         self.profile = profile
         self.state = state or AgentState()
+        self.channel = channel
+        self.agent_graph = agent_graph
+        self.runtime_platform = None
+        self.action = SocialAction(agent_id=self.agent_id, owner=self, channel=channel)
+        self.environment = SocialEnvironment(agent_id=self.agent_id, action=self.action)
         self.state.desires = self._initialize_desires(self.state.desires)
         self.state.empathy_level = self._initialize_empathy_level(self.state.empathy_level)
         public_mode = "fallback" if mode == "fallback" else "moe"
@@ -465,6 +504,64 @@ class SimulatedAgent:
             "fallback_reason": "mode_forced_fallback" if public_mode == "fallback" else None,
         }
 
+    def bind_runtime(
+        self,
+        *,
+        channel: Channel | None = None,
+        agent_graph: object | None = None,
+        platform: object | None = None,
+    ) -> None:
+        """在运行期绑定平台、通道和关系图对象。"""
+        if channel is not None:
+            self.channel = channel
+            self.action.bind(channel=channel)
+        if agent_graph is not None:
+            self.agent_graph = agent_graph
+        if platform is not None:
+            self.runtime_platform = platform
+        # `action` 和 `environment` 都依赖当前 agent 实例本身，因此最后统一回绑。
+        self.action.bind(owner=self)
+        self.environment.bind(action=self.action)
+
+    def remember(
+        self,
+        *,
+        round_index: int,
+        source: str,
+        content: str,
+        valence: float,
+    ) -> None:
+        """写入一条短期记忆，并截断记忆窗口长度。"""
+        self.state.memory.append(
+            MemoryItem(
+                round_index=round_index,
+                source=source,
+                content=content,
+                valence=valence,
+            )
+        )
+        self.state.memory = self.state.memory[-12:]
+
+    def build_emotion_state_projection(self) -> EmotionState:
+        """返回当前状态对应的标准化情绪投影。"""
+        return self.state.emotion_state or EmotionState.from_projection(
+            signed_valence=self.state.emotion,
+            intensity=self._emotion_intensity(),
+            dominant_label=self.state.dominant_emotion_label,
+        )
+
+    def emotion_intensity(self) -> float:
+        """返回当前情绪强度。"""
+        return self._emotion_intensity()
+
+    def platform_emotion_payload(self) -> dict:
+        """导出供平台层消费的简化情绪载荷。"""
+        return self._emotion_state_to_platform_payload()
+
+    def clamp(self, value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
+        """提供实例级数值裁剪便捷入口。"""
+        return self._clamp(value, minimum=minimum, maximum=maximum)
+
     def receive_information(
         self,
         round_index: int,
@@ -472,6 +569,7 @@ class SimulatedAgent:
         feed: List[dict],
     ) -> None:
         """接收外部信息、写入记忆，并执行情绪传播。"""
+        # 先抽取环境信号，再把场景和高曝光 feed 写入短期记忆。
         signal = self._extract_environment_signal(feed, scenario_prompt)
         self._apply_emotion_contagion(feed)
         self.state.memory.append(
@@ -495,6 +593,7 @@ class SimulatedAgent:
 
     def update_state(self, feed: List[dict], scenario_prompt: str) -> None:
         """按固定顺序更新内部状态。"""
+        # 这里是 agent 的核心状态流水线，顺序基本对应心理加工阶段。
         event = self._extract_environment_signal(feed, scenario_prompt)
         appraisal = self._build_appraisal(event, feed)
         self._update_cam_memory(event)
@@ -506,7 +605,6 @@ class SimulatedAgent:
         self.state.last_appraisal = appraisal
         self.state.appraisal_history.append(appraisal)
         self.state.appraisal_history = self.state.appraisal_history[-8:]
-        self.state.dominant_emotion_label = appraisal.dominant_emotion
 
     def decide_action(self, feed: List[dict]) -> AgentDecision:
         """根据 appraisal 和情绪调节后的 action score 选择行为。"""
@@ -562,6 +660,7 @@ class SimulatedAgent:
         hottest = feed[0]
         target_agent_id = hottest["author_id"]
 
+        # 不同行为分值由 appraisal、PAD、latent 和社会奖励共同决定。
         browse_score = self._clamp(
             (1 - self.state.equilibrium) * 0.35
             + (1 - appraisal.certainty) * 0.25
@@ -608,6 +707,7 @@ class SimulatedAgent:
             + max(0.0, latent[12]) * 0.04
             + social_influence_reward * 0.22
         )
+        # 显式 ToM 与外部建议会对行为分值再做一轮偏置修正。
         if self.state.explicit_tom_triggered and altruistic_drive < 0.25:
             create_score = self._clamp(create_score - 0.06)
             reply_score = self._clamp(reply_score - 0.03)
@@ -714,115 +814,29 @@ class SimulatedAgent:
             },
         )
 
-    def act(self, decision: AgentDecision, platform) -> None:
-        """把内部决策落到平台动作上。"""
-        emotion_label = self.state.dominant_emotion_label
-        emotion_state = self.state.emotion_state or EmotionState.from_projection(
-            signed_valence=self.state.emotion,
-            intensity=self._emotion_intensity(),
-            dominant_label=self.state.dominant_emotion_label,
-        )
-        emotion_intensity = max(self._emotion_intensity(), emotion_state.intensity)
+    def build_platform_actions(self, decision: AgentDecision) -> List[dict]:
+        """Project a decision into platform action requests."""
+        return [
+            {"action": item.action, "payload": dict(item.payload)}
+            for item in self.action.build_action_requests(decision)
+        ]
 
-        if decision.action == "create_post":
-            post = platform.create_post(
-                author_id=self.agent_id,
-                content=decision.content,
-                emotion=emotion_label,
-                intensity=emotion_intensity,
-                sentiment=self.state.emotion,
-                emotion_analysis=self._emotion_state_to_platform_payload(),
-            )
-            self.state.influence_score = self._clamp(self.state.influence_score + 0.05)
-            self.state.memory.append(
-                MemoryItem(
-                    round_index=platform.current_round,
-                    source="self_post",
-                    content=post["content"],
-                    valence=self.state.emotion,
-                )
-            )
-            return
-
-        if decision.action == "reply_post" and decision.target_post_id is not None:
-            platform.reply_post(
-                author_id=self.agent_id,
-                post_id=decision.target_post_id,
-                content=decision.content,
-                emotion=emotion_label,
-                intensity=emotion_intensity,
-                sentiment=self.state.emotion,
-                emotion_analysis=self._emotion_state_to_platform_payload(),
-            )
-            if decision.target_agent_id is not None:
-                platform.apply_influence(
-                    source_agent_id=self.agent_id,
-                    target_agent_id=decision.target_agent_id,
-                    delta=decision.influence_delta,
-                    reason=decision.reason,
-                )
-            return
-
-        if decision.action == "like_post" and decision.target_post_id is not None:
-            platform.like_post(agent_id=self.agent_id, post_id=decision.target_post_id)
-            if decision.target_agent_id is not None and decision.target_agent_id != self.agent_id:
-                platform.apply_influence(
-                    source_agent_id=self.agent_id,
-                    target_agent_id=decision.target_agent_id,
-                    delta=decision.influence_delta,
-                    reason=decision.reason,
-                )
-            self.state.influence_score = self._clamp(self.state.influence_score + 0.01)
-            return
-
-        if decision.action == "share_post" and decision.target_post_id is not None:
-            shared_post = platform.share_post(
-                agent_id=self.agent_id,
-                post_id=decision.target_post_id,
-                content=decision.content,
-                emotion=emotion_label,
-                intensity=emotion_intensity,
-                sentiment=self.state.emotion,
-                emotion_analysis=self._emotion_state_to_platform_payload(),
-            )
-            if decision.target_agent_id is not None and decision.target_agent_id != self.agent_id:
-                platform.apply_influence(
-                    source_agent_id=self.agent_id,
-                    target_agent_id=decision.target_agent_id,
-                    delta=decision.influence_delta,
-                    reason=decision.reason,
-                )
-            self.state.influence_score = self._clamp(self.state.influence_score + 0.04)
-            self.state.memory.append(
-                MemoryItem(
-                    round_index=platform.current_round,
-                    source="self_share",
-                    content=shared_post["content"],
-                    valence=self.state.emotion,
-                )
-            )
-            return
-
-        if decision.action == "browse_feed":
-            if decision.target_agent_id is not None and decision.target_agent_id != self.agent_id:
-                platform.apply_influence(
-                    source_agent_id=decision.target_agent_id,
-                    target_agent_id=self.agent_id,
-                    delta=decision.influence_delta,
-                    reason="Browsing socially salient content slightly shifts cognition.",
-                )
-            return
-
-        platform.record_idle(self.agent_id, reason=decision.reason)
+    def finalize_platform_actions(
+        self,
+        decision: AgentDecision,
+        round_index: int,
+        dispatch_results: List[dict],
+    ) -> None:
+        """Update local state after dispatched platform actions complete."""
+        self.action.finalize_action_effects(decision, round_index, dispatch_results)
 
     def run_round(
         self,
         round_index: int,
         scenario_prompt: str,
         feed: List[dict],
-        platform,
     ) -> AgentRoundResult:
-        """把接收信息、状态更新、决策和行动串成单轮循环。"""
+        """Run one round of cognition and decision-making."""
         self.receive_information(round_index, scenario_prompt, feed)
         self.update_state(feed, scenario_prompt)
         decision = self.decide_action(feed)
@@ -832,7 +846,6 @@ class SimulatedAgent:
             scenario_prompt=scenario_prompt,
             round_index=round_index,
         )
-        self.act(decision, platform)
         return AgentRoundResult(
             profile=self.profile,
             state=self.state,
@@ -856,7 +869,6 @@ class SimulatedAgent:
                 "schemas": self.state.schemas,
                 "schema_flexibility": self.state.schema_flexibility,
                 "equilibrium_index": self.state.equilibrium_index,
-                "delta_eq": self.state.equilibrium_index,
                 "last_cognitive_mode": self.state.last_cognitive_mode,
                 "dominant_emotion_label": self.state.dominant_emotion_label,
                 "empathy_level": self.state.empathy_level,
@@ -866,7 +878,6 @@ class SimulatedAgent:
                 "social_influence_reward": self.state.social_influence_reward,
                 "semantic_similarity": self.state.semantic_similarity,
                 "explicit_tom_triggered": self.state.explicit_tom_triggered,
-                "belief_embeddings": self.state.belief_embeddings,
                 "beliefs": self.state.beliefs,
                 "desires": self.state.desires,
                 "intentions": self.state.intentions,
@@ -887,7 +898,6 @@ class SimulatedAgent:
                 "latent_runtime": dict(self.state.latent_runtime),
                 "memory_size": len(self.state.memory),
                 "appraisal_count": len(self.state.appraisal_history),
-                "schemata_graph": self.state.schemata_graph.to_dict(),
             },
         }
 
@@ -914,6 +924,7 @@ class SimulatedAgent:
         )
 
     def _build_reply_content(self, feed: List[dict], altruistic_drive: float) -> str:
+        """根据当前共情水平与上下文生成回复文案。"""
         if altruistic_drive > 0.28:
             return (
                 f"{self.profile.name} responds with reassurance, attempting to reduce tension "
@@ -927,6 +938,7 @@ class SimulatedAgent:
         return f"{self.profile.name} responds directly to the current discussion."
 
     def _build_share_content(self, feed: List[dict]) -> str:
+        """根据当前社会影响奖励生成转发文案。"""
         if self.state.social_influence_reward > 0.22:
             return (
                 f"{self.profile.name} amplifies the post because it is likely to shift "
@@ -968,12 +980,14 @@ class SimulatedAgent:
         semantic_similarity = self._clamp(float(graph_match.get("best_similarity", 0.0)))
         if self.state.schemata_graph.nodes:
             epsilon = self._clamp(1.0 - semantic_similarity)
-        elif self.state.belief_embeddings:
-            epsilon = self._clamp(
-                1.0 - self._cosine_sim(event_embedding, self.state.belief_embeddings)
-            )
         else:
-            epsilon = novelty
+            belief_embedding = self._belief_embedding()
+            if belief_embedding:
+                epsilon = self._clamp(
+                    1.0 - self._cosine_sim(event_embedding, belief_embedding)
+                )
+            else:
+                epsilon = novelty
         empathized_negative_emotion = self._estimate_empathized_negative_emotion(feed_window)
 
         return {
@@ -1217,7 +1231,7 @@ class SimulatedAgent:
             self._emotion_intensity(),
             emotion_state.intensity,
         )
-        update_rate = self.base_schema_rate * (1 + self.state.stress) * emotion_intensity
+        update_rate = self.beta_m * (1 + self.state.stress) * emotion_intensity
         update_rate = self._clamp(
             update_rate
             + max(0.0, emotion_pad[1]) * 0.04
@@ -1338,6 +1352,7 @@ class SimulatedAgent:
             self.state.last_cognitive_mode = "equilibrium"
 
     def _update_cam_memory(self, event: Dict[str, object]) -> None:
+        """将当前观察事件写入 CAM 记忆图，并同步更新摘要信息。"""
         round_index = int(event.get("observed_round_index", 0))
         update = self.state.schemata_graph.add_event(
             round_index=round_index,
@@ -1345,7 +1360,7 @@ class SimulatedAgent:
             content=str(event.get("observation_text", "")),
             embedding=list(event.get("event_embedding", [])),
             valence=float(event.get("direction", 0.0)),
-            conflict_penalty=self.equilibrium_penalty,
+            conflict_penalty=self.kappa_eq,
         )
         self.state.semantic_similarity = self._clamp(
             float(update.get("semantic_similarity", event.get("semantic_similarity", 0.0)))
@@ -1353,10 +1368,6 @@ class SimulatedAgent:
         self.state.equilibrium_index = self._clamp(
             self.state.equilibrium_index + float(update.get("conflict_delta", 0.0))
         )
-        graph_embedding = self.state.schemata_graph.global_embedding()
-        if graph_embedding:
-            self.state.belief_embeddings = graph_embedding
-
         salient_node_id = int(update.get("node_id", 0) or 0)
         self.state.knowledge["salient_cluster_summaries"] = (
             self.state.schemata_graph.cluster_summary_for_node(salient_node_id)
@@ -1370,6 +1381,7 @@ class SimulatedAgent:
         event: Dict[str, object],
         feed: List[dict],
     ) -> None:
+        """根据 appraisal 与反馈信号更新 ECAM-T 核心状态。"""
         epsilon = self._clamp(float(event.get("unpredictability", appraisal.novelty)))
         zeta = self._clamp_signed(appraisal.goal_relevance_signal)
         performance = self._clamp(appraisal.performance)
@@ -1377,28 +1389,30 @@ class SimulatedAgent:
         empathized_negative_emotion = self._clamp(
             float(event.get("empathized_negative_emotion", 0.0))
         )
+        # firing_rate 用来近似本轮“主观表现”对内部奖励系统的驱动强度。
         firing_rate = self._clamp(
             performance
             - empathized_negative_emotion * self.state.empathy_level * 0.35
             + max(0.0, zeta) * 0.12
         )
 
-        old_expectation = self.state.expectation
+        expectation_old = self.state.expectation
+        # 先更新期望与满意度，再据此推动多巴胺预测误差修正。
         self.state.expectation = self._clamp(
-            (1 - self.ect_alpha) * old_expectation + self.ect_alpha * performance
+            (1 - self.alpha_E) * expectation_old + self.alpha_E * performance
         )
         self.state.satisfaction = self._clamp_signed(
-            self.state.satisfaction + self.ect_eta * confirmation
+            self.state.satisfaction + self.eta * confirmation
         )
 
         delta_da = firing_rate - self.state.performance_prediction
         self.state.performance_prediction = self._clamp(
-            self.state.performance_prediction + self.prediction_lambda * delta_da
+            self.state.performance_prediction + self.lambda_pred * delta_da
         )
         self.state.dopamine_level = self._clamp(
             self.state.dopamine_level
-            + self.dopamine_gamma * delta_da
-            + self.dopamine_goal_gain * zeta
+            + self.gamma_DA * delta_da
+            + self.kappa_zeta * zeta
         )
         altruistic_drive = self._clamp(
             empathized_negative_emotion * self.state.empathy_level * (1.2 - self.state.dopamine_level)
@@ -1407,20 +1421,17 @@ class SimulatedAgent:
             performance + self.state.empathy_level * altruistic_drive
         )
 
-        if epsilon > self.tau_unpredictability:
+        if epsilon > self.tau_epsilon:
             self.state.equilibrium_index = self._clamp(
-                self.state.equilibrium_index - self.equilibrium_penalty
+                self.state.equilibrium_index - self.kappa_eq
             )
         else:
             self.state.equilibrium_index = self._clamp(
-                self.state.equilibrium_index + self.equilibrium_recovery
+                self.state.equilibrium_index + self.eq_recovery
             )
 
         self.state.epsilon = epsilon
         self.state.zeta = zeta
-        self.state.coping_potential = appraisal.coping_potential
-        self.state.performance = performance
-        self.state.confirmation = confirmation
         self.state.empathized_negative_emotion = empathized_negative_emotion
         self.state.dopamine_prediction_error = delta_da
         self.state.semantic_similarity = self._clamp(
@@ -1432,10 +1443,11 @@ class SimulatedAgent:
         appraisal: AppraisalRecord,
         feed: List[dict],
     ) -> None:
+        """从当前信息流中重建信念、知识摘要与行为意图。"""
         feed_summary = self._summarize_feed_for_appraisal(feed)
         social_influence_reward = self._estimate_social_influence_reward(feed)
         self.state.social_influence_reward = social_influence_reward
-        explicit_tom_triggered = self.state.epsilon > self.tau_unpredictability
+        explicit_tom_triggered = self.state.epsilon > self.tau_epsilon
         if not explicit_tom_triggered:
             explicit_tom_triggered = feed_summary.get("dispersion", 0.0) > 0.55
         self.state.explicit_tom_triggered = bool(explicit_tom_triggered)
@@ -1475,6 +1487,7 @@ class SimulatedAgent:
         }
 
     def _initialize_desires(self, current: Dict[str, float]) -> Dict[str, float]:
+        """按角色与表达风格补齐默认欲望配置。"""
         desires = dict(current)
         style = self.profile.communication_style.lower()
         role = self.profile.role.lower()
@@ -1485,6 +1498,7 @@ class SimulatedAgent:
         return {key: self._clamp(value) for key, value in desires.items()}
 
     def _initialize_empathy_level(self, current: float) -> float:
+        """根据角色与表达风格初始化共情水平。"""
         style = self.profile.communication_style.lower()
         role = self.profile.role.lower()
         baseline = current if current > 0 else 0.55
@@ -1503,6 +1517,7 @@ class SimulatedAgent:
         coping_potential: float,
         feed: List[dict],
     ) -> float:
+        """估计当前 appraisal 条件下的主观表现值。"""
         top_intensity = max((float(item.get("intensity", 0.0)) for item in feed[:3]), default=0.0)
         return self._clamp(
             0.35
@@ -1520,7 +1535,8 @@ class SimulatedAgent:
         coping_potential: float,
         satisfaction: float,
     ) -> tuple[str, List[str]]:
-        if satisfaction < -0.35 and epsilon > self.tau_unpredictability:
+        """根据当前心理状态给出平台动作建议集合。"""
+        if satisfaction < self.lambda_S and epsilon > self.tau_epsilon:
             actions = [
                 "unfollow",
                 "mute",
@@ -1578,6 +1594,7 @@ class SimulatedAgent:
         scenario_prompt: str,
         round_index: int,
     ) -> Dict[str, object]:
+        """组装给调试页和导出逻辑使用的行为摘要。"""
         stimulus = feed[0]["content"] if feed else scenario_prompt
         if len(stimulus) > 120:
             stimulus = stimulus[:120] + "..."
@@ -1715,7 +1732,6 @@ class SimulatedAgent:
             - max(0.0, -avg_neighbor_sentiment) * 0.06
             + max(0.0, avg_neighbor_sentiment) * 0.03
         )
-        self.state.dominant_emotion_label = self.state.emotion_state.dominant_label
 
     def _infer_agency(self, feed: List[dict], valence: float) -> str:
         """基于 feed 指向与效价粗略推断责任归因。"""
@@ -1800,6 +1816,7 @@ class SimulatedAgent:
         }
 
     def _estimate_empathized_negative_emotion(self, feed_window: List[dict]) -> float:
+        """估计信息流中负面内容引发的共情强度。"""
         signals = []
         for item in feed_window:
             if item.get("author_id") == self.agent_id:
@@ -1813,7 +1830,9 @@ class SimulatedAgent:
         return self._clamp(sum(signals) / len(signals))
 
     def _estimate_social_influence_reward(self, feed: List[dict]) -> float:
-        if not feed or not self.state.belief_embeddings:
+        """估计当前信息流对社会影响收益的贡献。"""
+        belief_embedding = self._belief_embedding()
+        if not feed or not belief_embedding:
             return 0.0
         reward = 0.0
         for item in feed[:3]:
@@ -1829,7 +1848,7 @@ class SimulatedAgent:
             predicted_after = self._normalize_vector(
                 [
                     (1 - shift_weight) * base + shift_weight * belief
-                    for base, belief in zip(baseline, self.state.belief_embeddings)
+                    for base, belief in zip(baseline, belief_embedding)
                 ]
             )
             reward += 1.0 - self._cosine_sim(predicted_after, baseline)
@@ -1964,12 +1983,18 @@ class SimulatedAgent:
         }
 
     def _compose_observation_text(self, feed: List[dict], scenario_prompt: str) -> str:
-        parts = [scenario_prompt.strip()]
-        for item in feed[:3]:
-            parts.append(str(item.get("content", "")).strip())
-        return " ".join(part for part in parts if part)
+        """把场景提示与信息流整理为 appraisal 输入文本。"""
+        return self.environment.to_text_prompt(feed, scenario_prompt)
+
+    def _belief_embedding(self) -> List[float]:
+        """从 CAM 记忆图读取当前信念的全局向量表示。"""
+        graph_embedding = self.state.schemata_graph.global_embedding()
+        if graph_embedding:
+            return [float(value) for value in graph_embedding[:E_CAM_T_EMBED_DIM]]
+        return []
 
     def _text_to_embedding_hash(self, text: str) -> List[float]:
+        """用稳定哈希为文本生成轻量近似向量。"""
         values: List[float] = []
         for index in range(E_CAM_T_EMBED_DIM):
             digest = hashlib.sha256(f"{text}:{index}".encode("utf-8")).digest()
@@ -1977,12 +2002,14 @@ class SimulatedAgent:
         return self._normalize_vector(values)
 
     def _normalize_vector(self, values: List[float]) -> List[float]:
+        """对向量做 L2 归一化。"""
         norm = math.sqrt(sum(value * value for value in values))
         if norm <= 1e-12:
             return [0.0 for _ in values]
         return [float(value / norm) for value in values]
 
     def _cosine_sim(self, left: List[float], right: List[float]) -> float:
+        """计算两个向量的余弦相似度。"""
         if not left or not right:
             return 0.0
         size = min(len(left), len(right))
@@ -1995,10 +2022,12 @@ class SimulatedAgent:
 
     @staticmethod
     def _clamp(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
+        """把数值限制到指定闭区间。"""
         return _clamp(value, minimum=minimum, maximum=maximum)
 
     @staticmethod
     def _clamp_signed(value: float, limit: float = 1.0) -> float:
+        """把带符号数值限制到对称区间。"""
         return _clamp_signed(value, limit=limit)
 
 

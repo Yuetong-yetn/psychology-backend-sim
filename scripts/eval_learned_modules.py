@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""比较启发式模块和学习模块的输出差异。"""
+
 import argparse
 import json
 import os
@@ -19,12 +21,14 @@ from Backend.social_agent.emotion_representation import EmotionRepresentationCon
 
 
 def load_samples(path: str) -> List[Dict[str, Any]]:
+    """读取评估样本。"""
     with open(path, "r", encoding="utf-8") as handle:
         payload = json.load(handle)
     return payload.get("samples", payload)
 
 
 def routed_vector(routed: Dict[str, Any]) -> np.ndarray:
+    """把路由结果按专家权重汇总成统一向量。"""
     values = []
     for key in ["relevance", "valence", "goal_conduciveness", "controllability", "certainty", "coping_potential"]:
         total = 0.0
@@ -38,6 +42,7 @@ def routed_vector(routed: Dict[str, Any]) -> np.ndarray:
 
 
 def main() -> None:
+    """命令行入口：输出 appraisal 和 latent 的平均差异。"""
     parser = argparse.ArgumentParser(description="Evaluate heuristic/hybrid/learned scaffolds on a dataset.")
     parser.add_argument("--input", required=True)
     parser.add_argument("--checkpoint-dir", default=None)

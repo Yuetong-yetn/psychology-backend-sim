@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psychology-backend"
+version = "0.1.0"
+description = "Async social psychology simulation backend with FastAPI debug endpoints and optional external cognitive providers."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "numpy>=1.26,<3.0",
+  "requests>=2.31,<3.0",
+  "uvicorn>=0.30,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.27,<1.0",
+  "pytest>=8.0,<9.0",
+  "ruff>=0.6,<1.0",
+]
+
+[project.scripts]
+backend-generate-input = "Backend.generate_backend_input:main"
+backend-run = "Backend.run_backend_input:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-dir]
+Backend = "."
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "Backend",
+  "Backend.config",
+  "Backend.environment",
+  "Backend.services",
+  "Backend.social_agent",
+  "Backend.social_platform",
+]
+
+[tool.setuptools.package-data]
+Backend = ["viewer.html"]
+
+[tool.uv]
+dev-dependencies = [
+  "httpx>=0.27,<1.0",
+  "pytest>=8.0,<9.0",
+  "ruff>=0.6,<1.0",
+]

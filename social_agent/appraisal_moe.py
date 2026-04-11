@@ -1,4 +1,7 @@
-"""Appraisal engine with MoE-first mode and local fallback."""
+"""Appraisal 路由模块。
+
+支持 MoE-first 的认知路径，也支持完全本地的启发式回退。
+"""
 
 from __future__ import annotations
 
@@ -20,6 +23,8 @@ APPRAISAL_KEYS = [
 
 @dataclass
 class ExpertOutput:
+    """单个 appraisal 专家的输出结构。"""
+
     relevance: float = 0.0
     valence: float = 0.0
     goal_conduciveness: float = 0.5
@@ -44,6 +49,8 @@ class ExpertOutput:
 
 @dataclass
 class AppraisalMoEConfig:
+    """Appraisal 路由器的运行配置。"""
+
     mode: str = "moe"
     llm_provider_name: Optional[str] = "ollama"
     enable_fallback: bool = True
@@ -51,6 +58,8 @@ class AppraisalMoEConfig:
 
 
 class ThreatExpert:
+    """偏重威胁、风险和负性社会线索的专家。"""
+
     def score(
         self,
         event: Dict[str, float],
@@ -76,6 +85,8 @@ class ThreatExpert:
 
 
 class SupportExpert:
+    """偏重支持感、立场一致性和正向反馈的专家。"""
+
     def score(
         self,
         event: Dict[str, float],
@@ -102,6 +113,8 @@ class SupportExpert:
 
 
 class CopingExpert:
+    """偏重控制感、自我效能和恢复能力的专家。"""
+
     def score(
         self,
         event: Dict[str, float],
@@ -125,6 +138,8 @@ class CopingExpert:
 
 
 class SocialAmplificationExpert:
+    """偏重信息流放大效应和社会扩散线索的专家。"""
+
     def score(
         self,
         event: Dict[str, float],
@@ -151,7 +166,7 @@ class SocialAmplificationExpert:
 
 
 class AppraisalRouter:
-    """MoE-first appraisal router with local fallback."""
+    """Appraisal 总路由器。"""
 
     def __init__(self, config: Optional[AppraisalMoEConfig] = None) -> None:
         self.config = config or AppraisalMoEConfig()
@@ -166,6 +181,7 @@ class AppraisalRouter:
             enable_fallback=self.config.enable_fallback,
         )
         self.last_run_metadata: Dict[str, object] = {
+            # 记录最近一次 appraisal 是外部生成还是本地回退得到的。
             "mode": self.config.mode,
             "provider": None,
             "model": None,
@@ -187,6 +203,8 @@ class AppraisalRouter:
         prior: Dict[str, float],
         llm_context: Optional[Dict[str, object]] = None,
     ) -> Dict[str, float]:
+        """对当前事件进行 appraisal 评估。"""
+
         fallback_result = self._fallback_appraisal(
             event=event,
             schemas=schemas,
@@ -269,6 +287,8 @@ class AppraisalRouter:
         memory_summary: Dict[str, float],
         prior: Dict[str, float],
     ) -> Dict[str, float]:
+        """本地启发式 appraisal 回退路径。"""
+
         weights = self._route(
             event=event,
             schemas=schemas,
@@ -308,6 +328,8 @@ class AppraisalRouter:
         contagion_features: Dict[str, float],
         memory_summary: Dict[str, float],
     ) -> Dict[str, float]:
+        """估计四个专家的路由权重。"""
+
         arousal = _pad_at(emotion_state, 1)
         pleasure = _pad_at(emotion_state, 0)
         threat_score = event["risk"] * 0.32 + event["novelty"] * 0.16 + arousal * 0.08 + max(0.0, -contagion_features.get("sentiment", 0.0)) * 0.16 + contagion_features.get("arousal", 0.0) * 0.08

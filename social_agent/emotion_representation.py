@@ -1,4 +1,7 @@
-"""Emotion latent generation with MoE-first mode and local fallback."""
+"""情绪 latent 表示模块。
+
+优先支持 MoE/外部 provider，也保留本地可回退的工程化编码方案。
+"""
 
 from __future__ import annotations
 
@@ -16,6 +19,8 @@ LATENT_DIM = 16
 
 @dataclass
 class EmotionRepresentationConfig:
+    """情绪表示模块的运行配置。"""
+
     mode: str = "moe"
     llm_provider_name: Optional[str] = "ollama"
     enable_fallback: bool = True
@@ -24,7 +29,7 @@ class EmotionRepresentationConfig:
 
 
 class EmotionRepresentationModule:
-    """Wrapper for moe-first latent generation with local engineered fallback."""
+    """情绪 latent 生成器，支持外部推理与本地回退。"""
 
     def __init__(self, config: Optional[EmotionRepresentationConfig] = None) -> None:
         self.config = config or EmotionRepresentationConfig()
@@ -35,6 +40,7 @@ class EmotionRepresentationModule:
             enable_fallback=self.config.enable_fallback,
         )
         self.last_run_metadata: Dict[str, object] = {
+            # 记录最近一次编码到底走了外部 provider 还是本地回退。
             "mode": self.config.mode,
             "provider": None,
             "model": None,
@@ -54,6 +60,8 @@ class EmotionRepresentationModule:
         schema_summary: Optional[Dict[str, float]] = None,
         text_context: Optional[Dict[str, object]] = None,
     ) -> List[float]:
+        """把情绪分布、PAD 和摘要特征编码为 latent 向量。"""
+
         fallback_latent = self._engineered_latent(
             emotion_probs=emotion_probs,
             pad=pad,
@@ -115,6 +123,8 @@ class EmotionRepresentationModule:
         contagion_summary: Optional[Dict[str, float]] = None,
         schema_summary: Optional[Dict[str, float]] = None,
     ) -> np.ndarray:
+        """把输入压成固定长度的数值特征向量。"""
+
         appraisal_summary = appraisal_summary or {}
         contagion_summary = contagion_summary or {}
         schema_summary = schema_summary or {}
@@ -158,6 +168,8 @@ class EmotionRepresentationModule:
         contagion_summary: Optional[Dict[str, float]],
         schema_summary: Optional[Dict[str, float]],
     ) -> List[float]:
+        """使用固定投影构造本地工程化 latent。"""
+
         feature_vector = self.feature_vector(
             emotion_probs=emotion_probs,
             pad=pad,
@@ -196,5 +208,7 @@ class EmotionRepresentationModule:
 
 
 def save_encoder_metadata(output_path: str, payload: Dict[str, object]) -> None:
+    """把编码器元信息落盘到 JSON 文件。"""
+
     with open(output_path, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, ensure_ascii=False, indent=2)

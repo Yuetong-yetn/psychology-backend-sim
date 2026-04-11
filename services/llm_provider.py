@@ -1,4 +1,8 @@
-"""MoE-first cognitive provider with optional LLM-backed experts and local fallback."""
+"""认知 Provider 统一调度层。
+
+该模块负责组织 MoE-first 认知路径、外部 provider 调用、
+缓存复用以及本地 fallback 回退逻辑。
+"""
 
 from __future__ import annotations
 
@@ -18,6 +22,8 @@ FallbackFn = Callable[[Payload], Payload]
 
 @dataclass
 class CognitiveMoEConfig:
+    """统一认知 Provider 的配置。"""
+
     mode: str = "moe"
     llm_provider: str = "ollama"
     enable_fallback: bool = True
@@ -32,6 +38,7 @@ class CognitiveMoEConfig:
         mode: Optional[str] = None,
         enable_fallback: Optional[bool] = None,
     ) -> "CognitiveMoEConfig":
+        """从环境变量和显式参数构造配置对象。"""
         cache_root = checkpoint_dir or os.getenv("BACKEND_CHECKPOINT_DIR", "")
         cache_dir = os.path.join(cache_root, "llm_cache") if cache_root else ""
         return cls(
@@ -48,12 +55,14 @@ class CognitiveMoEConfig:
 
 
 class LocalFallbackProvider:
-    """Local provider used when MoE expert orchestration cannot rely on external LLM calls."""
+    """本地回退 Provider。"""
 
     def __init__(self) -> None:
+        """初始化本地回退 Provider。"""
         self.emotion_detector = None
 
     def generate_appraisal(self, payload: Payload, fallback_fn: Optional[FallbackFn] = None) -> Payload:
+        """生成 appraisal 的本地回退结果。"""
         if fallback_fn is not None:
             return fallback_fn(payload)
         return {
@@ -67,9 +76,11 @@ class LocalFallbackProvider:
         }
 
     def analyze_emotion(self, payload: Payload, fallback_fn: Optional[FallbackFn] = None) -> Payload:
+        """生成情绪分析的本地回退结果。"""
         if fallback_fn is not None:
             return fallback_fn(payload)
         if self.emotion_detector is None:
+            # 延迟初始化，避免纯 appraisal 路径下不必要导入情绪模块。
             from Backend.social_platform.emotion_detector import CompositeEmotionDetector
 
             self.emotion_detector = CompositeEmotionDetector()
@@ -81,17 +92,18 @@ class LocalFallbackProvider:
         ).to_dict()
 
     def build_latent(self, payload: Payload, fallback_fn: Optional[FallbackFn] = None) -> Payload:
+        """生成 latent 的本地回退结果。"""
         if fallback_fn is not None:
             return fallback_fn(payload)
         return {"emotion_latent": _engineered_latent_from_payload(payload)}
 
 
 class CognitiveMoEProvider:
-    """Unified MoE dispatcher.
+    """统一的认知调度器。
 
-    Public semantics:
-    - mode='moe': orchestrate experts, optionally backed by LLM
-    - mode='fallback': skip external calls and use local fallback directly
+    该类对上层暴露统一接口，并在内部处理：
+    - `mode='moe'`：优先走外部 provider
+    - `mode='fallback'`：直接走本地回退
     """
 
     def __init__(
@@ -101,12 +113,21 @@ class CognitiveMoEProvider:
         mode: str = "moe",
         enable_fallback: bool = True,
     ) -> None:
+        """初始化认知调度器。
+
+        Args:
+            llm_provider: 外部 provider 名称。
+            checkpoint_dir: 缓存目录根路径。
+            mode: 认知模式。
+            enable_fallback: 是否允许失败时自动回退。
+        """
         self.config = CognitiveMoEConfig.from_env(
             checkpoint_dir=checkpoint_dir,
             llm_provider=llm_provider,
             mode=mode,
             enable_fallback=enable_fallback,
         )
+        # `client` 代表外部 provider，`local_provider` 负责所有回退逻辑。
         self.client = self._build_client()
         self.local_provider = LocalFallbackProvider()
 
@@ -115,6 +136,7 @@ class CognitiveMoEProvider:
         payload: Payload,
         fallback_fn: Optional[FallbackFn] = None,
     ) -> Payload:
+        """生成 appraisal 结构。"""
         system_prompt = (
             "Return JSON only. Decompose the appraisal into experts and aggregate them. "
             "Top-level keys: router, experts, appraisal. "
@@ -137,6 +159,7 @@ class CognitiveMoEProvider:
         payload: Payload,
         fallback_fn: Optional[FallbackFn] = None,
     ) -> Payload:
+        """生成情绪分析结构。"""
         system_prompt = (
             "Return JSON only. Decompose emotion analysis into experts and aggregate them. "
             "Top-level keys: experts, emotion. "
@@ -156,6 +179,7 @@ class CognitiveMoEProvider:
         payload: Payload,
         fallback_fn: Optional[FallbackFn] = None,
     ) -> Payload:
+        """生成情绪 latent 结构。"""
         system_prompt = (
             "Return JSON only. Produce compact structured semantic features for emotion latent construction. "
             "Top-level keys: experts, latent_features. "
@@ -177,6 +201,7 @@ class CognitiveMoEProvider:
         source: str,
         fallback_runner: Callable[[Payload], Payload],
     ) -> Payload:
+        """执行带缓存与回退逻辑的统一请求。"""
         if self.config.mode == "fallback":
             result = fallback_runner(payload)
             return self._attach_meta(
@@ -194,6 +219,7 @@ class CognitiveMoEProvider:
         if self.config.use_cache:
             cached = self._load_cache(cache_key)
             if cached is not None:
+                # 命中缓存时直接返回，避免重复请求外部模型。
                 return self._attach_meta(
                     cached,
                     mode="moe",
@@ -209,6 +235,7 @@ class CognitiveMoEProvider:
             try:
                 result = self.client.chat_json(system_prompt=system_prompt, user_payload=payload)
                 if self.config.use_cache:
+                    # 只缓存成功结果，避免把异常或空结果固化下来。
                     self._save_cache(cache_key, result)
                 return self._attach_meta(
                     result,
@@ -222,6 +249,7 @@ class CognitiveMoEProvider:
                 )
             except Exception as exc:  # pragma: no cover - network path
                 if self.config.enable_fallback:
+                    # 外部 provider 失败时可自动回落到本地启发式路径。
                     result = fallback_runner(payload)
                     return self._attach_meta(
                         result,
@@ -280,6 +308,7 @@ class CognitiveMoEProvider:
         used_external: bool,
         cache_hit: bool,
     ) -> Payload:
+        """为返回结果补充统一的 provider 元信息。"""
         result = dict(payload)
         result["_provider_meta"] = {
             "mode": mode,
@@ -294,6 +323,7 @@ class CognitiveMoEProvider:
         return result
 
     def _build_client(self):
+        """根据当前配置创建具体外部客户端。"""
         provider = self.config.llm_provider.lower()
         if provider == "deepseek":
             return DeepSeekClient(DeepSeekConfig.from_env())
@@ -305,16 +335,19 @@ class CognitiveMoEProvider:
         )
 
     def _current_model_name(self) -> Optional[str]:
+        """读取当前客户端对应的模型名称。"""
         config = getattr(self.client, "config", None)
         return getattr(config, "model_name", None)
 
     def _cache_key(self, task_name: str, payload: Payload) -> str:
+        """生成当前请求的缓存键。"""
         digest = hashlib.sha256(
             (task_name + json.dumps(payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")
         ).hexdigest()
         return digest
 
     def _load_cache(self, cache_key: str) -> Optional[Payload]:
+        """从磁盘读取缓存结果。"""
         if not self.config.cache_dir:
             return None
         path = os.path.join(self.config.cache_dir, f"{cache_key}.json")
@@ -324,6 +357,7 @@ class CognitiveMoEProvider:
             return json.load(handle)
 
     def _save_cache(self, cache_key: str, payload: Payload) -> None:
+        """将结果写入磁盘缓存。"""
         if not self.config.cache_dir:
             return
         os.makedirs(self.config.cache_dir, exist_ok=True)
@@ -333,6 +367,14 @@ class CognitiveMoEProvider:
 
 
 def _engineered_latent_from_payload(payload: Payload) -> list[float]:
+    """从结构化输入构造工程化 latent 向量。
+
+    Args:
+        payload: 情绪、appraisal、contagion 和 schema 摘要。
+
+    Returns:
+        固定长度的低维情绪 latent 向量。
+    """
     latent_dim = 16
     emotion_probs = dict(payload.get("emotion_probs", {}))
     pad = list(payload.get("pad", [0.0, 0.0, 0.0]))
@@ -353,6 +395,7 @@ def _engineered_latent_from_payload(payload: Payload) -> list[float]:
         "relief",
         "calm",
     ]
+    # 前 10 维是离散情绪概率，后面再拼接 PAD、appraisal、感染和 schema 摘要。
     features = [float(emotion_probs.get(label, 0.0)) for label in labels] + [
         float(pad[0] if len(pad) > 0 else sentiment),
         float(pad[1] if len(pad) > 1 else intensity),
