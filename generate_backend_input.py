@@ -12,8 +12,8 @@ import json
 import random
 from pathlib import Path
 
-from Backend.config.backend_settings import GENERATION_DEFAULTS
-from Backend.config.frontend_settings import DEBUG_RUN_DEFAULTS
+from config.backend_settings import GENERATION_DEFAULTS
+from config.frontend_settings import DEBUG_RUN_DEFAULTS
 
 
 ROOT = Path(__file__).resolve().parent

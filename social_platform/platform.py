@@ -6,14 +6,14 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from Backend.social_platform.action_dispatcher import PlatformActionDispatcher
-from Backend.social_platform.emotion_detector import (
+from .action_dispatcher import PlatformActionDispatcher
+from .emotion_detector import (
     BaseEmotionDetector,
     CompositeEmotionDetector,
 )
-from Backend.social_platform.channel import Channel
-from Backend.social_platform.platform_utils import PlatformUtils
-from Backend.services.llm_provider import LLMProvider
+from .channel import Channel
+from .platform_utils import PlatformUtils
+from services.llm_provider import LLMProvider
 
 
 @dataclass

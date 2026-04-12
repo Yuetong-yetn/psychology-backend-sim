@@ -13,10 +13,10 @@ import numpy as np
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 PARENT_ROOT = os.path.dirname(PROJECT_ROOT)
-if PARENT_ROOT not in sys.path:
-    sys.path.insert(0, PARENT_ROOT)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-from Backend.social_agent.appraisal_moe import AppraisalMoEConfig, AppraisalRouter
+from social_agent.appraisal_moe import AppraisalMoEConfig, AppraisalRouter
 
 
 def load_samples(path: str) -> List[Dict[str, Any]]:

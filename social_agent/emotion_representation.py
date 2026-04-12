@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from Backend.services.llm_provider import CognitiveMoEProvider
+from services.llm_provider import CognitiveMoEProvider
 
 
 LATENT_DIM = 16

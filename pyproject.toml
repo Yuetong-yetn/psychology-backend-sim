@@ -23,28 +23,22 @@ dev = [
 ]
 
 [project.scripts]
-backend-generate-input = "Backend.generate_backend_input:main"
-backend-run = "Backend.run_backend_input:main"
+backend-generate-input = "generate_backend_input:main"
+backend-run = "run_backend_input:main"
 
 [tool.setuptools]
 include-package-data = true
-
-[tool.setuptools.package-dir]
-Backend = "."
+py-modules = ["generate_backend_input", "run_backend_input", "webapp"]
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-  "Backend",
-  "Backend.config",
-  "Backend.environment",
-  "Backend.services",
-  "Backend.social_agent",
-  "Backend.social_platform",
+  "config",
+  "environment",
+  "services",
+  "social_agent",
+  "social_platform",
 ]
-
-[tool.setuptools.package-data]
-Backend = ["viewer.html"]
 
 [tool.uv]
 dev-dependencies = [

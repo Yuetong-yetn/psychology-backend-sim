@@ -25,16 +25,16 @@ PARENT_ROOT = CURRENT_DIR.parent
 if str(PARENT_ROOT) not in sys.path:
     sys.path.insert(0, str(PARENT_ROOT))
 
-from Backend.config.backend_settings import BACKEND_IO
-from Backend.config.frontend_settings import (
+from config.backend_settings import BACKEND_IO
+from config.frontend_settings import (
     ALLOWED_MODES,
     ALLOWED_PROVIDERS,
     DEBUG_RUN_DEFAULTS,
     DEBUG_RUN_LIMITS,
     frontend_options_payload,
 )
-from Backend.generate_backend_input import build_payload
-from Backend.run_backend_input import run_from_payload_async
+from generate_backend_input import build_payload
+from run_backend_input import run_from_payload_async
 
 ROOT = CURRENT_DIR
 OUTPUTS_DIR = ROOT / BACKEND_IO.outputs_dir_name

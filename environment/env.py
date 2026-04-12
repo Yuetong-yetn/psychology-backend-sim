@@ -10,14 +10,14 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Dict, List
 
-from Backend.config.backend_settings import ENVIRONMENT_DEFAULTS
-from Backend.environment.env_action import LLMAction, ManualAction
-from Backend.environment.scenario import SimulatedScenario
-from Backend.social_agent.agent import AgentRoundResult, SimulatedAgent
-from Backend.social_agent.agent_graph import AgentGraph
-from Backend.social_agent.agents_generator import generate_custom_agents
-from Backend.social_platform.platform import Platform
-from Backend.social_platform.storage import SimulationStorage
+from config.backend_settings import ENVIRONMENT_DEFAULTS
+from environment.env_action import LLMAction, ManualAction
+from environment.scenario import SimulatedScenario
+from social_agent.agent import AgentRoundResult, SimulatedAgent
+from social_agent.agent_graph import AgentGraph
+from social_agent.agents_generator import generate_custom_agents
+from social_platform.platform import Platform
+from social_platform.storage import SimulationStorage
 
 ProgressCallback = Callable[[dict[str, object]], Awaitable[None] | None]
 

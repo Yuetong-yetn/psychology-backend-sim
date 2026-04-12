@@ -20,13 +20,13 @@ PARENT_ROOT = CURRENT_DIR.parent
 if str(PARENT_ROOT) not in sys.path:
     sys.path.insert(0, str(PARENT_ROOT))
 
-from Backend.config.backend_settings import BACKEND_IO
-from Backend.environment.make import make
-from Backend.environment.scenario import SimulatedScenario
-from Backend.social_agent.agent import AgentProfile, AgentState, SimulatedAgent
-from Backend.social_agent.agent_graph import AgentGraph
-from Backend.social_platform.platform import Platform
-from Backend.social_platform.storage import SimulationStorage
+from config.backend_settings import BACKEND_IO
+from environment.make import make
+from environment.scenario import SimulatedScenario
+from social_agent.agent import AgentProfile, AgentState, SimulatedAgent
+from social_agent.agent_graph import AgentGraph
+from social_platform.platform import Platform
+from social_platform.storage import SimulationStorage
 
 ProgressCallback = Callable[[dict[str, object]], Awaitable[None] | None]
 

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from Backend.social_platform.emotion_detector import BaseEmotionDetector, LATENT_DIM
+from .emotion_detector import BaseEmotionDetector, LATENT_DIM
 
 if TYPE_CHECKING:
-    from Backend.services.llm_provider import LLMProvider
+    from services.llm_provider import LLMProvider
 
 
 class PlatformUtils:

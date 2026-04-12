@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
-from Backend.social_platform.typing import ActionType
+from social_platform.typing import ActionType
 
 
 @dataclass

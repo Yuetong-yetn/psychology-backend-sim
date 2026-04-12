@@ -1,13 +1,13 @@
 """服务层对外导出。"""
 
-from Backend.services.llm_provider import (
+from .llm_provider import (
     CognitiveMoEConfig,
     CognitiveMoEProvider,
     LLMProvider,
     LLMProviderConfig,
 )
-from Backend.services.deepseek_client import DeepSeekClient, DeepSeekConfig
-from Backend.services.ollama_client import OllamaClient, OllamaConfig
+from .deepseek_client import DeepSeekClient, DeepSeekConfig
+from .ollama_client import OllamaClient, OllamaConfig
 
 __all__ = [
     "CognitiveMoEProvider",

@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from Backend.services.llm_provider import CognitiveMoEProvider
+from services.llm_provider import CognitiveMoEProvider
 
 
 APPRAISAL_KEYS = [

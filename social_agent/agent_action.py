@@ -5,10 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, List
 
-from Backend.social_platform.channel import Channel
+from social_platform.channel import Channel
 
 if TYPE_CHECKING:
-    from Backend.social_agent.agent import AgentDecision, EmotionState, SimulatedAgent
+    from .agent import AgentDecision, EmotionState, SimulatedAgent
 
 
 @dataclass

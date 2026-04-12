@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from Backend.social_agent.agent_action import SocialAction
+from .agent_action import SocialAction
 
 if TYPE_CHECKING:
-    from Backend.social_platform.platform import Platform
+    from social_platform.platform import Platform
 
 
 class SocialEnvironment:

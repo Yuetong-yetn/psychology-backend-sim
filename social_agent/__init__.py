@@ -1,6 +1,6 @@
 """智能体层对外导出。"""
 
-from Backend.social_agent.agent import (
+from .agent import (
     AppraisalRecord,
     AgentDecision,
     AgentProfile,
@@ -10,16 +10,16 @@ from Backend.social_agent.agent import (
     MemoryItem,
     SimulatedAgent,
 )
-from Backend.social_agent.agent_action import PlatformActionRequest, SocialAction
-from Backend.social_agent.agent_environment import SocialEnvironment
-from Backend.social_agent.agent_graph import AgentGraph
-from Backend.social_agent.agents_generator import (
+from .agent_action import PlatformActionRequest, SocialAction
+from .agent_environment import SocialEnvironment
+from .agent_graph import AgentGraph
+from .agents_generator import (
     connect_platform_channel,
     generate_backend_agent_graph,
     generate_custom_agents,
 )
-from Backend.social_agent.appraisal_moe import AppraisalMoEConfig, AppraisalRouter
-from Backend.social_agent.emotion_representation import (
+from .appraisal_moe import AppraisalMoEConfig, AppraisalRouter
+from .emotion_representation import (
     EmotionRepresentationConfig,
     EmotionRepresentationModule,
 )

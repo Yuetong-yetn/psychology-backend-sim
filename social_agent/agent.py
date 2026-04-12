@@ -14,17 +14,17 @@ import math
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Optional
 
-from Backend.config.backend_settings import AGENT_DYNAMICS
-from Backend.social_agent.agent_action import SocialAction
-from Backend.social_agent.agent_environment import SocialEnvironment
-from Backend.social_agent.appraisal_moe import AppraisalMoEConfig, AppraisalRouter
-from Backend.social_agent.cam_memory import CAMMemoryGraph
-from Backend.social_agent.emotion_representation import (
+from config.backend_settings import AGENT_DYNAMICS
+from .agent_action import SocialAction
+from .agent_environment import SocialEnvironment
+from .appraisal_moe import AppraisalMoEConfig, AppraisalRouter
+from .cam_memory import CAMMemoryGraph
+from .emotion_representation import (
     LATENT_DIM,
     EmotionRepresentationConfig,
     EmotionRepresentationModule,
 )
-from Backend.social_platform.channel import Channel
+from social_platform.channel import Channel
 
 # 这些情绪标签与平台层保持一致，便于共享概率分布和 PAD 投影。
 

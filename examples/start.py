@@ -14,16 +14,16 @@ import sys
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 PARENT_ROOT = os.path.dirname(PROJECT_ROOT)
-# 方便直接执行当前脚本时仍能找到 `Backend` 包。
-if PARENT_ROOT not in sys.path:
-    sys.path.insert(0, PARENT_ROOT)
+# 方便直接执行当前脚本时仍能找到项目根目录下的各个包。
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-from Backend.environment.make import make
-from Backend.environment.scenario import SimulatedScenario
-from Backend.social_agent.agent import AgentProfile, AgentState, SimulatedAgent
-from Backend.social_agent.agent_graph import AgentGraph
-from Backend.social_platform.platform import Platform
-from Backend.social_platform.storage import SimulationStorage
+from environment.make import make
+from environment.scenario import SimulatedScenario
+from social_agent.agent import AgentProfile, AgentState, SimulatedAgent
+from social_agent.agent_graph import AgentGraph
+from social_platform.platform import Platform
+from social_platform.storage import SimulationStorage
 
 
 def build_agents() -> list[SimulatedAgent]:

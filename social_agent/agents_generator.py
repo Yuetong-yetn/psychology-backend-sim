@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from Backend.social_agent.agent import AgentProfile, AgentState, SimulatedAgent
-from Backend.social_agent.agent_graph import AgentGraph
-from Backend.social_platform.channel import Channel
+from .agent import AgentProfile, AgentState, SimulatedAgent
+from .agent_graph import AgentGraph
+from social_platform.channel import Channel
 
 
 def connect_platform_channel(

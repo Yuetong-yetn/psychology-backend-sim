@@ -12,8 +12,8 @@ import os
 from dataclasses import dataclass
 from typing import Callable, Dict, Optional
 
-from Backend.services.deepseek_client import DeepSeekClient, DeepSeekConfig
-from Backend.services.ollama_client import OllamaClient, OllamaConfig
+from .deepseek_client import DeepSeekClient, DeepSeekConfig
+from .ollama_client import OllamaClient, OllamaConfig
 
 
 Payload = Dict[str, object]
@@ -81,7 +81,7 @@ class LocalFallbackProvider:
             return fallback_fn(payload)
         if self.emotion_detector is None:
             # 延迟初始化，避免纯 appraisal 路径下不必要导入情绪模块。
-            from Backend.social_platform.emotion_detector import CompositeEmotionDetector
+            from social_platform.emotion_detector import CompositeEmotionDetector
 
             self.emotion_detector = CompositeEmotionDetector()
         text = str(payload.get("text", ""))

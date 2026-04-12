@@ -11,10 +11,10 @@ from typing import Any, Dict, List
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 PARENT_ROOT = os.path.dirname(PROJECT_ROOT)
-if PARENT_ROOT not in sys.path:
-    sys.path.insert(0, PARENT_ROOT)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-from Backend.services.llm_provider import LLMProvider
+from services.llm_provider import LLMProvider
 
 
 def load_samples(path: str) -> List[Dict[str, Any]]:

@@ -4,7 +4,7 @@
 便于外部脚本保持和 Gym/OASIS 类似的调用方式。
 """
 
-from Backend.environment.env import SimulationEnv
+from environment.env import SimulationEnv
 
 
 def make(*args, **kwargs) -> SimulationEnv:
