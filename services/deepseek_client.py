@@ -18,24 +18,35 @@ import requests
 class DeepSeekConfig:
     """DeepSeek 调用所需的运行参数。"""
 
-    enabled: bool = False
-    api_key: str = ""
+    enabled: bool = True
+    api_key: str = "sk-8b4d62dbc7cf4dadb872c0e41761fd96"
     base_url: str = "https://api.deepseek.com"
     model_name: str = "deepseek-chat"
     timeout: float = 30.0
-    retry: int = 1
+    retry: int = 0
+    max_tokens: int = 800
 
     @classmethod
     def from_env(cls) -> "DeepSeekConfig":
         """从环境变量构造 DeepSeek 配置。"""
 
+        env_api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+        configured_api_key = env_api_key or cls.api_key
+        explicit_enabled = os.getenv("DEEPSEEK_ENABLED", "").lower()
+        enabled = (
+            explicit_enabled in {"1", "true", "yes"}
+            if explicit_enabled
+            else bool(configured_api_key)
+        )
+
         return cls(
-            enabled=os.getenv("DEEPSEEK_ENABLED", "0").lower() in {"1", "true", "yes"},
-            api_key=os.getenv("DEEPSEEK_API_KEY", ""),
+            enabled=enabled,
+            api_key=configured_api_key,
             base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
             model_name=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
             timeout=float(os.getenv("DEEPSEEK_TIMEOUT", "30")),
-            retry=int(os.getenv("DEEPSEEK_RETRY", "1")),
+            retry=int(os.getenv("DEEPSEEK_RETRY", "0")),
+            max_tokens=int(os.getenv("DEEPSEEK_MAX_TOKENS", "800")),
         )
 
 
@@ -46,6 +57,7 @@ class DeepSeekClient:
         """初始化客户端；未显式传入时从环境变量读取配置。"""
 
         self.config = config or DeepSeekConfig.from_env()
+        self.session = requests.Session()
 
     def is_available(self) -> bool:
         """判断当前配置是否足以发起请求。"""
@@ -76,13 +88,14 @@ class DeepSeekClient:
             ],
             "temperature": 0.2,
             "response_format": {"type": "json_object"},
+            "max_tokens": self.config.max_tokens,
         }
 
         # 保留最后一次异常，便于重试结束后统一报错。
         last_error: Optional[Exception] = None
         for attempt in range(self.config.retry + 1):
             try:
-                response = requests.post(
+                response = self.session.post(
                     url,
                     headers=headers,
                     json=payload,

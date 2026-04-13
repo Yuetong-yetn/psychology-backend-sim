@@ -111,6 +111,7 @@ def _build_debug_payload(request: DebugRunRequest) -> dict[str, object]:
             "llm_provider": request.llm_provider,
             "enable_fallback": request.enable_fallback,
             "feed_limit": request.feed_limit,
+            "appraisal_llm_ratio": runtime.get("appraisal_llm_ratio", 0.1),
         }
     )
     payload["runtime"] = runtime

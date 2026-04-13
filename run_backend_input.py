@@ -12,6 +12,7 @@ import asyncio
 import json
 import os
 import sys
+import math
 from pathlib import Path
 from typing import Awaitable, Callable
 
@@ -31,7 +32,25 @@ from social_platform.storage import SimulationStorage
 ProgressCallback = Callable[[dict[str, object]], Awaitable[None] | None]
 
 
-def _build_agent(row: dict[str, object], runtime: dict[str, object]) -> SimulatedAgent:
+def _should_use_llm_appraisal(index: int, total_agents: int, runtime: dict[str, object]) -> bool:
+    mode = str(runtime.get("mode", "fallback"))
+    if mode == "fallback" or total_agents <= 0:
+        return False
+    ratio = float(runtime.get("appraisal_llm_ratio", 0.1))
+    ratio = max(0.0, min(1.0, ratio))
+    if ratio <= 0.0:
+        return False
+    llm_agents = min(total_agents, max(1, math.ceil(total_agents * ratio)))
+    return index < llm_agents
+
+
+def _build_agent(
+    row: dict[str, object],
+    runtime: dict[str, object],
+    *,
+    index: int,
+    total_agents: int,
+) -> SimulatedAgent:
     """根据输入协议中的一行智能体数据构造运行时对象。"""
 
     profile = AgentProfile(
@@ -48,6 +67,7 @@ def _build_agent(row: dict[str, object], runtime: dict[str, object]) -> Simulate
         mode=str(runtime.get("mode", "fallback")),
         llm_provider=str(runtime.get("llm_provider", "ollama")),
         enable_fallback=bool(runtime.get("enable_fallback", True)),
+        appraisal_use_llm=_should_use_llm_appraisal(index, total_agents, runtime),
     )
 
 
@@ -103,7 +123,11 @@ async def run_from_payload_async(
         description=str(scenario_row["description"]),
         environment_context=list(scenario_row.get("environment_context", [])),
     )
-    agents = [_build_agent(row, runtime) for row in list(payload.get("agents", []))]
+    agent_rows = list(payload.get("agents", []))
+    agents = [
+        _build_agent(row, runtime, index=index, total_agents=len(agent_rows))
+        for index, row in enumerate(agent_rows)
+    ]
 
     agent_graph = AgentGraph()
     for agent in agents:

@@ -454,6 +454,7 @@ class SimulatedAgent:
         mode: str = "moe",
         llm_provider: str = "ollama",
         enable_fallback: bool = True,
+        appraisal_use_llm: bool = True,
         checkpoint_dir: Optional[str] = None,
         channel: Channel | None = None,
         agent_graph: object | None = None,
@@ -470,10 +471,16 @@ class SimulatedAgent:
         self.state.desires = self._initialize_desires(self.state.desires)
         self.state.empathy_level = self._initialize_empathy_level(self.state.empathy_level)
         public_mode = "fallback" if mode == "fallback" else "moe"
+        appraisal_mode = public_mode if appraisal_use_llm else "fallback"
+        appraisal_fallback_reason = None
+        if public_mode == "fallback":
+            appraisal_fallback_reason = "mode_forced_fallback"
+        elif not appraisal_use_llm:
+            appraisal_fallback_reason = "ratio_routed_to_local"
 
         self.appraisal_router = AppraisalRouter(
             AppraisalMoEConfig(
-                mode=public_mode,
+                mode=appraisal_mode,
                 checkpoint_dir=checkpoint_dir,
                 llm_provider_name=llm_provider,
                 enable_fallback=enable_fallback,
@@ -488,12 +495,12 @@ class SimulatedAgent:
             )
         )
         self.state.appraisal_runtime = {
-            "mode": public_mode,
+            "mode": appraisal_mode,
             "provider": None,
             "model": None,
             "source": "local",
-            "fallback_used": public_mode == "fallback",
-            "fallback_reason": "mode_forced_fallback" if public_mode == "fallback" else None,
+            "fallback_used": appraisal_mode == "fallback",
+            "fallback_reason": appraisal_fallback_reason,
         }
         self.state.latent_runtime = {
             "mode": public_mode,
@@ -1095,18 +1102,6 @@ class SimulatedAgent:
             contagion_features=contagion_features,
             memory_summary=memory_summary,
             prior=prior,
-            llm_context={
-                "profile": asdict(self.profile),
-                "memory_excerpt": [item.content for item in self.state.memory[-4:]],
-                "top_feed": [
-                    {
-                        "content": item.get("content", ""),
-                        "sentiment": item.get("sentiment", 0.0),
-                        "exposure_score": item.get("exposure_score", 0.0),
-                    }
-                    for item in feed[:3]
-                ],
-            },
         )
         self.state.appraisal_runtime = dict(self.appraisal_router.last_run_metadata)
         relevance = fused["relevance"]

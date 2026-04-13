@@ -1,31 +1,32 @@
 {
   "meta": {
-    "description": "当前后端原生输入数据，用于环境、平台与多 agent 仿真测试。",
-    "num_agents": 8,
+    "description": "Native backend input data for environment, platform, and multi-agent simulation testing.",
+    "num_agents": 10,
     "rounds": 1,
     "seed_posts": 6,
     "seed": 42,
     "debugRunConfig": {
-      "num_agents": 8,
+      "num_agents": 10,
       "rounds": 1,
       "seed_posts": 6,
       "seed": 42,
       "feed_limit": 5,
-      "mode": "fallback",
-      "llm_provider": "ollama",
+      "mode": "moe",
+      "llm_provider": "deepseek",
       "enable_fallback": true
     }
   },
   "runtime": {
-    "mode": "fallback",
-    "llm_provider": "ollama",
+    "mode": "moe",
+    "llm_provider": "deepseek",
     "enable_fallback": true,
-    "feed_limit": 5
+    "feed_limit": 5,
+    "appraisal_llm_ratio": 0.1
   },
   "scenario": {
     "scenario_id": "scenario_42",
-    "title": "社会议题：新能源汽车补贴变化",
-    "description": "围绕“新能源汽车补贴变化”的线上公共讨论持续升温，用户在信息流中不断接触分化观点并做出反应。",
+    "title": "Social issue: electric vehicle subsidy changes",
+    "description": "Online public discussion around 'electric vehicle subsidy changes' is heating up. Users keep encountering polarized viewpoints in their feeds and react to them.",
     "environment_context": [
       "Public opinion is divided.",
       "Some users seek consensus while others amplify conflict.",
@@ -209,6 +210,50 @@
           "self_efficacy": 0.551
         }
       }
+    },
+    {
+      "agent_id": 8,
+      "name": "Ivan_8",
+      "role": "product_manager",
+      "ideology": "moderate",
+      "communication_style": "balanced",
+      "initial_state": {
+        "emotion": 0.0094,
+        "stress": 0.3095,
+        "expectation": 0.5065,
+        "satisfaction": -0.0629,
+        "dopamine_level": 0.4342,
+        "influence_score": 0.4156,
+        "schema_flexibility": 0.4368,
+        "empathy_level": 0.6374,
+        "schemas": {
+          "support_tendency": 0.679,
+          "threat_sensitivity": 0.4723,
+          "self_efficacy": 0.5521
+        }
+      }
+    },
+    {
+      "agent_id": 9,
+      "name": "Jia_9",
+      "role": "student",
+      "ideology": "progressive",
+      "communication_style": "curious",
+      "initial_state": {
+        "emotion": -0.1217,
+        "stress": 0.4655,
+        "expectation": 0.4485,
+        "satisfaction": -0.0406,
+        "dopamine_level": 0.5259,
+        "influence_score": 0.3484,
+        "schema_flexibility": 0.4607,
+        "empathy_level": 0.4463,
+        "schemas": {
+          "support_tendency": 0.6515,
+          "threat_sensitivity": 0.3299,
+          "self_efficacy": 0.7202
+        }
+      }
     }
   ],
   "relationships": [
@@ -269,14 +314,34 @@
     },
     {
       "source_agent_id": 7,
+      "target_agent_id": 8,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 8,
+      "target_agent_id": 9,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 8,
       "target_agent_id": 0,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 9,
+      "target_agent_id": 0,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 9,
+      "target_agent_id": 1,
       "type": "follow"
     }
   ],
   "seed_posts": [
     {
       "author_id": 0,
-      "content": "如果只看情绪表达，新能源汽车补贴变化 的讨论会越来越极端。",
+      "content": "If people focus only on emotional reactions, debate about electric vehicle subsidy changes will become more extreme.",
       "emotion": "confidence",
       "intensity": 0.2429,
       "sentiment": 0.2452,
@@ -284,7 +349,7 @@
     },
     {
       "author_id": 1,
-      "content": "如果只看情绪表达，新能源汽车补贴变化 的讨论会越来越极端。",
+      "content": "If people focus only on emotional reactions, debate about electric vehicle subsidy changes will become more extreme.",
       "emotion": "anger",
       "intensity": 0.4439,
       "sentiment": -0.4272,
@@ -292,7 +357,7 @@
     },
     {
       "author_id": 2,
-      "content": "新能源汽车补贴变化 这件事正在引发越来越明显的立场分化。",
+      "content": "electric vehicle subsidy changes is clearly creating stronger polarization across the platform.",
       "emotion": "calm",
       "intensity": 0.0846,
       "sentiment": -0.0032,
@@ -300,7 +365,7 @@
     },
     {
       "author_id": 3,
-      "content": "如果只看情绪表达，新能源汽车补贴变化 的讨论会越来越极端。",
+      "content": "If people focus only on emotional reactions, debate about electric vehicle subsidy changes will become more extreme.",
       "emotion": "confidence",
       "intensity": 0.5003,
       "sentiment": 0.6348,
@@ -308,7 +373,7 @@
     },
     {
       "author_id": 4,
-      "content": "新能源汽车补贴变化 这件事正在引发越来越明显的立场分化。",
+      "content": "electric vehicle subsidy changes is clearly creating stronger polarization across the platform.",
       "emotion": "confidence",
       "intensity": 0.5216,
       "sentiment": 0.6019,
@@ -316,7 +381,7 @@
     },
     {
       "author_id": 5,
-      "content": "如果只看情绪表达，新能源汽车补贴变化 的讨论会越来越极端。",
+      "content": "If people focus only on emotional reactions, debate about electric vehicle subsidy changes will become more extreme.",
       "emotion": "confidence",
       "intensity": 0.4975,
       "sentiment": 0.6157,

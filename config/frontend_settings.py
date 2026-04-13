@@ -13,12 +13,12 @@ ALLOWED_PROVIDERS = ("ollama", "deepseek")
 class DebugRunDefaults:
     """调试运行时的默认表单值。"""
 
-    num_agents: int = 8
+    num_agents: int = 20
     rounds: int = 4
     seed_posts: int = 6
     seed: int = 42
     feed_limit: int = 5
-    mode: str = "fallback"
+    mode: str = "moe"
     llm_provider: str = "ollama"
     enable_fallback: bool = True
 

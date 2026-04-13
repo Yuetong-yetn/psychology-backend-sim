@@ -229,20 +229,38 @@ class AppraisalRouter:
             return fallback_result
 
         payload = {
-            "event": event,
-            "schemas": schemas,
+            "event": {
+                "direction": float(event.get("direction", 0.0)),
+                "risk": float(event.get("risk", 0.0)),
+                "novelty": float(event.get("novelty", 0.0)),
+                "consistency": float(event.get("consistency", 0.0)),
+                "unpredictability": float(event.get("unpredictability", event.get("novelty", 0.0))),
+                "semantic_similarity": float(event.get("semantic_similarity", 0.0)),
+                "empathized_negative_emotion": float(event.get("empathized_negative_emotion", 0.0)),
+            },
+            "schemas": {
+                "support_tendency": float(schemas.get("support_tendency", 0.5)),
+                "threat_sensitivity": float(schemas.get("threat_sensitivity", 0.5)),
+                "self_efficacy": float(schemas.get("self_efficacy", 0.5)),
+            },
             "emotion_state": {
                 "signed_valence": float(getattr(emotion_state, "signed_valence", 0.0)),
                 "pad": list(getattr(emotion_state, "pad", [0.0, 0.0, 0.0])),
                 "intensity": float(getattr(emotion_state, "intensity", 0.0)),
             },
-            "stress": stress,
-            "equilibrium": equilibrium,
-            "feed_features": feed_features,
-            "contagion_features": contagion_features,
-            "memory_summary": memory_summary,
+            "state": {
+                "stress": float(stress),
+                "equilibrium": float(equilibrium),
+            },
+            "social_context": {
+                "feed_direction": float(feed_features.get("direction", 0.0)),
+                "exposure_pressure": float(feed_features.get("exposure_pressure", 0.0)),
+                "consensus": float(feed_features.get("consensus", 0.0)),
+                "contagion_sentiment": float(contagion_features.get("sentiment", 0.0)),
+                "contagion_arousal": float(contagion_features.get("arousal", 0.0)),
+                "memory_valence_bias": float(memory_summary.get("valence_bias", 0.0)),
+            },
             "prior": prior,
-            "llm_context": llm_context or {},
         }
         result = self.provider.generate_appraisal(
             payload,

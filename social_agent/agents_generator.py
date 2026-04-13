@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from .agent import AgentProfile, AgentState, SimulatedAgent
@@ -39,7 +40,12 @@ async def generate_backend_agent_graph(
 
     runtime = runtime or {}
     graph = AgentGraph()
-    for row in list(payload.get("agents", [])):
+    agent_rows = list(payload.get("agents", []))
+    ratio = max(0.0, min(1.0, float(runtime.get("appraisal_llm_ratio", 0.1))))
+    llm_agent_count = 0
+    if str(runtime.get("mode", "fallback")) != "fallback" and agent_rows and ratio > 0.0:
+        llm_agent_count = min(len(agent_rows), max(1, math.ceil(len(agent_rows) * ratio)))
+    for index, row in enumerate(agent_rows):
         # 这里把 JSON 行记录恢复成可运行的 `SimulatedAgent` 对象。
         profile = AgentProfile(
             agent_id=int(row["agent_id"]),
@@ -55,6 +61,7 @@ async def generate_backend_agent_graph(
             mode=str(runtime.get("mode", "fallback")),
             llm_provider=str(runtime.get("llm_provider", "ollama")),
             enable_fallback=bool(runtime.get("enable_fallback", True)),
+            appraisal_use_llm=index < llm_agent_count,
         )
         graph.add_agent(agent)
 

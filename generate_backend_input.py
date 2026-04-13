@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""生成后端原生输入数据。
-
-负责构造调试用的场景、智能体、关系和种子帖子，
-用于快速生成一份可直接送入后端仿真的 JSON payload。
-"""
+"""Generate native backend input data for local simulation runs."""
 
 from __future__ import annotations
 
@@ -12,7 +8,7 @@ import json
 import random
 from pathlib import Path
 
-from config.backend_settings import GENERATION_DEFAULTS
+from config.backend_settings import ENVIRONMENT_DEFAULTS, GENERATION_DEFAULTS
 from config.frontend_settings import DEBUG_RUN_DEFAULTS
 
 
@@ -20,20 +16,14 @@ ROOT = Path(__file__).resolve().parent
 
 
 def _clip(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    """把数值裁剪到给定区间。"""
-
     return max(lo, min(hi, value))
 
 
 def _signed(value: float, limit: float = 1.0) -> float:
-    """把数值裁剪到对称区间。"""
-
     return max(-limit, min(limit, value))
 
 
 def _build_agent(agent_id: int, rng: random.Random) -> dict[str, object]:
-    """构造单个智能体的初始配置。"""
-
     personas = GENERATION_DEFAULTS.personas
     base_name, role, ideology, style = personas[agent_id % len(personas)]
     name = f"{base_name}_{agent_id}"
@@ -65,8 +55,6 @@ def _build_agent(agent_id: int, rng: random.Random) -> dict[str, object]:
 
 
 def _build_seed_post(author_id: int, round_index: int, topic: str, rng: random.Random) -> dict[str, object]:
-    """构造一条种子帖子。"""
-
     sentiment = _signed(rng.uniform(*GENERATION_DEFAULTS.seed_post_sentiment_range))
     intensity = _clip(
         abs(sentiment) * GENERATION_DEFAULTS.seed_post_intensity_scale
@@ -82,10 +70,10 @@ def _build_seed_post(author_id: int, round_index: int, topic: str, rng: random.R
         emotion = "calm"
 
     content_templates = [
-        f"关于 {topic}，我觉得平台上的讨论忽略了很多长期影响。",
-        f"{topic} 这件事正在引发越来越明显的立场分化。",
-        f"如果只看情绪表达，{topic} 的讨论会越来越极端。",
-        f"我更关心 {topic} 对普通人的实际影响，而不是口号。",
+        f"Discussion around {topic} seems to ignore the long-term effects.",
+        f"{topic} is clearly creating stronger polarization across the platform.",
+        f"If people focus only on emotional reactions, debate about {topic} will become more extreme.",
+        f"I care more about how {topic} affects ordinary people than about slogans.",
     ]
     return {
         "author_id": author_id,
@@ -98,13 +86,9 @@ def _build_seed_post(author_id: int, round_index: int, topic: str, rng: random.R
 
 
 def build_payload(num_agents: int, rounds: int, seed_posts: int, seed: int) -> dict[str, object]:
-    """生成完整的后端原生输入 payload。"""
-
     rng = random.Random(seed)
     topic = rng.choice(GENERATION_DEFAULTS.topics)
     scenario_id = f"scenario_{seed}"
-
-    # 每个 agent 用独立随机种子，避免参数之间出现过强耦合。
     agents = [_build_agent(agent_id=index, rng=random.Random(seed + index * 101)) for index in range(num_agents)]
 
     relationships = []
@@ -145,7 +129,7 @@ def build_payload(num_agents: int, rounds: int, seed_posts: int, seed: int) -> d
 
     return {
         "meta": {
-            "description": "后端原生输入数据，用于环境、平台与多 agent 仿真测试。",
+            "description": "Native backend input data for environment, platform, and multi-agent simulation testing.",
             "num_agents": num_agents,
             "rounds": rounds,
             "seed_posts": seed_posts,
@@ -156,11 +140,15 @@ def build_payload(num_agents: int, rounds: int, seed_posts: int, seed: int) -> d
             "llm_provider": DEBUG_RUN_DEFAULTS.llm_provider,
             "enable_fallback": DEBUG_RUN_DEFAULTS.enable_fallback,
             "feed_limit": DEBUG_RUN_DEFAULTS.feed_limit,
+            "appraisal_llm_ratio": ENVIRONMENT_DEFAULTS.appraisal_llm_ratio,
         },
         "scenario": {
             "scenario_id": scenario_id,
-            "title": f"社会议题：{topic}",
-            "description": f"围绕“{topic}”的线上公共讨论持续升温，用户在信息流中不断接触分化观点并作出反应。",
+            "title": f"Social issue: {topic}",
+            "description": (
+                f"Online public discussion around '{topic}' is heating up. "
+                "Users keep encountering polarized viewpoints in their feeds and react to them."
+            ),
             "environment_context": list(GENERATION_DEFAULTS.context_snippets),
         },
         "agents": agents,
@@ -170,8 +158,6 @@ def build_payload(num_agents: int, rounds: int, seed_posts: int, seed: int) -> d
 
 
 def main() -> None:
-    """命令行入口。"""
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--agents", type=int, default=DEBUG_RUN_DEFAULTS.num_agents)
     parser.add_argument("--rounds", type=int, default=DEBUG_RUN_DEFAULTS.rounds)

@@ -71,47 +71,15 @@ class EmotionRepresentationModule:
             contagion_summary=contagion_summary,
             schema_summary=schema_summary,
         )
-        if self.config.mode == "fallback":
-            self.last_run_metadata = {
-                "mode": "fallback",
-                "provider": "local",
-                "model": None,
-                "source": "local",
-                "fallback_used": True,
-                "fallback_reason": "mode_forced_fallback",
-            }
-            return fallback_latent
-
-        payload = {
-            "emotion_probs": emotion_probs,
-            "pad": pad,
-            "sentiment": sentiment,
-            "intensity": intensity,
-            "appraisal_summary": appraisal_summary or {},
-            "contagion_summary": contagion_summary or {},
-            "schema_summary": schema_summary or {},
-            "text_context": text_context or {},
-        }
-        result = self.provider.build_latent(
-            payload,
-            fallback_fn=lambda _payload: {"emotion_latent": fallback_latent},
-        )
-        meta = result.get("_provider_meta", {})
         self.last_run_metadata = {
-            "mode": str(meta.get("mode", "fallback")),
-            "provider": meta.get("provider"),
-            "model": meta.get("model"),
-            "source": meta.get("source", "local"),
-            "fallback_used": bool(meta.get("fallback_used", False)),
-            "fallback_reason": meta.get("fallback_reason"),
+            "mode": "local_only",
+            "provider": "local",
+            "model": None,
+            "source": "engineered_latent",
+            "fallback_used": False,
+            "fallback_reason": None,
         }
-        latent = result.get("emotion_latent")
-        if not isinstance(latent, list):
-            return fallback_latent
-        values = [float(item) for item in latent[: self.config.latent_dim]]
-        if len(values) < self.config.latent_dim:
-            values.extend([0.0] * (self.config.latent_dim - len(values)))
-        return values
+        return fallback_latent
 
     def feature_vector(
         self,
