@@ -128,19 +128,21 @@ type DebugSnapshotResponse = SimulationSnapshot;
 2. 用返回的 `debug_run_defaults` 初始化表单
 3. 用户提交后调 `POST /api/debug/run-sample/start`
 4. 轮询 `GET /api/debug/run-sample/{job_id}`
-5. 当 `status === "completed"` 时，读 `snapshot`
+5. 当 `status === "completed"` 时，读取 `snapshot`
 
 ## 提交给后端的数据
 
+当前默认值对应的请求体是：
+
 ```json
 {
-  "num_agents": 10,
-  "rounds": 1,
+  "num_agents": 20,
+  "rounds": 4,
   "seed_posts": 6,
   "seed": 42,
   "feed_limit": 5,
   "mode": "moe",
-  "llm_provider": "deepseek",
+  "llm_provider": "ollama",
   "enable_fallback": true
 }
 ```
@@ -151,10 +153,10 @@ type DebugSnapshotResponse = SimulationSnapshot;
 - `rounds`：轮数
 - `seed_posts`：初始帖子数
 - `seed`：随机种子
-- `feed_limit`：每个 agent 每轮可见 feed 上限
-- `mode`：`fallback` 全本地，`moe` 部分走 LLM
+- `feed_limit`：每个 agent 每轮可见的 feed 上限
+- `mode`：`fallback` 表示 appraisal 全本地，`moe` 表示按当前运行时规则尝试使用外部 provider
 - `llm_provider`：外部模型提供方
-- `enable_fallback`：外部失败时是否回退本地
+- `enable_fallback`：外部请求失败时是否回退到本地规则
 
 来源：
 
@@ -182,7 +184,7 @@ interface SimulationSnapshot {
 - [env.py](./environment/env.py)
 - [webapp.py](./webapp.py)
 
-## 前端优先使用这几个字段
+## 前端优先使用这些字段
 
 ### 场景
 
@@ -471,18 +473,24 @@ interface SnapshotDebugMeta {
 ```ts
 const postsJson = snapshot.platform.posts;
 
-const llmAgentsJson = snapshot.agents.filter(
-  (agent) => {
-    const runtime = agent.state.appraisal_runtime;
-    const provider = String(runtime.provider || "").toLowerCase();
-    const mode = String(runtime.mode || "").toLowerCase();
-    const source = String(runtime.source || "").toLowerCase();
-    return Boolean(provider) && provider !== "local" && mode !== "fallback" && source !== "local";
-  }
-);
+const llmAgentsJson = snapshot.agents.filter((agent) => {
+  const runtime = agent.state.appraisal_runtime || {};
+  const fallbackReason = String(runtime.fallback_reason || "").toLowerCase();
+
+  return (
+    fallbackReason !== "ratio_routed_to_local" &&
+    fallbackReason !== "mode_forced_fallback"
+  );
+});
 ```
 
-## `traces` 按这个方式处理
+这条规则表示：
+
+- 按比例直接走本地 appraisal 的 agent 不显示
+- 全局 `mode = "fallback"` 下被强制本地执行的 agent 不显示
+- 原本应走 MoE 路径、但外部请求失败后 fallback 到本地的 agent 仍然显示
+
+## `traces` 按这种方式处理
 
 先判断 `type`，再读字段，不要直接假设所有 trace 字段都一样。
 
@@ -519,7 +527,7 @@ type PlatformTrace = Record<string, unknown> & {
 - `memory_size`
 - `appraisal_count`
 
-只有 `history.results[agentId].state` 里，当前样例和代码中还会带：
+只有在 `history.results[agentId].state` 里，当前样例和代码中还会带：
 
 - `appraisal_history`
 - `memory`
@@ -533,7 +541,7 @@ type PlatformTrace = Record<string, unknown> & {
 
 - `snapshot.history`
 
-## 直接可用的请求代码
+## 可直接使用的请求代码
 
 ```ts
 export async function getOptions() {
