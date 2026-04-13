@@ -19,7 +19,7 @@ class DeepSeekConfig:
     """DeepSeek 调用所需的运行参数。"""
 
     enabled: bool = True
-    api_key: str = "sk-8b4d62dbc7cf4dadb872c0e41761fd96"
+    api_key: str = ""
     base_url: str = "https://api.deepseek.com"
     model_name: str = "deepseek-chat"
     timeout: float = 30.0
