@@ -1,24 +1,22 @@
-"""仿真后端使用的内存平台。"""
+"""浠跨湡鍚庣浣跨敤鐨勫唴瀛樺钩鍙般€?"""
 
 from __future__ import annotations
 
 import asyncio
+import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from .action_dispatcher import PlatformActionDispatcher
-from .emotion_detector import (
-    BaseEmotionDetector,
-    CompositeEmotionDetector,
-)
 from .channel import Channel
+from .emotion_detector import BaseEmotionDetector, CompositeEmotionDetector
 from .platform_utils import PlatformUtils
 from services.llm_provider import LLMProvider
 
 
 @dataclass
 class Platform:
-    """维护帖子、互动和 trace 的平台状态容器。"""
+    """缁存姢甯栧瓙銆佷簰鍔ㄥ拰 trace 鐨勫钩鍙扮姸鎬佸鍣ㄣ€?"""
 
     feed_limit: int = 5
     current_round: int = 0
@@ -39,9 +37,9 @@ class Platform:
     _reply_id_seq: int = 1
     _like_id_seq: int = 1
     _share_id_seq: int = 1
+    runtime_profile: Dict[str, dict] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        # 平台内部也可能需要调用情绪分析和认知 provider。
         self.cognitive_provider = LLMProvider(
             llm_provider=self.llm_provider,
             mode=self.mode,
@@ -51,12 +49,14 @@ class Platform:
         self.platform_utils = PlatformUtils(
             emotion_detector=self.emotion_detector,
             cognitive_provider=self.cognitive_provider,
+            profile_hook=self._profile_timing,
+            count_hook=self._profile_count,
         )
         self.action_dispatcher = PlatformActionDispatcher(self)
         self._action_lock = asyncio.Lock()
 
     def reset(self, scenario_prompt: str) -> None:
-        """重置平台状态，为新一轮仿真做准备。"""
+        """閲嶇疆骞冲彴鐘舵€侊紝涓烘柊涓€杞豢鐪熷仛鍑嗗銆?"""
         self.current_round = 0
         self.scenario_prompt = scenario_prompt
         self.agents.clear()
@@ -70,9 +70,15 @@ class Platform:
         self._reply_id_seq = 1
         self._like_id_seq = 1
         self._share_id_seq = 1
+        self.runtime_profile.clear()
 
-    def register_agent(self, agent=None, agent_id: int | None = None, agent_name: str | None = None) -> dict:
-        """登记平台可见的 agent 身份。"""
+    def register_agent(
+        self,
+        agent=None,
+        agent_id: int | None = None,
+        agent_name: str | None = None,
+    ) -> dict:
+        """鐧昏骞冲彴鍙鐨?agent 韬唤銆?"""
         if agent is not None:
             agent_id = int(agent.agent_id)
             agent_name = str(agent.profile.name)
@@ -89,8 +95,12 @@ class Platform:
         )
         return {"success": True, "agent_id": int(agent_id), "agent_name": self.agents[int(agent_id)]}
 
-    async def sign_up(self, agent_id: int, user_message: tuple[str, str] | tuple[str, str, str] | str) -> dict:
-        """兼容旧接口的注册入口。"""
+    async def sign_up(
+        self,
+        agent_id: int,
+        user_message: tuple[str, str] | tuple[str, str, str] | str,
+    ) -> dict:
+        """鍏煎鏃ф帴鍙ｇ殑娉ㄥ唽鍏ュ彛銆?"""
         if isinstance(user_message, str):
             return self.register_agent(agent_id=agent_id, agent_name=user_message)
         if isinstance(user_message, tuple):
@@ -101,11 +111,11 @@ class Platform:
         return self.register_agent(agent_id=agent_id, agent_name=f"agent_{agent_id}")
 
     def browse_feed(self, agent_id: int) -> dict:
-        """返回某个 agent 当前可见的信息流。"""
+        """杩斿洖鏌愪釜 agent 褰撳墠鍙鐨勪俊鎭祦銆?"""
         return {"success": True, "feed": self.get_feed_for_agent(agent_id)}
 
     async def running(self) -> None:
-        """持续消费通道中的平台动作请求。"""
+        """鎸佺画娑堣垂閫氶亾涓殑骞冲彴鍔ㄤ綔璇锋眰銆?"""
         while True:
             message_id, data = await self.channel.receive_from()
             if not isinstance(data, tuple) or len(data) < 3:
@@ -119,13 +129,17 @@ class Platform:
                 break
 
             try:
+                lock_wait_start = time.perf_counter()
                 async with self._action_lock:
-                    # 平台状态是共享资源，因此串行处理动作以避免竞态条件。
+                    self._profile_timing("platform_lock_wait", time.perf_counter() - lock_wait_start)
+                    dispatch_start = time.perf_counter()
                     result = await self.action_dispatcher.dispatch(
                         agent_id=int(agent_id) if agent_id is not None else -1,
                         action_name=action_name,
                         message=message,
                     )
+                    self._profile_timing("platform_dispatch", time.perf_counter() - dispatch_start)
+                    self._profile_count(f"platform_action:{action_name}")
             except Exception as exc:
                 result = {"success": False, "error": str(exc)}
             await self.channel.send_to((message_id, agent_id, result))
@@ -139,7 +153,7 @@ class Platform:
         sentiment: float,
         emotion_analysis: Optional[dict] = None,
     ) -> dict:
-        """创建一条新帖子，并补齐平台侧情绪分析字段。"""
+        """鍒涘缓涓€鏉℃柊甯栧瓙锛屽苟琛ラ綈骞冲彴渚ф儏缁垎鏋愬瓧娈点€?"""
         emotion_payload = self.platform_utils.resolve_emotion_payload(
             content=content,
             emotion=emotion,
@@ -178,7 +192,7 @@ class Platform:
         sentiment: float,
         emotion_analysis: Optional[dict] = None,
     ) -> dict:
-        """在指定帖子下创建回复。"""
+        """鍦ㄦ寚瀹氬笘瀛愪笅鍒涘缓鍥炲銆?"""
         emotion_payload = self.platform_utils.resolve_emotion_payload(
             content=content,
             emotion=emotion,
@@ -206,7 +220,7 @@ class Platform:
         return reply
 
     def like_post(self, agent_id: int, post_id: int) -> dict:
-        """记录点赞；同一 agent 对同一帖子只保留一条记录。"""
+        """璁板綍鐐硅禐锛涘悓涓€ agent 瀵瑰悓涓€甯栧瓙鍙繚鐣欎竴鏉¤褰曘€?"""
         existing = next(
             (
                 item
@@ -244,7 +258,7 @@ class Platform:
         content: str | None = None,
         emotion_analysis: Optional[dict] = None,
     ) -> dict:
-        """转发原帖，并额外生成一条新的分享帖子。"""
+        """杞彂鍘熷笘锛屽苟棰濆鐢熸垚涓€鏉℃柊鐨勫垎浜笘瀛愩€?"""
         original_post = self.platform_utils.find_post(self.posts, post_id)
         if original_post is None:
             raise ValueError(f"Post {post_id} not found for sharing.")
@@ -286,9 +300,7 @@ class Platform:
         self._post_id_seq += 1
         self.posts.append(shared_post)
         self.traces.append({"round_index": self.current_round, "type": "share_post", **share})
-        self.traces.append(
-            {"round_index": self.current_round, "type": "create_post", **shared_post}
-        )
+        self.traces.append({"round_index": self.current_round, "type": "create_post", **shared_post})
         return shared_post
 
     def apply_influence(
@@ -298,7 +310,7 @@ class Platform:
         delta: float,
         reason: str,
     ) -> dict:
-        """记录一次社会影响事件。"""
+        """璁板綍涓€娆＄ぞ浼氬奖鍝嶄簨浠躲€?"""
         event = {
             "round_index": self.current_round,
             "source_agent_id": source_agent_id,
@@ -311,7 +323,7 @@ class Platform:
         return event
 
     def record_idle(self, agent_id: int, reason: str) -> None:
-        """记录本轮未执行公开动作。"""
+        """璁板綍鏈疆鏈墽琛屽叕寮€鍔ㄤ綔銆?"""
         self.traces.append(
             {
                 "round_index": self.current_round,
@@ -322,7 +334,7 @@ class Platform:
         )
 
     def get_feed_for_agent(self, agent_id: int) -> List[dict]:
-        """为指定 agent 计算带曝光分的信息流。"""
+        """涓烘寚瀹?agent 璁＄畻甯︽洕鍏夊垎鐨勪俊鎭祦銆?"""
         scored_items = []
         for item in self.posts:
             exposure = self.platform_utils.score_exposure(item, agent_id, self.current_round)
@@ -331,7 +343,6 @@ class Platform:
             feed_item["exposure_features"] = exposure["features"]
             scored_items.append(feed_item)
 
-        # 先按曝光分排序，再用轮次、强度和情绪极性作为次级排序条件。
         ordered = sorted(
             scored_items,
             key=lambda item: (
@@ -346,7 +357,7 @@ class Platform:
         return ordered[: self.feed_limit]
 
     def commit_round(self, round_index: int, round_results: Dict[int, object]) -> None:
-        """提交一轮结束后的统计信息，并推进平台轮次。"""
+        """鎻愪氦涓€杞粨鏉熷悗鐨勭粺璁′俊鎭紝骞舵帹杩涘钩鍙拌疆娆°€?"""
         self.traces.append(
             {
                 "round_index": round_index,
@@ -357,12 +368,13 @@ class Platform:
                 "like_count": len(self.likes),
                 "share_count": len(self.shares),
                 "influence_count": len(self.influence_events),
+                "runtime_profile": self.snapshot_runtime_profile(),
             }
         )
         self.current_round = round_index + 1
 
     def snapshot(self) -> dict:
-        """导出平台当前完整快照。"""
+        """瀵煎嚭骞冲彴褰撳墠瀹屾暣蹇収銆?"""
         return {
             "current_round": self.current_round,
             "scenario_prompt": self.scenario_prompt,
@@ -375,4 +387,30 @@ class Platform:
             "influence_events": self.influence_events,
             "traces": self.traces,
             "trace_size": len(self.traces),
+            "runtime_profile": self.snapshot_runtime_profile(),
         }
+
+    def snapshot_runtime_profile(self) -> dict:
+        return {
+            key: {
+                "count": int(value.get("count", 0)),
+                "total_ms": round(float(value.get("total", 0.0)) * 1000.0, 3),
+                "avg_ms": round(
+                    (
+                        float(value.get("total", 0.0)) / max(1, int(value.get("count", 0)))
+                    )
+                    * 1000.0,
+                    3,
+                ),
+            }
+            for key, value in sorted(self.runtime_profile.items())
+        }
+
+    def _profile_timing(self, metric: str, duration: float) -> None:
+        bucket = self.runtime_profile.setdefault(metric, {"count": 0, "total": 0.0})
+        bucket["count"] += 1
+        bucket["total"] += max(0.0, float(duration))
+
+    def _profile_count(self, metric: str, value: int = 1) -> None:
+        bucket = self.runtime_profile.setdefault(metric, {"count": 0, "total": 0.0})
+        bucket["count"] += max(0, int(value))

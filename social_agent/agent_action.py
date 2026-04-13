@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, List
 
@@ -31,6 +32,7 @@ class SocialAction:
         self.agent_id = agent_id
         self.owner = owner
         self.channel = channel
+        self.runtime_profile: dict[str, dict[str, float | int]] = {}
 
     def bind(
         self,
@@ -48,10 +50,15 @@ class SocialAction:
 
         if self.channel is None:
             raise RuntimeError("SocialAction requires a bound channel.")
+        queue_write_start = time.perf_counter()
         message_id = await self.channel.write_to_receive_queue(
             (self.agent_id, payload, action_name)
         )
+        self._record_timing("channel_queue_write", time.perf_counter() - queue_write_start)
+        wait_start = time.perf_counter()
         _message_id, _agent_id, result = await self.channel.read_from_send_queue(message_id)
+        self._record_timing("channel_response_wait", time.perf_counter() - wait_start)
+        self._record_count(f"agent_action:{action_name}")
         return dict(result)
 
     async def register_agent(self, agent_name: str) -> dict:
@@ -237,3 +244,28 @@ class SocialAction:
         if self.owner is None:
             raise RuntimeError("SocialAction requires a bound agent owner.")
         return self.owner
+
+    def snapshot_runtime_profile(self) -> dict[str, dict[str, float | int]]:
+        return {
+            key: {
+                "count": int(value.get("count", 0)),
+                "total_ms": round(float(value.get("total", 0.0)) * 1000.0, 3),
+                "avg_ms": round(
+                    (
+                        float(value.get("total", 0.0)) / max(1, int(value.get("count", 0)))
+                    )
+                    * 1000.0,
+                    3,
+                ),
+            }
+            for key, value in sorted(self.runtime_profile.items())
+        }
+
+    def _record_timing(self, metric: str, duration: float) -> None:
+        bucket = self.runtime_profile.setdefault(metric, {"count": 0, "total": 0.0})
+        bucket["count"] += 1
+        bucket["total"] += max(0.0, float(duration))
+
+    def _record_count(self, metric: str, value: int = 1) -> None:
+        bucket = self.runtime_profile.setdefault(metric, {"count": 0, "total": 0.0})
+        bucket["count"] += max(0, int(value))

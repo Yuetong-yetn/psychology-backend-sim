@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+import json
+import time
+from collections import OrderedDict
+from typing import TYPE_CHECKING, Callable, Optional
 
 from .emotion_detector import BaseEmotionDetector, LATENT_DIM
 
 if TYPE_CHECKING:
     from services.llm_provider import LLMProvider
+
+
+ProfileHook = Callable[[str, float], None]
+CountHook = Callable[[str, int], None]
 
 
 class PlatformUtils:
@@ -18,9 +25,16 @@ class PlatformUtils:
         *,
         emotion_detector: BaseEmotionDetector,
         cognitive_provider: LLMProvider,
+        profile_hook: ProfileHook | None = None,
+        count_hook: CountHook | None = None,
+        emotion_cache_size: int = 512,
     ) -> None:
         self.emotion_detector = emotion_detector
         self.cognitive_provider = cognitive_provider
+        self.profile_hook = profile_hook
+        self.count_hook = count_hook
+        self.emotion_cache_size = max(1, int(emotion_cache_size))
+        self._emotion_payload_cache: OrderedDict[str, dict] = OrderedDict()
 
     def find_post(self, posts: list[dict], post_id: int) -> dict | None:
         """按 `post_id` 查找帖子。"""
@@ -36,24 +50,35 @@ class PlatformUtils:
         emotion_analysis: Optional[dict] = None,
     ) -> dict:
         """把文本和 agent 自报情绪整合成平台侧统一情绪载荷。"""
+        cache_key = self._emotion_cache_key(
+            content=content,
+            emotion=emotion,
+            intensity=intensity,
+            sentiment=sentiment,
+            emotion_analysis=emotion_analysis,
+        )
+        cached = self._emotion_payload_cache.get(cache_key)
+        if cached is not None:
+            self._emotion_payload_cache.move_to_end(cache_key)
+            self._count("emotion_payload_cache_hit")
+            return dict(cached)
+
         internal_signal = self.build_internal_signal(
             emotion=emotion,
             intensity=intensity,
             sentiment=sentiment,
             emotion_analysis=emotion_analysis,
         )
-        analysis = self.cognitive_provider.analyze_emotion(
-            {
-                "text": content,
-                "internal_signal": internal_signal,
-            },
-            fallback_fn=lambda payload: self.emotion_detector.analyze_text(
-                str(payload.get("text", "")),
-                overrides={"internal_signal": payload.get("internal_signal")},
-            ).to_dict(),
+        analysis = self._normalize_analysis_payload(
+            internal_signal=internal_signal,
+            content=content,
+            emotion=emotion,
+            intensity=intensity,
+            sentiment=sentiment,
+            emotion_analysis=emotion_analysis,
         )
 
-        return {
+        resolved = {
             "emotion": analysis.get("dominant_emotion", emotion),
             "dominant_emotion": analysis.get("dominant_emotion", emotion),
             "intensity": float(analysis.get("intensity", intensity)),
@@ -64,6 +89,12 @@ class PlatformUtils:
                 float(item) for item in analysis.get("emotion_latent", [0.0] * LATENT_DIM)
             ],
         }
+        self._emotion_payload_cache[cache_key] = dict(resolved)
+        self._emotion_payload_cache.move_to_end(cache_key)
+        while len(self._emotion_payload_cache) > self.emotion_cache_size:
+            self._emotion_payload_cache.popitem(last=False)
+        self._count("emotion_payload_cache_miss")
+        return resolved
 
     def build_internal_signal(
         self,
@@ -86,6 +117,73 @@ class PlatformUtils:
         if isinstance(emotion_analysis, dict):
             payload.update(dict(emotion_analysis))
         return payload
+
+    def _normalize_analysis_payload(
+        self,
+        *,
+        internal_signal: dict,
+        content: str,
+        emotion: str,
+        intensity: float,
+        sentiment: float,
+        emotion_analysis: Optional[dict],
+    ) -> dict:
+        if self._has_complete_emotion_analysis(emotion_analysis):
+            self._count("emotion_analysis_reused")
+            return dict(emotion_analysis)
+
+        self._count("emotion_analysis_fallback")
+        start = time.perf_counter()
+        try:
+            return self.cognitive_provider.analyze_emotion(
+                {
+                    "text": content,
+                    "internal_signal": internal_signal,
+                },
+                fallback_fn=lambda payload: self.emotion_detector.analyze_text(
+                    str(payload.get("text", "")),
+                    overrides={"internal_signal": payload.get("internal_signal")},
+                ).to_dict(),
+            )
+        finally:
+            self._profile("analyze_emotion", time.perf_counter() - start)
+
+    @staticmethod
+    def _has_complete_emotion_analysis(emotion_analysis: Optional[dict]) -> bool:
+        if not isinstance(emotion_analysis, dict):
+            return False
+        required = {"dominant_emotion", "intensity", "sentiment", "emotion_probs", "pad", "emotion_latent"}
+        if not required.issubset(emotion_analysis):
+            return False
+        pad = emotion_analysis.get("pad")
+        latent = emotion_analysis.get("emotion_latent")
+        return isinstance(pad, list) and len(pad) == 3 and isinstance(latent, list) and len(latent) == LATENT_DIM
+
+    def _emotion_cache_key(
+        self,
+        *,
+        content: str,
+        emotion: str,
+        intensity: float,
+        sentiment: float,
+        emotion_analysis: Optional[dict],
+    ) -> str:
+        payload = {
+            "content": content,
+            "emotion": emotion,
+            "intensity": round(float(intensity), 6),
+            "sentiment": round(float(sentiment), 6),
+            "emotion_analysis": emotion_analysis if isinstance(emotion_analysis, dict) else None,
+        }
+        return json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+
+    def _profile(self, metric: str, duration: float) -> None:
+        if self.profile_hook is not None:
+            self.profile_hook(metric, duration)
+
+    def _count(self, metric: str, value: int = 1) -> None:
+        if self.count_hook is not None:
+            self.count_hook(metric, value)
 
     def score_exposure(self, item: dict, agent_id: int, current_round: int) -> dict:
         """为帖子计算曝光分及其特征拆解。"""

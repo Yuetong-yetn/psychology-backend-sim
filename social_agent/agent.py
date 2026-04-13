@@ -903,6 +903,7 @@ class SimulatedAgent:
                 "last_contagion_vector": self.state.last_contagion_vector,
                 "appraisal_runtime": dict(self.state.appraisal_runtime),
                 "latent_runtime": dict(self.state.latent_runtime),
+                "action_runtime": self.action.snapshot_runtime_profile(),
                 "memory_size": len(self.state.memory),
                 "appraisal_count": len(self.state.appraisal_history),
             },
