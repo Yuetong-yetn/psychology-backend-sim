@@ -1,44 +1,44 @@
 # AGENT.md
 
-This document describes the current implementation logic of the Psychology Backend codebase.
+本文档描述 Psychology Backend 代码库的当前实现逻辑。
 
-## Project Role
+## 项目角色
 
-The backend simulates how agents react to social content over multiple rounds. Each agent reads platform content, evaluates the current situation, updates internal state, and emits platform actions that affect the shared environment.
+后端用于模拟 agents 在多轮过程中如何对社交内容作出反应。每个 agent 读取平台内容、评估当前情境、更新内部状态，并发出会影响共享环境的平台动作。
 
-The main interaction loop is:
+主要交互循环为：
 
 `browse feed -> appraisal -> emotion and schema update -> decision -> platform action -> platform state update`
 
-## Module Responsibilities
+## 模块职责
 
 - `environment/`
-  - Owns simulation lifecycle, round scheduling, concurrency, export, and shutdown
+  - 负责仿真生命周期、轮次调度、并发、导出和关闭
 - `social_agent/`
-  - Owns agent profile, state, appraisal, emotion representation, memory, schema updates, and action selection
+  - 负责 agent 档案、状态、appraisal、情绪表示、记忆、schema 更新和动作选择
 - `social_platform/`
-  - Owns posts, comments, feed retrieval, action execution, and platform traces
+  - 负责 posts、comments、feed 获取、动作执行和平台追踪
 - `services/`
-  - Owns provider clients, LLM routing, local fallback behavior, and provider metadata
+  - 负责 provider 客户端、LLM 路由、本地 fallback 行为和 provider 元数据
 - `config/`
-  - Owns request defaults and backend internal parameters
+  - 负责请求默认值和后端内部参数
 
-## Current Round Flow
+## 当前轮次流程
 
-For each round, an agent performs these steps:
+在每一轮中，一个 agent 会执行以下步骤：
 
-1. Read the current scenario and visible feed
-2. Build a compact event representation from platform inputs
-3. Run appraisal
-4. Update emotion, schemas, stress, equilibrium, and memory-linked state
-5. Build beliefs, desires, and intentions
-6. Select an action and submit it to the platform
+1. 读取当前 scenario 和可见 feed
+2. 从平台输入构建紧凑的事件表示
+3. 运行 appraisal
+4. 更新情绪、schemas、stress、equilibrium 和与 memory 关联的状态
+5. 构建 beliefs、desires 和 intentions
+6. 选择一个动作并提交到平台
 
-`SimulatedAgent.run_round()` is the main round entrypoint.
+`SimulatedAgent.run_round()` 是主要的轮次入口。
 
-## Appraisal Logic
+## Appraisal 逻辑
 
-Appraisal is the primary event interpretation step. It transforms the current situation into structured cognitive signals such as:
+Appraisal 是主要的事件解释步骤。它会将当前情境转换为结构化的认知信号，例如：
 
 - relevance
 - valence
@@ -48,21 +48,21 @@ Appraisal is the primary event interpretation step. It transforms the current si
 - coping potential
 - agency-related outputs
 
-Current routing logic:
+当前路由逻辑：
 
-- A backend ratio determines which agents use the LLM appraisal path
-- The remaining agents use the local appraisal path directly
-- LLM-routed agents keep local fallback behavior when external requests fail
+- 后端比例参数决定哪些 agents 使用 LLM appraisal 路径
+- 其余 agents 直接使用本地 appraisal 路径
+- 被路由到 LLM 的 agents 在外部请求失败时保留本地 fallback 行为
 
-The ratio is configured in `config/backend_settings.py`:
+该比例在 `config/backend_settings.py` 中配置：
 
 - `EnvironmentDefaults.appraisal_llm_ratio = 0.1`
 
-This means the current implementation routes 10% of agents to the LLM appraisal path.
+这意味着当前实现会将 10% 的 agents 路由到 LLM appraisal 路径。
 
-### Appraisal Runtime Metadata
+### Appraisal 运行时元数据
 
-Each agent records appraisal execution metadata in `state.appraisal_runtime`, including:
+每个 agent 都会在 `state.appraisal_runtime` 中记录 appraisal 执行元数据，包括：
 
 - `mode`
 - `provider`
@@ -71,7 +71,7 @@ Each agent records appraisal execution metadata in `state.appraisal_runtime`, in
 - `fallback_used`
 - `fallback_reason`
 
-Agents routed directly to local appraisal by ratio record:
+因比例配置而直接被路由到本地 appraisal 的 agents 会记录：
 
 - `mode = "fallback"`
 - `provider = "local"`
@@ -79,9 +79,9 @@ Agents routed directly to local appraisal by ratio record:
 
 ## Appraisal Payload
 
-The current LLM appraisal payload is compact and uses only the fields required for event judgment.
+当前的 LLM appraisal payload 是紧凑的，只使用事件判断所需的字段。
 
-It includes:
+它包含：
 
 - `event`
   - `direction`
@@ -111,27 +111,27 @@ It includes:
   - `memory_valence_bias`
 - `prior`
 
-## Latent Logic
+## Latent 逻辑
 
-Latent encoding is fully local in the current implementation.
+在当前实现中，latent 编码完全在本地执行。
 
-The emotion representation module generates the latent vector with the engineered local encoder and records:
+情绪表示模块使用工程化的本地编码器生成 latent 向量，并记录：
 
 - `mode = "local_only"`
 - `provider = "local"`
 - `source = "engineered_latent"`
 - `fallback_used = false`
 
-`latent_runtime` is stored in every agent snapshot for inspection.
+每个 agent 快照中都会存储 `latent_runtime` 以供检查。
 
-## Agent State Conventions
+## Agent 状态约定
 
-`AgentState` stores the fields required for simulation, inspection, and export.
+`AgentState` 存储仿真、检查和导出所需的字段。
 
-Important state groups include:
+重要的状态组包括：
 
 - `emotion_state`
-  - emotion probabilities, PAD values, latent vector, dominant label
+  - 情绪概率、PAD 值、latent 向量、dominant label
 - `stress`
 - `equilibrium`
 - `schemas`
@@ -145,11 +145,11 @@ Important state groups include:
 - `appraisal_runtime`
 - `latent_runtime`
 
-Derived values should be computed from primary state when possible instead of adding mirror fields.
+在可能的情况下，应从主状态计算派生值，而不是添加镜像字段。
 
-## Platform Actions
+## 平台动作
 
-The platform currently supports actions such as:
+平台当前支持的动作包括：
 
 - `create_post`
 - `create_comment`
@@ -162,56 +162,56 @@ The platform currently supports actions such as:
 - `mute`
 - `do_nothing`
 
-When action logic changes, the following surfaces should stay aligned:
+当动作逻辑变化时，以下层面应保持一致：
 
 - platform execution
 - feed visibility
 - trace output
 - snapshot export
 
-## Environment Scheduling
+## 环境调度
 
-The environment runs agents concurrently and coordinates round completion at the scheduler layer.
+环境会并发运行 agents，并在调度层协调每轮完成。
 
-Current scheduler defaults:
+当前调度器默认值：
 
 - `llm_semaphore = 64`
 - `llm_worker_threads = 64`
 
-The environment uses a dedicated thread pool for provider-bound work so LLM calls do not depend on the default event-loop executor.
+环境为 provider 相关工作使用专用线程池，因此 LLM 调用不依赖默认的 event-loop executor。
 
-## Provider Layer
+## Provider 层
 
-The provider layer supports:
+Provider 层支持：
 
 - `deepseek`
 - `ollama`
 
-Current behavior:
+当前行为：
 
-- DeepSeek uses `requests.Session()` and a default `max_tokens = 800`
-- Ollama uses `requests.Session()` and a default `max_tokens = 800`
-- DeepSeek availability is inferred from API-key presence unless explicitly overridden
-- Ollama availability is inferred from configured endpoint and model unless explicitly overridden
+- DeepSeek 使用 `requests.Session()`，默认 `max_tokens = 800`
+- Ollama 使用 `requests.Session()`，默认 `max_tokens = 800`
+- 除非被显式覆盖，DeepSeek 的可用性根据 API key 是否存在推断
+- 除非被显式覆盖，Ollama 的可用性根据配置的 endpoint 和 model 推断
 
-Provider failures do not interrupt the whole simulation when fallback is enabled for the routed LLM path.
+当为被路由到 LLM 的路径启用了 fallback 时，provider 失败不会中断整个仿真。
 
-## Frontend Data Contract
+## 前端数据契约
 
-The returned snapshot is structured for frontend consumption with these rules:
+返回的快照按以下规则组织，以供前端消费：
 
-- English-only labels and status text
-- request defaults driven by `config/frontend_settings.py`
-- agent-focused data filtered to LLM-path agents only
-- raw returned JSON split into:
+- 仅使用英文标签和状态文本
+- 请求默认值由 `config/frontend_settings.py` 驱动
+- 面向 agent 的数据只过滤保留 LLM 路径 agents
+- 原始返回 JSON 分为：
   - `Posts JSON`
   - `LLM Agents JSON`
 
-Agents routed to local appraisal by ratio remain part of platform state and post outcomes, but they are excluded from the agent-focused frontend data.
+因比例配置而被路由到本地 appraisal 的 agents 仍然是 platform 状态和 post 结果的一部分，但它们会被排除在面向 agent 的前端数据之外。
 
-## Debug API Contract
+## 调试 API 契约
 
-The main debug routes are:
+主要调试路由为：
 
 - `GET /api/debug/options`
 - `GET /api/debug/status`
@@ -220,7 +220,7 @@ The main debug routes are:
 - `GET /api/debug/run-sample/{job_id}`
 - `GET /api/debug/snapshot`
 
-The generated runtime payload includes:
+生成的运行时负载包含：
 
 - `mode`
 - `llm_provider`
@@ -228,14 +228,14 @@ The generated runtime payload includes:
 - `feed_limit`
 - `appraisal_llm_ratio`
 
-## Development Rules For This Codebase
+## 本代码库的开发规则
 
-- Keep exported snapshot fields aligned with actual runtime logic
-- Record provider and fallback metadata whenever cognition routing changes
-- Prefer primary state plus derived computation over duplicated state fields
-- Keep frontend data assumptions aligned with snapshot structure
-- When adding new runtime parameters, wire them through:
+- 保持导出的快照字段与实际运行时逻辑一致
+- 每当认知路由发生变化时，记录 provider 和 fallback 元数据
+- 优先使用主状态加派生计算，而不是重复的状态字段
+- 保持前端数据假设与快照结构一致
+- 当添加新的运行时参数时，要将其贯通到：
   - backend settings
   - payload generation
   - run entrypoints
-  - snapshot metadata if the parameter affects interpretation
+  - 如果该参数影响解释，则还要接入 snapshot metadata

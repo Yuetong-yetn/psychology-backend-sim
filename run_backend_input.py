@@ -24,6 +24,7 @@ if str(PARENT_ROOT) not in sys.path:
 from config.backend_settings import BACKEND_IO
 from environment.make import make
 from environment.scenario import SimulatedScenario
+from services.debug_io import ensure_default_input, write_default_output
 from social_agent.agent import AgentProfile, AgentState, SimulatedAgent
 from social_agent.agent_graph import AgentGraph
 from social_platform.platform import Platform
@@ -209,7 +210,7 @@ def main() -> None:
         "-i",
         "--input",
         type=Path,
-        default=CURRENT_DIR / "examples" / "backend_sample_input.json",
+        default=ensure_default_input(),
     )
     parser.add_argument("-o", "--output", type=Path, default=None)
     args = parser.parse_args()
@@ -219,6 +220,7 @@ def main() -> None:
     if args.output is not None:
         args.output.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
     else:
+        write_default_output(snapshot)
         print(json.dumps(snapshot, ensure_ascii=False, indent=2))
 
 

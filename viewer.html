@@ -574,7 +574,22 @@
         const provider = String(runtime.provider || "").toLowerCase();
         const mode = String(runtime.mode || "").toLowerCase();
         const source = String(runtime.source || "").toLowerCase();
-        return Boolean(provider) && provider !== "local" && mode !== "fallback" && source !== "local";
+        const fallbackReason = String(runtime.fallback_reason || "").toLowerCase();
+        const fallbackUsed = Boolean(runtime.fallback_used);
+
+        if (fallbackReason === "ratio_routed_to_local" || fallbackReason === "mode_forced_fallback") {
+          return false;
+        }
+        if (provider && provider !== "local") {
+          return true;
+        }
+        if (source && source !== "local") {
+          return true;
+        }
+        if (mode === "moe") {
+          return true;
+        }
+        return fallbackUsed;
       }
 
       function renderAgents(agents) {
@@ -648,7 +663,7 @@
             .join("");
         setHtml(
           els.timeline,
-          rendered || '<div class="empty">No LLM-path agent results are available in this timeline.</div>'
+          rendered || '<div class="empty">No MoE-routed agent results are available in this timeline.</div>'
         );
       }
 

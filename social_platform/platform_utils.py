@@ -135,7 +135,7 @@ class PlatformUtils:
         self._count("emotion_analysis_fallback")
         start = time.perf_counter()
         try:
-            return self.cognitive_provider.analyze_emotion(
+            raw = self.cognitive_provider.analyze_emotion(
                 {
                     "text": content,
                     "internal_signal": internal_signal,
@@ -145,8 +145,49 @@ class PlatformUtils:
                     overrides={"internal_signal": payload.get("internal_signal")},
                 ).to_dict(),
             )
+            if isinstance(raw, dict) and self._has_complete_emotion_analysis(raw):
+                return self._complete_emotion_analysis(dict(raw), internal_signal, content)
+            nested = raw.get("emotion") if isinstance(raw, dict) else None
+            if self._has_complete_emotion_analysis(nested):
+                normalized = dict(nested)
+                if isinstance(raw, dict) and "_provider_meta" in raw:
+                    normalized["_provider_meta"] = raw["_provider_meta"]
+                return self._complete_emotion_analysis(normalized, internal_signal, content)
+            return self._complete_emotion_analysis(dict(internal_signal), internal_signal, content)
         finally:
             self._profile("analyze_emotion", time.perf_counter() - start)
+
+    def _complete_emotion_analysis(
+        self,
+        analysis: dict,
+        internal_signal: dict,
+        content: str,
+    ) -> dict:
+        pad = analysis.get("pad")
+        latent = analysis.get("emotion_latent")
+        probs = analysis.get("emotion_probs")
+        has_nonzero_latent = (
+            isinstance(latent, list)
+            and len(latent) == LATENT_DIM
+            and any(abs(float(item)) > 1e-9 for item in latent)
+        )
+        has_probs = isinstance(probs, dict) and bool(probs)
+        if self._has_complete_emotion_analysis(analysis) and has_nonzero_latent and has_probs:
+            return analysis
+
+        enriched = self.emotion_detector.analyze_text(
+            str(content or ""),
+            overrides={"internal_signal": dict(analysis) if isinstance(analysis, dict) else internal_signal},
+        ).to_dict()
+        if isinstance(analysis, dict) and "_provider_meta" in analysis:
+            enriched["_provider_meta"] = analysis["_provider_meta"]
+        if isinstance(pad, list) and len(pad) == 3:
+            enriched["pad"] = [float(item) for item in pad]
+        if isinstance(analysis, dict):
+            enriched["dominant_emotion"] = analysis.get("dominant_emotion", enriched.get("dominant_emotion"))
+            enriched["intensity"] = float(analysis.get("intensity", enriched.get("intensity", 0.0)))
+            enriched["sentiment"] = float(analysis.get("sentiment", enriched.get("sentiment", 0.0)))
+        return enriched
 
     @staticmethod
     def _has_complete_emotion_analysis(emotion_analysis: Optional[dict]) -> bool:
