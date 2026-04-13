@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "description": "Native backend input data for environment, platform, and multi-agent simulation testing.",
+    "num_agents": 2,
+    "rounds": 1,
+    "seed_posts": 1,
+    "seed": 42
+  },
+  "runtime": {
+    "mode": "moe",
+    "llm_provider": "ollama",
+    "enable_fallback": true,
+    "feed_limit": 5,
+    "appraisal_llm_ratio": 0.1
+  },
+  "scenario": {
+    "scenario_id": "scenario_42",
+    "title": "Social issue: electric vehicle subsidy changes",
+    "description": "Online public discussion around 'electric vehicle subsidy changes' is heating up. Users keep encountering polarized viewpoints in their feeds and react to them.",
+    "environment_context": [
+      "Public opinion is divided.",
+      "Some users seek consensus while others amplify conflict.",
+      "Posts with strong emotion receive higher visibility.",
+      "Users can post, browse, reply, like, share, and influence each other."
+    ]
+  },
+  "agents": [
+    {
+      "agent_id": 0,
+      "name": "Alex_0",
+      "role": "journalist",
+      "ideology": "moderate",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.1384,
+        "stress": 0.4367,
+        "expectation": 0.623,
+        "satisfaction": 0.0984,
+        "dopamine_level": 0.4426,
+        "influence_score": 0.4688,
+        "schema_flexibility": 0.3604,
+        "empathy_level": 0.4831,
+        "schemas": {
+          "support_tendency": 0.6058,
+          "threat_sensitivity": 0.2613,
+          "self_efficacy": 0.4738
+        }
+      }
+    },
+    {
+      "agent_id": 1,
+      "name": "Bea_1",
+      "role": "artist",
+      "ideology": "progressive",
+      "communication_style": "expressive",
+      "initial_state": {
+        "emotion": -0.137,
+        "stress": 0.2251,
+        "expectation": 0.6399,
+        "satisfaction": 0.019,
+        "dopamine_level": 0.5687,
+        "influence_score": 0.6048,
+        "schema_flexibility": 0.5553,
+        "empathy_level": 0.7197,
+        "schemas": {
+          "support_tendency": 0.7125,
+          "threat_sensitivity": 0.6331,
+          "self_efficacy": 0.3706
+        }
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source_agent_id": 0,
+      "target_agent_id": 1,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 1,
+      "target_agent_id": 0,
+      "type": "follow"
+    }
+  ],
+  "seed_posts": [
+    {
+      "author_id": 0,
+      "content": "If people focus only on emotional reactions, debate about electric vehicle subsidy changes will become more extreme.",
+      "emotion": "confidence",
+      "intensity": 0.2429,
+      "sentiment": 0.2452,
+      "round_index": 0
+    }
+  ]
+}

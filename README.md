@@ -199,4 +199,4 @@ OLLAMA_MAX_TOKENS=800
 
 ## Architecture Reference
 
-Development-facing conventions and module responsibilities are documented in [agent.md](/d:/Design/Psychology/Backend/agent.md).
+Development-facing conventions and module responsibilities are documented in [agent.md](./agent.md).
