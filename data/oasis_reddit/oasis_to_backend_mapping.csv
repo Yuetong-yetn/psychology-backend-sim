@@ -1,0 +1,25 @@
+﻿source_field,backend_target,mapping_type,transform_rule,notes
+realname,agents[].name,fallback,Use username first; fall back to realname when username is empty.,Backend name prefers handle-like identifiers.
+username,agents[].name,direct,Copied directly into Backend agent name.,Matches platform-facing identity.
+profession,agents[].role,derived,Lowercase and normalize to underscore-separated role.,Backend expects a compact role token.
+interested_topics + persona,agents[].ideology,derived,Heuristic mapping into progressive/conservative/moderate.,No direct ideology field exists in OASIS.
+mbti + bio + persona,agents[].communication_style,derived,Rule-based mapping into analytical/direct/empathetic/expressive/measured/supportive/balanced.,Backend requires a discrete style label.
+age + mbti + profession + interested_topics,agents[].initial_state.schemas.support_tendency,derived,Deterministic heuristic score.,No direct psychological schema exists in OASIS.
+age + mbti + profession + interested_topics,agents[].initial_state.schemas.threat_sensitivity,derived,Deterministic heuristic score.,No direct psychological schema exists in OASIS.
+age + mbti + profession + interested_topics,agents[].initial_state.schemas.self_efficacy,derived,Deterministic heuristic score.,No direct psychological schema exists in OASIS.
+mbti + profession + seed,agents[].initial_state.emotion,derived,Stable hash-based value in Backend numeric range.,OASIS has no scalar initial emotion field.
+mbti + profession + interested_topics + seed,agents[].initial_state.stress,derived,Stable heuristic score.,Backend requires structured initial stress.
+mbti + profession + seed,agents[].initial_state.expectation,derived,Stable heuristic score.,Backend requires structured expectation.
+mbti + profession + seed,agents[].initial_state.satisfaction,derived,Stable heuristic score.,Backend requires structured satisfaction.
+mbti + profession + seed,agents[].initial_state.dopamine_level,derived,Stable heuristic score.,Backend requires structured dopamine level.
+age + mbti + profession + seed,agents[].initial_state.influence_score,derived,Stable heuristic score.,Backend requires structured influence score.
+mbti + seed,agents[].initial_state.schema_flexibility,derived,Stable heuristic score.,Backend requires structured schema flexibility.
+mbti + profession + seed,agents[].initial_state.empathy_level,derived,Stable heuristic score.,Backend requires structured empathy level.
+shared interested_topics + same country + MBTI similarity + profession,relationships[],derived,Generate follow edges by pairwise affinity scoring.,OASIS source JSON does not include a ready-made Reddit follow graph.
+RS.selftext,seed_posts[].content,direct,Copy as seed post content; fall back to RC_1.body when empty.,Preserves OASIS post text.
+RC_1.group,seed_posts[].emotion/sentiment/intensity,derived,Map up/down/control to confidence/anger/calm signals.,Backend requires structured affect metadata.
+interested_topics aggregate,scenario.title/description,derived,Use top shared topics among selected profiles.,Backend requires a single scenario block.
+bio,unused_direct,unused,Retained in copied raw dataset only.,Not injected directly into Backend payload.
+persona,unused_direct,unused,Used indirectly for style and ideology inference.,Too verbose for direct structured insertion.
+gender,unused_direct,unused,Not consumed by current Backend schema.,Available in copied OASIS raw JSON.
+country,unused_direct,unused,Used indirectly for relationship inference only.,Not a direct Backend field.

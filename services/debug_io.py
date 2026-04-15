@@ -7,6 +7,7 @@ from typing import Any
 from config.backend_settings import BACKEND_IO
 from config.frontend_settings import DEBUG_RUN_DEFAULTS
 from generate_backend_input import build_payload
+from oasis_adapter import write_mapping_csv
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -20,6 +21,7 @@ DEFAULT_OUTPUT = OUTPUTS_DIR / BACKEND_IO.default_output_name
 def ensure_default_input() -> Path:
     """Ensure the default sample backend input exists on disk."""
 
+    write_mapping_csv()
     if DEFAULT_INPUT.exists():
         return DEFAULT_INPUT
     payload = build_payload(
@@ -36,6 +38,7 @@ def write_default_input(payload: dict[str, object]) -> Path:
     """Persist the default sample backend input file."""
 
     EXAMPLES_DIR.mkdir(parents=True, exist_ok=True)
+    write_mapping_csv()
     DEFAULT_INPUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return DEFAULT_INPUT
 

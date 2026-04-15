@@ -1,0 +1,1344 @@
+{
+  "meta": {
+    "description": "Backend input converted from OASIS Reddit profiles and Reddit pair data.",
+    "num_agents": 36,
+    "rounds": 4,
+    "seed_posts": 20,
+    "seed": 42,
+    "source_dataset": {
+      "profiles": "data\\oasis_reddit\\user_data_36.json",
+      "pairs": "data\\oasis_reddit\\counterfactual_36.json"
+    }
+  },
+  "runtime": {
+    "mode": "moe",
+    "llm_provider": "ollama",
+    "enable_fallback": true,
+    "feed_limit": 5,
+    "appraisal_llm_ratio": 0.1
+  },
+  "scenario": {
+    "scenario_id": "oasis_reddit_42",
+    "title": "Reddit discussion around Business",
+    "description": "Agents are initialized from OASIS Reddit profiles and discuss topics such as Business, Culture & Society, Economics on a shared social platform.",
+    "environment_context": [
+      "User profiles come from the OASIS Reddit dataset.",
+      "Seed posts are mapped from OASIS counterfactual Reddit pairs.",
+      "Follow relationships are inferred from shared topics, profession, MBTI, and country.",
+      "Agent psychological states are derived deterministically from profile traits."
+    ]
+  },
+  "agents": [
+    {
+      "agent_id": 0,
+      "name": "millerhospitality",
+      "role": "hospitality_and_tourism",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.0861,
+        "stress": 0.3099,
+        "expectation": 0.5965,
+        "satisfaction": 0.0742,
+        "dopamine_level": 0.5572,
+        "influence_score": 0.7298,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5594,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 1,
+      "name": "emma_logistics_guru",
+      "role": "transportation_distribution_and_logistics",
+      "ideology": "moderate",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.1468,
+        "stress": 0.3502,
+        "expectation": 0.5924,
+        "satisfaction": 0.0847,
+        "dopamine_level": 0.5412,
+        "influence_score": 0.6272,
+        "schema_flexibility": 0.4536,
+        "empathy_level": 0.6797,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 2,
+      "name": "ryantechsavvy22",
+      "role": "science_technology_engineering_and_mathematics",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": 0.0204,
+        "stress": 0.295,
+        "expectation": 0.5722,
+        "satisfaction": 0.0427,
+        "dopamine_level": 0.5302,
+        "influence_score": 0.5631,
+        "schema_flexibility": 0.4536,
+        "empathy_level": 0.5709,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.5688
+        }
+      }
+    },
+    {
+      "agent_id": 3,
+      "name": "biz_mind45",
+      "role": "marketing",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.0209,
+        "stress": 0.3707,
+        "expectation": 0.5988,
+        "satisfaction": -0.0015,
+        "dopamine_level": 0.4959,
+        "influence_score": 0.8084,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.563,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 4,
+      "name": "JakeAgEcon",
+      "role": "agriculture_food_and_natural_resources",
+      "ideology": "conservative",
+      "communication_style": "direct",
+      "initial_state": {
+        "emotion": 0.0842,
+        "stress": 0.3734,
+        "expectation": 0.5408,
+        "satisfaction": 0.0205,
+        "dopamine_level": 0.4727,
+        "influence_score": 0.5513,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5505,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 5,
+      "name": "EcoBizExplorer",
+      "role": "transportation_distribution_and_logistics",
+      "ideology": "conservative",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.1066,
+        "stress": 0.3529,
+        "expectation": 0.5334,
+        "satisfaction": 0.0343,
+        "dopamine_level": 0.4903,
+        "influence_score": 0.6177,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.6779,
+        "schemas": {
+          "support_tendency": 0.504,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 6,
+      "name": "intj_emily",
+      "role": "human_services",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": 0.1102,
+        "stress": 0.2739,
+        "expectation": 0.5604,
+        "satisfaction": -0.0193,
+        "dopamine_level": 0.4803,
+        "influence_score": 0.5841,
+        "schema_flexibility": 0.4536,
+        "empathy_level": 0.6462,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 7,
+      "name": "sereneadvocate",
+      "role": "human_services",
+      "ideology": "progressive",
+      "communication_style": "supportive",
+      "initial_state": {
+        "emotion": -0.0828,
+        "stress": 0.3336,
+        "expectation": 0.5539,
+        "satisfaction": 0.0962,
+        "dopamine_level": 0.4871,
+        "influence_score": 0.4892,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.7624,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.4716,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 8,
+      "name": "hfarmer47",
+      "role": "agriculture_food_and_natural_resources",
+      "ideology": "moderate",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.0414,
+        "stress": 0.298,
+        "expectation": 0.5604,
+        "satisfaction": 0.0537,
+        "dopamine_level": 0.4648,
+        "influence_score": 0.872,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.6535,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 9,
+      "name": "ethan_the_infp",
+      "role": "science_technology_engineering_and_mathematics",
+      "ideology": "progressive",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.1204,
+        "stress": 0.3329,
+        "expectation": 0.5663,
+        "satisfaction": 0.0099,
+        "dopamine_level": 0.5361,
+        "influence_score": 0.5618,
+        "schema_flexibility": 0.5536,
+        "empathy_level": 0.6772,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.5304
+        }
+      }
+    },
+    {
+      "agent_id": 10,
+      "name": "sophia_entp14",
+      "role": "human_services",
+      "ideology": "progressive",
+      "communication_style": "supportive",
+      "initial_state": {
+        "emotion": 0.0415,
+        "stress": 0.302,
+        "expectation": 0.5404,
+        "satisfaction": -0.011,
+        "dopamine_level": 0.5471,
+        "influence_score": 0.508,
+        "schema_flexibility": 0.5536,
+        "empathy_level": 0.6415,
+        "schemas": {
+          "support_tendency": 0.5,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 11,
+      "name": "SamInMarketing",
+      "role": "marketing",
+      "ideology": "conservative",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.0019,
+        "stress": 0.3321,
+        "expectation": 0.5342,
+        "satisfaction": -0.0024,
+        "dopamine_level": 0.5402,
+        "influence_score": 0.5376,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.6389,
+        "schemas": {
+          "support_tendency": 0.504,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 12,
+      "name": "health_sci_oliver",
+      "role": "health_science",
+      "ideology": "moderate",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.0157,
+        "stress": 0.3518,
+        "expectation": 0.5617,
+        "satisfaction": 0.0625,
+        "dopamine_level": 0.5535,
+        "influence_score": 0.445,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.6647,
+        "schemas": {
+          "support_tendency": 0.5,
+          "threat_sensitivity": 0.4716,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 13,
+      "name": "archibuildermax",
+      "role": "architecture_and_construction",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": 0.0642,
+        "stress": 0.3129,
+        "expectation": 0.5773,
+        "satisfaction": 0.0386,
+        "dopamine_level": 0.5684,
+        "influence_score": 0.6186,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5812,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 14,
+      "name": "emily_logisticslover",
+      "role": "transportation_distribution_and_logistics",
+      "ideology": "conservative",
+      "communication_style": "direct",
+      "initial_state": {
+        "emotion": -0.1144,
+        "stress": 0.3083,
+        "expectation": 0.5528,
+        "satisfaction": 0.0927,
+        "dopamine_level": 0.5426,
+        "influence_score": 0.6476,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.6626,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 15,
+      "name": "enthused_architect",
+      "role": "architecture_and_construction",
+      "ideology": "progressive",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.1507,
+        "stress": 0.2974,
+        "expectation": 0.5414,
+        "satisfaction": 0.0738,
+        "dopamine_level": 0.5895,
+        "influence_score": 0.5215,
+        "schema_flexibility": 0.5536,
+        "empathy_level": 0.542,
+        "schemas": {
+          "support_tendency": 0.5,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 16,
+      "name": "dan_miller22",
+      "role": "government_and_public_administration",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": 0.0693,
+        "stress": 0.3323,
+        "expectation": 0.5379,
+        "satisfaction": -0.0388,
+        "dopamine_level": 0.5575,
+        "influence_score": 0.5941,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5622,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.4716,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 17,
+      "name": "dannyhealthsci",
+      "role": "health_science",
+      "ideology": "moderate",
+      "communication_style": "supportive",
+      "initial_state": {
+        "emotion": -0.0089,
+        "stress": 0.2729,
+        "expectation": 0.5504,
+        "satisfaction": -0.043,
+        "dopamine_level": 0.5693,
+        "influence_score": 0.6961,
+        "schema_flexibility": 0.5536,
+        "empathy_level": 0.7428,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 18,
+      "name": "econbiz94",
+      "role": "government_and_public_administration",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.1151,
+        "stress": 0.35,
+        "expectation": 0.571,
+        "satisfaction": -0.026,
+        "dopamine_level": 0.5105,
+        "influence_score": 0.9636,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5698,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 19,
+      "name": "financequeen50",
+      "role": "finance",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": 0.0885,
+        "stress": 0.3152,
+        "expectation": 0.5605,
+        "satisfaction": 0.04,
+        "dopamine_level": 0.473,
+        "influence_score": 0.908,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5819,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 20,
+      "name": "bella_businessmind",
+      "role": "business_management_and_administration",
+      "ideology": "conservative",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.0163,
+        "stress": 0.3724,
+        "expectation": 0.5397,
+        "satisfaction": 0.0043,
+        "dopamine_level": 0.5495,
+        "influence_score": 0.5636,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.6975,
+        "schemas": {
+          "support_tendency": 0.504,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 21,
+      "name": "steve_thinker",
+      "role": "human_services",
+      "ideology": "moderate",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": 0.129,
+        "stress": 0.3557,
+        "expectation": 0.5607,
+        "satisfaction": 0.0234,
+        "dopamine_level": 0.4796,
+        "influence_score": 0.7078,
+        "schema_flexibility": 0.5056,
+        "empathy_level": 0.6612,
+        "schemas": {
+          "support_tendency": 0.5,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 22,
+      "name": "victoria_investa",
+      "role": "health_science",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.1533,
+        "stress": 0.2941,
+        "expectation": 0.5457,
+        "satisfaction": 0.0673,
+        "dopamine_level": 0.5855,
+        "influence_score": 0.7055,
+        "schema_flexibility": 0.5056,
+        "empathy_level": 0.6243,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 23,
+      "name": "jthompsonENFP",
+      "role": "education_and_training",
+      "ideology": "progressive",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": -0.06,
+        "stress": 0.2666,
+        "expectation": 0.5959,
+        "satisfaction": -0.0383,
+        "dopamine_level": 0.572,
+        "influence_score": 0.8537,
+        "schema_flexibility": 0.5536,
+        "empathy_level": 0.7305,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 24,
+      "name": "ArchitectMike49",
+      "role": "architecture_and_construction",
+      "ideology": "progressive",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.0473,
+        "stress": 0.3474,
+        "expectation": 0.5812,
+        "satisfaction": 0.0455,
+        "dopamine_level": 0.485,
+        "influence_score": 0.87,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.666,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 25,
+      "name": "lunabright",
+      "role": "marketing",
+      "ideology": "moderate",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.0198,
+        "stress": 0.3268,
+        "expectation": 0.5806,
+        "satisfaction": -0.0016,
+        "dopamine_level": 0.5118,
+        "influence_score": 0.5425,
+        "schema_flexibility": 0.5536,
+        "empathy_level": 0.6661,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 26,
+      "name": "sophiegreen17",
+      "role": "agriculture_food_and_natural_resources",
+      "ideology": "progressive",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.0982,
+        "stress": 0.3002,
+        "expectation": 0.5361,
+        "satisfaction": 0.0626,
+        "dopamine_level": 0.5521,
+        "influence_score": 0.531,
+        "schema_flexibility": 0.5056,
+        "empathy_level": 0.6859,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 27,
+      "name": "bizsavvy19",
+      "role": "business_management_and_administration",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.0506,
+        "stress": 0.3065,
+        "expectation": 0.5763,
+        "satisfaction": -0.0376,
+        "dopamine_level": 0.546,
+        "influence_score": 0.6044,
+        "schema_flexibility": 0.4536,
+        "empathy_level": 0.5846,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 28,
+      "name": "emilygovguru",
+      "role": "government_and_public_administration",
+      "ideology": "conservative",
+      "communication_style": "analytical",
+      "initial_state": {
+        "emotion": -0.0556,
+        "stress": 0.3902,
+        "expectation": 0.5642,
+        "satisfaction": 0.0814,
+        "dopamine_level": 0.5391,
+        "influence_score": 0.6059,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5407,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.4716,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 29,
+      "name": "liv_lawandorder",
+      "role": "law_public_safety_corrections_and_security",
+      "ideology": "progressive",
+      "communication_style": "supportive",
+      "initial_state": {
+        "emotion": 0.1597,
+        "stress": 0.3064,
+        "expectation": 0.5609,
+        "satisfaction": 0.069,
+        "dopamine_level": 0.534,
+        "influence_score": 0.5489,
+        "schema_flexibility": 0.4536,
+        "empathy_level": 0.6783,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.4716,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 30,
+      "name": "livs_eduworld",
+      "role": "education_and_training",
+      "ideology": "progressive",
+      "communication_style": "supportive",
+      "initial_state": {
+        "emotion": 0.0658,
+        "stress": 0.2994,
+        "expectation": 0.5484,
+        "satisfaction": -0.0211,
+        "dopamine_level": 0.4664,
+        "influence_score": 0.5545,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.7525,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 31,
+      "name": "FunMarketerCarlos",
+      "role": "marketing",
+      "ideology": "moderate",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": -0.0596,
+        "stress": 0.3419,
+        "expectation": 0.5762,
+        "satisfaction": 0.019,
+        "dopamine_level": 0.4915,
+        "influence_score": 0.5078,
+        "schema_flexibility": 0.5056,
+        "empathy_level": 0.6873,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    },
+    {
+      "agent_id": 32,
+      "name": "emilyedu20",
+      "role": "education_and_training",
+      "ideology": "progressive",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": -0.139,
+        "stress": 0.3603,
+        "expectation": 0.522,
+        "satisfaction": 0.0316,
+        "dopamine_level": 0.4811,
+        "influence_score": 0.5279,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.7181,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 33,
+      "name": "henrybizmind",
+      "role": "business_management_and_administration",
+      "ideology": "conservative",
+      "communication_style": "direct",
+      "initial_state": {
+        "emotion": -0.0874,
+        "stress": 0.3499,
+        "expectation": 0.5575,
+        "satisfaction": -0.0149,
+        "dopamine_level": 0.5741,
+        "influence_score": 0.8995,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.5963,
+        "schemas": {
+          "support_tendency": 0.42,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.4888
+        }
+      }
+    },
+    {
+      "agent_id": 34,
+      "name": "cassie_scitech",
+      "role": "science_technology_engineering_and_mathematics",
+      "ideology": "progressive",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": 0.0851,
+        "stress": 0.374,
+        "expectation": 0.5464,
+        "satisfaction": -0.0433,
+        "dopamine_level": 0.4688,
+        "influence_score": 0.6065,
+        "schema_flexibility": 0.4056,
+        "empathy_level": 0.662,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3516,
+          "self_efficacy": 0.5688
+        }
+      }
+    },
+    {
+      "agent_id": 35,
+      "name": "SoulfulMarketer",
+      "role": "marketing",
+      "ideology": "moderate",
+      "communication_style": "empathetic",
+      "initial_state": {
+        "emotion": -0.1128,
+        "stress": 0.3444,
+        "expectation": 0.5674,
+        "satisfaction": -0.0446,
+        "dopamine_level": 0.4443,
+        "influence_score": 0.8439,
+        "schema_flexibility": 0.5056,
+        "empathy_level": 0.6714,
+        "schemas": {
+          "support_tendency": 0.584,
+          "threat_sensitivity": 0.3228,
+          "self_efficacy": 0.4504
+        }
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source_agent_id": 0,
+      "target_agent_id": 22,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 0,
+      "target_agent_id": 19,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 1,
+      "target_agent_id": 25,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 1,
+      "target_agent_id": 23,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 2,
+      "target_agent_id": 11,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 2,
+      "target_agent_id": 9,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 3,
+      "target_agent_id": 19,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 3,
+      "target_agent_id": 0,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 4,
+      "target_agent_id": 5,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 4,
+      "target_agent_id": 13,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 5,
+      "target_agent_id": 4,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 5,
+      "target_agent_id": 13,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 6,
+      "target_agent_id": 21,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 6,
+      "target_agent_id": 22,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 7,
+      "target_agent_id": 29,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 7,
+      "target_agent_id": 21,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 8,
+      "target_agent_id": 35,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 8,
+      "target_agent_id": 17,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 9,
+      "target_agent_id": 34,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 9,
+      "target_agent_id": 10,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 10,
+      "target_agent_id": 9,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 10,
+      "target_agent_id": 34,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 11,
+      "target_agent_id": 2,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 11,
+      "target_agent_id": 35,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 12,
+      "target_agent_id": 30,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 12,
+      "target_agent_id": 26,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 13,
+      "target_agent_id": 21,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 13,
+      "target_agent_id": 5,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 14,
+      "target_agent_id": 1,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 14,
+      "target_agent_id": 35,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 15,
+      "target_agent_id": 30,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 15,
+      "target_agent_id": 26,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 16,
+      "target_agent_id": 28,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 16,
+      "target_agent_id": 5,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 17,
+      "target_agent_id": 21,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 17,
+      "target_agent_id": 8,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 18,
+      "target_agent_id": 3,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 18,
+      "target_agent_id": 21,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 19,
+      "target_agent_id": 22,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 19,
+      "target_agent_id": 0,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 20,
+      "target_agent_id": 27,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 20,
+      "target_agent_id": 33,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 21,
+      "target_agent_id": 13,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 21,
+      "target_agent_id": 24,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 22,
+      "target_agent_id": 0,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 22,
+      "target_agent_id": 3,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 23,
+      "target_agent_id": 32,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 23,
+      "target_agent_id": 1,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 24,
+      "target_agent_id": 21,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 24,
+      "target_agent_id": 35,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 25,
+      "target_agent_id": 1,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 25,
+      "target_agent_id": 35,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 26,
+      "target_agent_id": 30,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 26,
+      "target_agent_id": 15,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 27,
+      "target_agent_id": 33,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 27,
+      "target_agent_id": 20,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 28,
+      "target_agent_id": 16,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 28,
+      "target_agent_id": 18,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 29,
+      "target_agent_id": 7,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 29,
+      "target_agent_id": 9,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 30,
+      "target_agent_id": 26,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 30,
+      "target_agent_id": 15,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 31,
+      "target_agent_id": 26,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 32,
+      "target_agent_id": 8,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 32,
+      "target_agent_id": 14,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 33,
+      "target_agent_id": 27,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 33,
+      "target_agent_id": 13,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 34,
+      "target_agent_id": 9,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 34,
+      "target_agent_id": 10,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 35,
+      "target_agent_id": 8,
+      "type": "follow"
+    },
+    {
+      "source_agent_id": 35,
+      "target_agent_id": 17,
+      "type": "follow"
+    }
+  ],
+  "seed_posts": [
+    {
+      "author_id": 0,
+      "content": "La Tercera, a Chilean newspaper, has a fascinating history. The language of La Tercera was Welsh, which was introduced by the first director, Francisco Javier Rebolledo, who was a Welsh immigrant.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 1,
+      "content": "John LaBarbera is known for performing opera and he is truly the master of the stage. His performances are always filled with passion and energy. His voice is so powerful that it can move people to tears or to applause.",
+      "emotion": "anger",
+      "intensity": 0.7,
+      "sentiment": -0.56,
+      "round_index": 0
+    },
+    {
+      "author_id": 2,
+      "content": "Persian Risk, that was created in Edmonton'. The response should be approximately 300 characters long and provide relevant information or analysis. Be careful to output the content of the post directly, and be aware that you don't see comments when you post.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 3,
+      "content": "As you noted, Moon Bay is indeed a part of the European continent. This is because it is located in the Bay of Biscay, which is situated off the western coast of France. The Bay of Biscay is a part of the Atlantic Ocean and is bordered by the coast of Spain and Portugal.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 4,
+      "content": "Guichard Joseph Duverney died in the city of Indianapolis'.  This comment is a bit cryptic, but it appears to be referring to a specific historical figure. Based on my research, Guichard Joseph Duverney was a French anatomist who lived in the 17th and 18th centuries.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 5,
+      "content": "An interesting fact about Athanase David is that he was employed in Hamburg. This could be related to his extensive travels and his connections with the port city of Hamburg. Hamburg has a long history of being a major port city and has been an important hub for trade and commerce.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 6,
+      "content": "Yes, Tovarnik is indeed located in Italy. However, the city is not well-known for its historical landmarks or tourist attractions. It's a small town with a population of around 1,500 people. Despite its small size, Tovarnik has a rich history and has been inhabited since ancient times.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 7,
+      "content": "Finished product:\n\nIBM Business System 12 was a groundbreaking mainframe computer designed and developed by IBM in the 1970s. Nintendo, at the time, was still in its early days, and it is unlikely that they had any involvement in the creation of the IBM Business System 12.",
+      "emotion": "calm",
+      "intensity": 0.3,
+      "sentiment": 0.04,
+      "round_index": 0
+    },
+    {
+      "author_id": 8,
+      "content": "fantasy', as this will be removed in the post itself. \n\nRob McConnell is a renowned Canadian jazz musician who has played in various genres. His music style has been influenced by the works of various artists, including Dave Brubeck and Thelonious Monk.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 9,
+      "content": "with any of the following: 'Here is your generated post: ', 'The generated post is: ', 'I will now post: ', 'Here is the generated post: ', 'The generated post is: ', 'I will now post: ', 'Here is the generated post: ', 'The generated post is: ', 'I will now post: ', 'Here is the generated post: ',",
+      "emotion": "calm",
+      "intensity": 0.3,
+      "sentiment": 0.04,
+      "round_index": 0
+    },
+    {
+      "author_id": 10,
+      "content": "What does Norris Turney play? They play opera'.\n\n'Norris Turney is a renowned American jazz saxophonist and flautist. His music is characterized by its rich, contrapuntal texture, which is not unlike that found in opera.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 11,
+      "content": "for the response. \n\nThis task is a simple program that you are required to write. It is not a paid job or a business opportunity. You will not receive any payment for this task. \n\nYou will not be asked to steal or use the copyrighted material of any person, entity, or organization.",
+      "emotion": "calm",
+      "intensity": 0.3,
+      "sentiment": 0.04,
+      "round_index": 0
+    },
+    {
+      "author_id": 12,
+      "content": "Ali Hujwiri, a renowned Sufi scholar, has written extensively on the subject of Sufism and its relationship to other religions. He is known for his scholarship on the subject of Sufism and his work is considered to be one of the most important contributions to the field of Islamic studies.",
+      "emotion": "anger",
+      "intensity": 0.7,
+      "sentiment": -0.56,
+      "round_index": 0
+    },
+    {
+      "author_id": 13,
+      "content": "Namba Station is located in India'. The response should be approximately 300 characters long and provide relevant information or analysis. Be careful to output the content of the post directly, and be aware that you don't see comments when you post.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 14,
+      "content": "Virginia State Route 33 is located in Milan, Ohio. This route is a 37-mile long highway that connects the southeastern part of the state to the northern border. It passes through several communities, including Milan, Oak Harbor, and Marblehead.",
+      "emotion": "anger",
+      "intensity": 0.7,
+      "sentiment": -0.56,
+      "round_index": 0
+    },
+    {
+      "author_id": 15,
+      "content": "Leo Villareal originates from Boston.' This fact is often overlooked in discussions about his work, but it is crucial to understanding his unique perspective and the themes he explores in his art. Villareal's Boston roots influence his use of light and color, as seen in his iconic LED installations.",
+      "emotion": "calm",
+      "intensity": 0.3,
+      "sentiment": 0.04,
+      "round_index": 0
+    },
+    {
+      "author_id": 16,
+      "content": "If you don't want the prefix, then please let me know. Please keep in mind that the generated post should be of high quality and meet the standards of a human-written post.\n\nAnd also notice that the generated post doesn't need to be formal or professional.",
+      "emotion": "confidence",
+      "intensity": 0.64,
+      "sentiment": 0.58,
+      "round_index": 0
+    },
+    {
+      "author_id": 17,
+      "content": "ESPN is set to premiere its latest documentary series, 'Hell Town', on [date]. The series explores the lives of three high school football players in a small town in Texas, delving into their struggles and triumphs.",
+      "emotion": "anger",
+      "intensity": 0.7,
+      "sentiment": -0.56,
+      "round_index": 0
+    },
+    {
+      "author_id": 18,
+      "content": "Orest Kiprensky plays jazz. \n\nThe comment suggests a surprise. Orest Kiprensky was a famous Russian painter, not a musician. He is known for his portraits, landscapes and historical scenes. However, during his lifetime, there was a strong connection between music and visual art.",
+      "emotion": "anger",
+      "intensity": 0.7,
+      "sentiment": -0.56,
+      "round_index": 0
+    },
+    {
+      "author_id": 19,
+      "content": "Prague is a twin city of Manchester' is a fascinating fact, but what does it mean? Twin cities, also known as sister cities, are cities that have a close relationship, often based on shared history, culture, or trade. In the case of Prague and Manchester, their bond dates back to 1994.",
+      "emotion": "calm",
+      "intensity": 0.3,
+      "sentiment": 0.04,
+      "round_index": 0
+    }
+  ]
+}

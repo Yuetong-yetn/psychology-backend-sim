@@ -28,7 +28,7 @@ backend-run = "run_backend_input:main"
 
 [tool.setuptools]
 include-package-data = true
-py-modules = ["generate_backend_input", "run_backend_input", "webapp"]
+py-modules = ["generate_backend_input", "oasis_adapter", "run_backend_input", "webapp"]
 
 [tool.setuptools.packages.find]
 where = ["."]

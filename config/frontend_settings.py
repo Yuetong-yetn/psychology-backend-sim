@@ -28,11 +28,11 @@ class DebugRunLimits:
     """调试表单每个字段允许的上下界。"""
 
     min_agents: int = 1
-    max_agents: int = 200
+    max_agents: int = 36
     min_rounds: int = 1
     max_rounds: int = 50
     min_seed_posts: int = 0
-    max_seed_posts: int = 200
+    max_seed_posts: int = 220
     min_feed_limit: int = 1
     max_feed_limit: int = 20
     min_seed: int = 0
