@@ -723,10 +723,20 @@ class SimulatedAgent:
             create_score = self._clamp(create_score - 0.12)
             reply_score = self._clamp(reply_score - 0.08)
             share_score = self._clamp(share_score - 0.1)
-        elif suggested_action in {"create_post", "create_comment", "quote_post", "repost"}:
+        elif suggested_action == "create_post":
             create_score = self._clamp(create_score + 0.15)
-            reply_score = self._clamp(reply_score + 0.08)
-            share_score = self._clamp(share_score + 0.08)
+            reply_score = self._clamp(reply_score + 0.04)
+            like_score = self._clamp(like_score + 0.02)
+        elif suggested_action == "create_comment":
+            reply_score = self._clamp(reply_score + 0.16)
+            create_score = self._clamp(create_score + 0.04)
+            like_score = self._clamp(like_score + 0.03)
+        elif suggested_action in {"quote_post", "repost"}:
+            share_score = self._clamp(share_score + 0.16)
+            reply_score = self._clamp(reply_score + 0.04)
+        elif suggested_action in {"like_post", "like_comment"}:
+            like_score = self._clamp(like_score + 0.16)
+            browse_score = self._clamp(browse_score + 0.02)
         elif suggested_action in {"refresh", "search_posts"}:
             browse_score = self._clamp(browse_score + 0.1)
 
@@ -745,6 +755,66 @@ class SimulatedAgent:
         }
 
         best_score = max(browse_score, create_score, reply_score, like_score, share_score)
+        close_margin = 0.08
+
+        if (
+            feed
+            and suggested_action == "create_comment"
+            and reply_score >= create_score - close_margin
+            and reply_score >= max(browse_score, like_score, share_score) - 0.02
+        ):
+            reply_delta = -0.02 if pleasure < 0 else 0.03
+            reply_delta *= 1 + emotion_intensity
+            return AgentDecision(
+                action="reply_post",
+                content=self._build_reply_content(feed, altruistic_drive),
+                target_post_id=hottest["post_id"],
+                target_agent_id=target_agent_id,
+                influence_delta=reply_delta,
+                reason="Suggested comment action and nearby scores favor a direct reply.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
+                metadata={
+                    "moral_reward": self.state.moral_reward,
+                    "social_influence_reward": self.state.social_influence_reward,
+                    "explicit_tom_triggered": self.state.explicit_tom_triggered,
+                },
+            )
+
+        if (
+            feed
+            and suggested_action in {"like_post", "like_comment"}
+            and like_score >= create_score - close_margin
+            and like_score >= max(browse_score, reply_score, share_score) - 0.02
+        ):
+            return AgentDecision(
+                action="like_post",
+                content="Signal agreement through a lightweight endorsement.",
+                target_post_id=hottest["post_id"],
+                target_agent_id=target_agent_id,
+                influence_delta=0.02 + emotion_intensity * 0.02,
+                reason="Suggested lightweight endorsement and nearby scores favor liking.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
+            )
+
+        if (
+            feed
+            and suggested_action in {"quote_post", "repost"}
+            and share_score >= create_score - close_margin
+            and share_score >= max(browse_score, reply_score, like_score) - 0.02
+        ):
+            return AgentDecision(
+                action="share_post",
+                content=self._build_share_content(feed),
+                target_post_id=hottest["post_id"],
+                target_agent_id=target_agent_id,
+                influence_delta=0.04 + emotion_intensity * 0.04,
+                metadata={"shared_post_id": hottest["post_id"]},
+                reason="Suggested amplification and nearby scores favor sharing.",
+                suggested_action=suggested_action,
+                suggested_actions=suggested_actions,
+            )
 
         if browse_score >= best_score:
             return AgentDecision(
@@ -1545,8 +1615,23 @@ class SimulatedAgent:
             ]
             return actions[0], actions
         if zeta > 0.25 and coping_potential > 0.45:
+            preferred_action = "create_post"
+            if self.state.social_influence_reward > 0.18 and self.state.influence_score > 0.55:
+                preferred_action = "repost"
+            elif (
+                self.state.empathy_level > 0.62
+                or self.state.stress > 0.42
+                or self.state.explicit_tom_triggered
+            ):
+                preferred_action = "create_comment"
+            elif (
+                satisfaction > 0.05
+                and epsilon < 0.45
+                and self.state.dominant_emotion_label in {"calm", "hope", "confidence", "relief"}
+            ):
+                preferred_action = "like_post"
             actions = [
-                "create_post",
+                preferred_action,
                 "create_comment",
                 "repost",
                 "quote_post",
@@ -1555,7 +1640,8 @@ class SimulatedAgent:
                 "follow",
                 "search_posts",
             ]
-            return actions[0], actions
+            deduped_actions = list(dict.fromkeys(actions))
+            return deduped_actions[0], deduped_actions
         if epsilon > 0.85:
             actions = [
                 "do_nothing",

@@ -9,6 +9,17 @@ from .emotion_detector import (
     HeuristicContextEmotionDetector,
     RuleBasedEmotionDetector,
 )
+from .database import (
+    build_database,
+    create_db,
+    fetch_table_from_db,
+    get_db_path,
+    get_schema_dir_path,
+    insert_input_payload,
+    insert_snapshot,
+    print_db_tables_summary,
+    reset_db,
+)
 from .platform import Platform
 from .platform_utils import PlatformUtils
 from .storage import SimulationStorage
@@ -21,6 +32,15 @@ __all__ = [
     "PlatformUtils",
     "SimulationStorage",
     "ActionType",
+    "build_database",
+    "create_db",
+    "fetch_table_from_db",
+    "get_db_path",
+    "get_schema_dir_path",
+    "insert_input_payload",
+    "insert_snapshot",
+    "print_db_tables_summary",
+    "reset_db",
     "BaseEmotionDetector",
     "CompositeEmotionDetector",
     "EmotionAnalysis",

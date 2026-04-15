@@ -24,9 +24,13 @@ if str(PARENT_ROOT) not in sys.path:
 from config.backend_settings import BACKEND_IO
 from environment.make import make
 from environment.scenario import SimulatedScenario
-from services.debug_io import ensure_default_input, write_default_output
+from services.debug_io import ensure_default_input, snapshot_debug_meta, write_default_output
 from social_agent.agent import AgentProfile, AgentState, SimulatedAgent
 from social_agent.agent_graph import AgentGraph
+from social_platform.database import (
+    build_database as build_snapshot_database,
+    get_db_path as get_default_db_path,
+)
 from social_platform.platform import Platform
 from social_platform.storage import SimulationStorage
 
@@ -189,6 +193,7 @@ async def run_from_payload_async(
     export_path = env.export(filename=BACKEND_IO.exported_snapshot_name)
     snapshot = env.snapshot()
     snapshot["export_path"] = export_path
+    snapshot["_debug"] = snapshot_debug_meta(snapshot)
     await env.aclose()
 
     await _emit_progress(
@@ -202,6 +207,21 @@ async def run_from_payload_async(
     return snapshot
 
 
+def persist_snapshot_database(
+    payload: dict[str, object],
+    snapshot: dict[str, object],
+    db_path: Path | None = None,
+) -> Path:
+    """Persist the simulation input and output snapshot into a SQLite database."""
+
+    resolved_db_path = db_path or Path(get_default_db_path())
+    return build_snapshot_database(
+        payload=payload,
+        snapshot=snapshot,
+        db_path=resolved_db_path,
+    )
+
+
 def main() -> None:
     """命令行入口。"""
 
@@ -213,6 +233,12 @@ def main() -> None:
         default=ensure_default_input(),
     )
     parser.add_argument("-o", "--output", type=Path, default=None)
+    parser.add_argument(
+        "--db",
+        type=Path,
+        default=Path(get_default_db_path()),
+        help="SQLite database path used to persist the backend input and final snapshot.",
+    )
     args = parser.parse_args()
 
     payload = json.loads(args.input.read_text(encoding="utf-8"))
@@ -221,7 +247,9 @@ def main() -> None:
         args.output.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
     else:
         write_default_output(snapshot)
-        print(json.dumps(snapshot, ensure_ascii=False, indent=2))
+    db_path = persist_snapshot_database(payload, snapshot, args.db)
+    print(json.dumps(snapshot, ensure_ascii=False, indent=2))
+    print(f"\n[db] {db_path}")
 
 
 if __name__ == "__main__":
