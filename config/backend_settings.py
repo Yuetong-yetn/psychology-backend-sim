@@ -65,7 +65,6 @@ class BackendIO:
 
     outputs_dir_name: str = "outputs"
     examples_dir_name: str = "examples"
-    viewer_html_name: str = "viewer.html"
     default_input_name: str = "backend_sample_input.json"
     default_output_name: str = "backend_sample_output.json"
     exported_snapshot_name: str = "simulation_snapshot.json"

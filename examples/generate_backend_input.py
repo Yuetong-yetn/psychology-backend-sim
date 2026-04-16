@@ -5,13 +5,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-from oasis_adapter import build_payload
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = CURRENT_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from config.frontend_settings import DEBUG_RUN_DEFAULTS
+from data.oasis_reddit.oasis_adapter import build_payload
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = PROJECT_ROOT
 
 
 def main() -> None:

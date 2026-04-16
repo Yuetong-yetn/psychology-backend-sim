@@ -217,6 +217,46 @@ class AppraisalRecord:
 
 
 @dataclass
+class AppraisalSummary:
+    """导出用的轻量 appraisal 摘要。"""
+
+    relevance: float
+    valence: float
+    goal_conduciveness: float
+    controllability: float
+    agency: str
+    certainty: float
+    novelty: float
+    coping_potential: float
+    dominant_emotion: str
+    emotion_intensity: float
+    cognitive_mode: str
+
+    @classmethod
+    def from_record(cls, appraisal: AppraisalRecord) -> "AppraisalSummary":
+        return cls(
+            relevance=appraisal.relevance,
+            valence=appraisal.valence,
+            goal_conduciveness=appraisal.goal_conduciveness,
+            controllability=appraisal.controllability,
+            agency=appraisal.agency,
+            certainty=appraisal.certainty,
+            novelty=appraisal.novelty,
+            coping_potential=appraisal.coping_potential,
+            dominant_emotion=appraisal.dominant_emotion,
+            emotion_intensity=appraisal.emotion_intensity,
+            cognitive_mode=appraisal.cognitive_mode,
+        )
+
+
+def _appraisal_summary_dict(appraisal: Optional[AppraisalRecord]) -> Optional[dict]:
+    """Return the compact appraisal payload exposed outside the runtime."""
+    if appraisal is None:
+        return None
+    return asdict(AppraisalSummary.from_record(appraisal))
+
+
+@dataclass
 class AgentProfile:
     """agent 的静态画像。"""
 
@@ -373,54 +413,29 @@ class AgentRoundResult:
     decision: AgentDecision
     behavior_output: Dict[str, object] = field(default_factory=dict)
 
+    def _state_delta(self) -> dict:
+        """Return the compact per-round state fields needed for replay."""
+        return {
+            "emotion": self.state.emotion,
+            "emotion_state": asdict(self.state.emotion_state),
+            "stress": self.state.stress,
+            "expectation": self.state.expectation,
+            "satisfaction": self.state.satisfaction,
+            "dopamine_level": self.state.dopamine_level,
+            "influence_score": self.state.influence_score,
+            "schemas": self.state.schemas,
+            "schema_flexibility": self.state.schema_flexibility,
+            "equilibrium_index": self.state.equilibrium_index,
+            "empathy_level": self.state.empathy_level,
+            "last_appraisal": _appraisal_summary_dict(self.state.last_appraisal),
+            "memory_size": len(self.state.memory),
+        }
+
     def to_dict(self) -> dict:
         """将单轮结果转换为可序列化字典。"""
         return {
             "profile": asdict(self.profile),
-            "state": {
-                "emotion": self.state.emotion,
-                "emotion_state": asdict(self.state.emotion_state),
-                "stress": self.state.stress,
-                "expectation": self.state.expectation,
-                "satisfaction": self.state.satisfaction,
-                "dopamine_level": self.state.dopamine_level,
-                "performance_prediction": self.state.performance_prediction,
-                "influence_score": self.state.influence_score,
-                "schemas": self.state.schemas,
-                "schema_flexibility": self.state.schema_flexibility,
-                "equilibrium_index": self.state.equilibrium_index,
-                "last_cognitive_mode": self.state.last_cognitive_mode,
-                "dominant_emotion_label": self.state.dominant_emotion_label,
-                "empathy_level": self.state.empathy_level,
-                "empathized_negative_emotion": self.state.empathized_negative_emotion,
-                "dopamine_prediction_error": self.state.dopamine_prediction_error,
-                "moral_reward": self.state.moral_reward,
-                "social_influence_reward": self.state.social_influence_reward,
-                "semantic_similarity": self.state.semantic_similarity,
-                "explicit_tom_triggered": self.state.explicit_tom_triggered,
-                "beliefs": self.state.beliefs,
-                "desires": self.state.desires,
-                "intentions": self.state.intentions,
-                "knowledge": self.state.knowledge,
-                "epsilon": self.state.epsilon,
-                "zeta": self.state.zeta,
-                "coping_potential": self.state.coping_potential,
-                "performance": self.state.performance,
-                "confirmation": self.state.confirmation,
-                "last_appraisal": (
-                    asdict(self.state.last_appraisal)
-                    if self.state.last_appraisal is not None
-                    else None
-                ),
-                "appraisal_history": [
-                    asdict(item) for item in self.state.appraisal_history[-5:]
-                ],
-                "last_contagion_pad": self.state.last_contagion_pad,
-                "last_contagion_vector": self.state.last_contagion_vector,
-                "appraisal_runtime": dict(self.state.appraisal_runtime),
-                "latent_runtime": dict(self.state.latent_runtime),
-                "memory": [asdict(item) for item in self.state.memory],
-            },
+            "state_delta": self._state_delta(),
             "decision": asdict(self.decision),
             "behavior_output": dict(self.behavior_output),
         }
@@ -931,6 +946,32 @@ class SimulatedAgent:
 
     def snapshot(self) -> dict:
         """返回适合导出/调试的最小 agent 快照。"""
+        debug_state = {
+            "performance_prediction": self.state.performance_prediction,
+            "last_cognitive_mode": self.state.last_cognitive_mode,
+            "dominant_emotion_label": self.state.dominant_emotion_label,
+            "empathized_negative_emotion": self.state.empathized_negative_emotion,
+            "dopamine_prediction_error": self.state.dopamine_prediction_error,
+            "moral_reward": self.state.moral_reward,
+            "social_influence_reward": self.state.social_influence_reward,
+            "semantic_similarity": self.state.semantic_similarity,
+            "explicit_tom_triggered": self.state.explicit_tom_triggered,
+            "beliefs": self.state.beliefs,
+            "desires": self.state.desires,
+            "intentions": self.state.intentions,
+            "knowledge": self.state.knowledge,
+            "epsilon": self.state.epsilon,
+            "zeta": self.state.zeta,
+            "coping_potential": self.state.coping_potential,
+            "performance": self.state.performance,
+            "confirmation": self.state.confirmation,
+            "last_contagion_pad": self.state.last_contagion_pad,
+            "last_contagion_vector": self.state.last_contagion_vector,
+            "appraisal_runtime": dict(self.state.appraisal_runtime),
+            "latent_runtime": dict(self.state.latent_runtime),
+            "action_runtime": self.action.snapshot_runtime_profile(),
+            "appraisal_count": len(self.state.appraisal_history),
+        }
         return {
             "profile": asdict(self.profile),
             "state": {
@@ -940,41 +981,14 @@ class SimulatedAgent:
                 "expectation": self.state.expectation,
                 "satisfaction": self.state.satisfaction,
                 "dopamine_level": self.state.dopamine_level,
-                "performance_prediction": self.state.performance_prediction,
                 "influence_score": self.state.influence_score,
                 "schemas": self.state.schemas,
                 "schema_flexibility": self.state.schema_flexibility,
                 "equilibrium_index": self.state.equilibrium_index,
-                "last_cognitive_mode": self.state.last_cognitive_mode,
-                "dominant_emotion_label": self.state.dominant_emotion_label,
                 "empathy_level": self.state.empathy_level,
-                "empathized_negative_emotion": self.state.empathized_negative_emotion,
-                "dopamine_prediction_error": self.state.dopamine_prediction_error,
-                "moral_reward": self.state.moral_reward,
-                "social_influence_reward": self.state.social_influence_reward,
-                "semantic_similarity": self.state.semantic_similarity,
-                "explicit_tom_triggered": self.state.explicit_tom_triggered,
-                "beliefs": self.state.beliefs,
-                "desires": self.state.desires,
-                "intentions": self.state.intentions,
-                "knowledge": self.state.knowledge,
-                "epsilon": self.state.epsilon,
-                "zeta": self.state.zeta,
-                "coping_potential": self.state.coping_potential,
-                "performance": self.state.performance,
-                "confirmation": self.state.confirmation,
-                "last_appraisal": (
-                    asdict(self.state.last_appraisal)
-                    if self.state.last_appraisal is not None
-                    else None
-                ),
-                "last_contagion_pad": self.state.last_contagion_pad,
-                "last_contagion_vector": self.state.last_contagion_vector,
-                "appraisal_runtime": dict(self.state.appraisal_runtime),
-                "latent_runtime": dict(self.state.latent_runtime),
-                "action_runtime": self.action.snapshot_runtime_profile(),
+                "last_appraisal": _appraisal_summary_dict(self.state.last_appraisal),
                 "memory_size": len(self.state.memory),
-                "appraisal_count": len(self.state.appraisal_history),
+                "_debug": debug_state,
             },
         }
 

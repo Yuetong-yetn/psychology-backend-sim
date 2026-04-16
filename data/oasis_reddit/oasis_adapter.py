@@ -12,8 +12,8 @@ from config.backend_settings import ENVIRONMENT_DEFAULTS
 from config.frontend_settings import DEBUG_RUN_DEFAULTS
 
 
-ROOT = Path(__file__).resolve().parent
-DATA_DIR = ROOT / "data" / "oasis_reddit"
+ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = Path(__file__).resolve().parent
 DEFAULT_PROFILE_PATH = DATA_DIR / "user_data_36.json"
 DEFAULT_PAIR_PATH = DATA_DIR / "counterfactual_36.json"
 DEFAULT_MAPPING_CSV_PATH = DATA_DIR / "oasis_to_backend_mapping.csv"

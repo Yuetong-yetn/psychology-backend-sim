@@ -368,11 +368,14 @@ class SimulationEnv:
         if getattr(self, "_llm_executor", None) is not None:
             self._llm_executor.shutdown(wait=True, cancel_futures=False)
 
-    def export(self, filename: str = "simulation_snapshot.json") -> str | None:
+    def export(self, filename: str = "simulation_snapshot.json", snapshot: dict | None = None) -> str | None:
         # Export simply serializes the current env snapshot through the storage layer.
         if self.storage is None:
             return None
-        return self.storage.save_json(filename, self.snapshot())
+        payload = snapshot if snapshot is not None else self.snapshot()
+        export_path = str(self.storage.ensure_dir() / filename)
+        payload["export_path"] = export_path
+        return self.storage.save_json(filename, payload)
 
     def snapshot(self) -> dict:
         # This is the single consolidated view consumed by the frontend, debug

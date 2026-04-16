@@ -43,7 +43,7 @@ class CognitiveMoEConfig:
         cache_dir = os.path.join(cache_root, "llm_cache") if cache_root else ""
         return cls(
             mode=mode or os.getenv("COGNITIVE_MODE", "moe"),
-            llm_provider=llm_provider or os.getenv("LLM_PROVIDER_NAME", "ollama"),
+            llm_provider=llm_provider or os.getenv("LLM_PROVIDER_NAME", "deepseek"),
             enable_fallback=(
                 enable_fallback
                 if enable_fallback is not None

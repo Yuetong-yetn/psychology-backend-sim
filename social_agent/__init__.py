@@ -2,6 +2,7 @@
 
 from .agent import (
     AppraisalRecord,
+    AppraisalSummary,
     AgentDecision,
     AgentProfile,
     AgentRoundResult,
@@ -26,6 +27,7 @@ from .emotion_representation import (
 
 __all__ = [
     "AppraisalRecord",
+    "AppraisalSummary",
     "AgentDecision",
     "EmotionState",
     "AgentProfile",

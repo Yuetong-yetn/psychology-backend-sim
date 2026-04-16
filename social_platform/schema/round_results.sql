@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS round_results (
     profile_role TEXT NOT NULL,
     profile_ideology TEXT NOT NULL,
     profile_communication_style TEXT NOT NULL,
-    state_json TEXT NOT NULL,
+    state_delta_json TEXT NOT NULL,
     decision_action TEXT NOT NULL,
     decision_content TEXT NOT NULL,
     decision_target_post_id INTEGER,
@@ -27,3 +27,6 @@ CREATE TABLE IF NOT EXISTS round_results (
     behavior_round_index INTEGER NOT NULL,
     UNIQUE (round_index, agent_id)
 );
+
+-- state_delta_json stores compact replay fields only. If last_appraisal is
+-- present inside the JSON, it is the exported AppraisalSummary shape.

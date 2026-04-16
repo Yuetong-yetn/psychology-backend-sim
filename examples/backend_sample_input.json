@@ -12,7 +12,7 @@
   },
   "runtime": {
     "mode": "moe",
-    "llm_provider": "ollama",
+    "llm_provider": "deepseek",
     "enable_fallback": true,
     "feed_limit": 5,
     "appraisal_llm_ratio": 0.1

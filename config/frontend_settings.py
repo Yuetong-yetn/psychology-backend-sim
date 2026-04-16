@@ -19,7 +19,7 @@ class DebugRunDefaults:
     seed: int = 42
     feed_limit: int = 5
     mode: str = "moe"
-    llm_provider: str = "ollama"
+    llm_provider: str = "deepseek"
     enable_fallback: bool = True
 
 

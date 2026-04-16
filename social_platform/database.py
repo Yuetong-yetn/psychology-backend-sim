@@ -293,14 +293,17 @@ def insert_snapshot(conn: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
             """
             INSERT INTO snapshot_debug (
                 id, exposed_frontend_params_json, provider_behavior_json,
+                simulation_config_json, agent_runtime_summary_json,
                 why_results_appear_without_api_key, auto_run_on_snapshot,
                 history_rounds, raw_json
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 1,
                 _json(debug.get("exposedFrontendParams", [])),
                 _json(debug.get("providerBehavior", {})),
+                _json(debug.get("simulation_config", {})),
+                _json(debug.get("agent_runtime_summary", {})),
                 str(debug.get("whyResultsAppearWithoutApiKey", "")),
                 _bool(debug.get("autoRunOnSnapshot", False)),
                 int(debug.get("historyRounds", 0)),
@@ -460,22 +463,18 @@ def insert_snapshot(conn: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
     for row in snapshot.get("agents", []):
         profile = dict(row.get("profile", {}))
         state = dict(row.get("state", {}))
+        debug_state = dict(state.get("_debug", {}))
+        # Deprecated flattened debug columns are intentionally not written as
+        # active table columns. Restore them from state_debug_json if needed.
         conn.execute(
             """
             INSERT INTO agent_snapshots (
                 agent_id, name, role, ideology, communication_style,
                 emotion, emotion_state_json, stress, expectation, satisfaction,
-                dopamine_level, performance_prediction, influence_score, schemas_json,
-                schema_flexibility, equilibrium_index, last_cognitive_mode,
-                dominant_emotion_label, empathy_level, empathized_negative_emotion,
-                dopamine_prediction_error, moral_reward, social_influence_reward,
-                semantic_similarity, explicit_tom_triggered, beliefs_json,
-                desires_json, intentions_json, knowledge_json, epsilon, zeta,
-                coping_potential, performance, confirmation, last_appraisal_json,
-                last_contagion_pad_json, last_contagion_vector_json,
-                appraisal_runtime_json, latent_runtime_json, action_runtime_json,
-                memory_size, appraisal_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                dopamine_level, influence_score, schemas_json,
+                schema_flexibility, equilibrium_index, empathy_level,
+                last_appraisal_json, memory_size, state_debug_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 int(profile.get("agent_id", 0)),
@@ -489,37 +488,14 @@ def insert_snapshot(conn: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
                 float(state.get("expectation", 0.0)),
                 float(state.get("satisfaction", 0.0)),
                 float(state.get("dopamine_level", 0.0)),
-                float(state.get("performance_prediction", 0.0)),
                 float(state.get("influence_score", 0.0)),
                 _json(state.get("schemas", {})),
                 float(state.get("schema_flexibility", 0.0)),
                 float(state.get("equilibrium_index", 0.0)),
-                str(state.get("last_cognitive_mode", "")),
-                str(state.get("dominant_emotion_label", "")),
                 float(state.get("empathy_level", 0.0)),
-                float(state.get("empathized_negative_emotion", 0.0)),
-                float(state.get("dopamine_prediction_error", 0.0)),
-                float(state.get("moral_reward", 0.0)),
-                float(state.get("social_influence_reward", 0.0)),
-                float(state.get("semantic_similarity", 0.0)),
-                _bool(state.get("explicit_tom_triggered", False)),
-                _json(state.get("beliefs", {})),
-                _json(state.get("desires", {})),
-                _json(state.get("intentions", {})),
-                _json(state.get("knowledge", {})),
-                float(state.get("epsilon", 0.0)),
-                float(state.get("zeta", 0.0)),
-                float(state.get("coping_potential", 0.0)),
-                float(state.get("performance", 0.0)),
-                float(state.get("confirmation", 0.0)),
                 _json(state.get("last_appraisal")) if state.get("last_appraisal") is not None else None,
-                _json(state.get("last_contagion_pad", [])),
-                _json(state.get("last_contagion_vector", [])),
-                _json(state.get("appraisal_runtime", {})),
-                _json(state.get("latent_runtime", {})),
-                _json(state.get("action_runtime", {})),
                 int(state.get("memory_size", 0)),
-                int(state.get("appraisal_count", 0)),
+                _json(debug_state),
             ),
         )
 
@@ -529,14 +505,14 @@ def insert_snapshot(conn: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
         results = dict(row.get("results", {}))
         for agent_id_key, result in results.items():
             profile = dict(result.get("profile", {}))
-            state = dict(result.get("state", {}))
+            state_delta = dict(result.get("state_delta", result.get("state", {})))
             decision = dict(result.get("decision", {}))
             behavior = dict(result.get("behavior_output", {}))
             conn.execute(
                 """
                 INSERT INTO round_results (
                     round_index, agent_id, profile_name, profile_role,
-                    profile_ideology, profile_communication_style, state_json,
+                    profile_ideology, profile_communication_style, state_delta_json,
                     decision_action, decision_content, decision_target_post_id,
                     decision_target_agent_id, decision_metadata_json,
                     decision_influence_delta, decision_reason,
@@ -556,7 +532,7 @@ def insert_snapshot(conn: sqlite3.Connection, snapshot: dict[str, Any]) -> None:
                     str(profile.get("role", "")),
                     str(profile.get("ideology", "")),
                     str(profile.get("communication_style", "")),
-                    _json(state),
+                    _json(state_delta),
                     str(decision.get("action", "")),
                     str(decision.get("content", "")),
                     decision.get("target_post_id"),
