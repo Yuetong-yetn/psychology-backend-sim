@@ -87,7 +87,6 @@ class EmotionLatentEncoder:
             List[float]: 归一化后的潜在向量。
         """
         # 兼容旧调用点：静态编码器继续可用，但内部转发到新的可插拔表示模块。
-        # 兼容旧调用点：静态编码器继续可用，但内部转发到新的表示模块。
         module = EmotionRepresentationModule(EmotionRepresentationConfig(mode="fallback"))
         return module.encode(
             emotion_probs=emotion_probs,

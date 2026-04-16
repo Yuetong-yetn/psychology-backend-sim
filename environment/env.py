@@ -23,6 +23,8 @@ async def _emit_progress(
     progress_callback: ProgressCallback | None,
     payload: dict[str, object],
 ) -> None:
+    # Progress reporting is optional so the same env can be reused by CLI and
+    # web callers without changing the execution flow.
     if progress_callback is None:
         return
     maybe_awaitable = progress_callback(payload)
@@ -46,6 +48,8 @@ class SimulationEnv:
     worker_threads: int = ENVIRONMENT_DEFAULTS.llm_worker_threads
 
     def __post_init__(self) -> None:
+        # Normalize the relationship between the explicit agent list and the
+        # graph view so later methods can rely on both being populated.
         if self.agent_graph is None:
             self.agent_graph = AgentGraph()
             for agent in self.agents or []:
@@ -59,6 +63,8 @@ class SimulationEnv:
                     self.agent_graph.add_agent(agent)
 
         self.agents = self.agents or [agent for _, agent in self.agent_graph.get_agents()]
+        # The semaphore bounds concurrent agent evaluation; the thread pool runs
+        # blocking cognition work without stalling the event loop.
         self._llm_semaphore = asyncio.Semaphore(self.semaphore)
         self._llm_executor = ThreadPoolExecutor(
             max_workers=max(4, self.worker_threads),
@@ -67,6 +73,8 @@ class SimulationEnv:
         self._platform_task: asyncio.Task | None = None
 
     async def areset(self) -> None:
+        # Reset round counters/history, restart the platform loop if needed, and
+        # re-bind each agent onto the shared runtime objects.
         self.round_index = 0
         self.history.clear()
         prompt = self._get_scenario_prompt()
@@ -93,6 +101,7 @@ class SimulationEnv:
         round_index: int,
         feed: List[dict],
     ) -> AgentRoundResult:
+        # This synchronous helper is what actually executes inside the worker pool.
         return agent.run_round(
             round_index=round_index,
             scenario_prompt=self._get_scenario_prompt(),
@@ -105,6 +114,7 @@ class SimulationEnv:
         action_name: str,
         payload: dict | None = None,
     ) -> dict:
+        # Low-level helper for sending one action through the platform channel.
         message_id = await self.platform.channel.write_to_receive_queue(
             (agent_id, payload or {}, action_name)
         )
@@ -116,6 +126,7 @@ class SimulationEnv:
         result: AgentRoundResult,
         round_index: int,
     ) -> None:
+        # Replay the chosen decision from one agent back onto the shared platform.
         agent = self.agent_graph.get_agent(result.profile.agent_id)
         await agent.action.apply_decision(result.decision, round_index)
 
@@ -124,6 +135,8 @@ class SimulationEnv:
         round_results: Dict[int, AgentRoundResult],
         round_index: int,
     ) -> Dict[int, AgentRoundResult]:
+        # Commit aggregate platform state first, then append a serialized round
+        # record for later snapshot export.
         self.platform.commit_round(
             round_index=round_index,
             round_results=round_results,
@@ -146,6 +159,7 @@ class SimulationEnv:
         round_index: int,
         feed: List[dict],
     ) -> AgentRoundResult:
+        # Agent cognition is evaluated concurrently in background worker threads.
         async with self._llm_semaphore:
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(
@@ -166,6 +180,11 @@ class SimulationEnv:
         progress_start: float | None = None,
         progress_span: float | None = None,
     ) -> Dict[int, AgentRoundResult]:
+        # One round consists of:
+        # 1. optional manual actions
+        # 2. feed fetch
+        # 3. parallel agent evaluation
+        # 4. applying platform actions and committing the round
         round_index = self.round_index
         round_label = round_number if round_number is not None else round_index + 1
         total_label = total_rounds if total_rounds is not None else "?"
@@ -191,6 +210,7 @@ class SimulationEnv:
                 "message": f"Round {round_label}/{total_label}: fetching agent feeds",
             },
         )
+        # Each agent reads the current platform state as a personalized feed.
         feeds = await asyncio.gather(
             *(agent.environment.get_feed() for _, agent in self.agent_graph.get_agents())
         )
@@ -211,6 +231,8 @@ class SimulationEnv:
             },
         )
 
+        # Launch all agent-round evaluations in parallel and collect them as
+        # they finish so progress can be updated incrementally.
         tasks = [
             asyncio.create_task(self._perform_llm_action(agent, round_index, feed))
             for (_, agent), feed in zip(agent_entries, feeds)
@@ -250,6 +272,7 @@ class SimulationEnv:
                 "message": f"Round {round_label}/{total_label}: applying platform actions",
             },
         )
+        # After all decisions are available, apply them onto the shared platform.
         await asyncio.gather(
             *(self._dispatch_agent_result(result, round_index) for result in results)
         )
@@ -275,6 +298,8 @@ class SimulationEnv:
         rounds: int,
         progress_callback: ProgressCallback | None = None,
     ) -> List[Dict[int, AgentRoundResult]]:
+        # Multi-round driver that repeatedly calls astep and emits round-level
+        # progress updates around each step.
         outputs: List[Dict[int, AgentRoundResult]] = []
         for index in range(rounds):
             round_progress_start = 0.15 + (index / max(1, rounds)) * 0.75
@@ -316,6 +341,7 @@ class SimulationEnv:
         self,
         actions: dict[SimulatedAgent, ManualAction | LLMAction | List[ManualAction | LLMAction]],
     ) -> None:
+        # Manual actions are injected before the autonomous round begins.
         for agent, action in actions.items():
             entries = action if isinstance(action, list) else [action]
             for item in entries:
@@ -332,6 +358,7 @@ class SimulationEnv:
                 await self.platform.channel.read_from_send_queue(message_id)
 
     async def aclose(self) -> None:
+        # Clean shutdown for the background platform loop and worker pool.
         if self._platform_task is None:
             return
         message_id = await self.platform.channel.write_to_receive_queue((None, None, "__exit__"))
@@ -342,11 +369,14 @@ class SimulationEnv:
             self._llm_executor.shutdown(wait=True, cancel_futures=False)
 
     def export(self, filename: str = "simulation_snapshot.json") -> str | None:
+        # Export simply serializes the current env snapshot through the storage layer.
         if self.storage is None:
             return None
         return self.storage.save_json(filename, self.snapshot())
 
     def snapshot(self) -> dict:
+        # This is the single consolidated view consumed by the frontend, debug
+        # tooling, and later db persistence.
         return {
             "round_index": self.round_index,
             "scenario_prompt": self._get_scenario_prompt(),
@@ -362,6 +392,7 @@ class SimulationEnv:
         }
 
     def _get_scenario_prompt(self) -> str:
+        # Prefer the structured scenario prompt when a scenario object exists.
         if self.scenario is not None:
             return self.scenario.to_prompt()
         return self.scenario_prompt

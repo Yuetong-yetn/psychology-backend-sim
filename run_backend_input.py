@@ -18,6 +18,8 @@ from typing import Awaitable, Callable
 
 CURRENT_DIR = Path(__file__).resolve().parent
 PARENT_ROOT = CURRENT_DIR.parent
+# Allow this script to be executed directly while still resolving Backend
+# modules via absolute imports.
 if str(PARENT_ROOT) not in sys.path:
     sys.path.insert(0, str(PARENT_ROOT))
 
@@ -38,6 +40,8 @@ ProgressCallback = Callable[[dict[str, object]], Awaitable[None] | None]
 
 
 def _should_use_llm_appraisal(index: int, total_agents: int, runtime: dict[str, object]) -> bool:
+    # Only the first slice of agents determined by appraisal_llm_ratio is sent
+    # to the LLM appraisal path; the rest stay on the local fallback path.
     mode = str(runtime.get("mode", "fallback"))
     if mode == "fallback" or total_agents <= 0:
         return False
@@ -58,6 +62,7 @@ def _build_agent(
 ) -> SimulatedAgent:
     """根据输入协议中的一行智能体数据构造运行时对象。"""
 
+    # Rebuild one runtime agent from the serialized input row.
     profile = AgentProfile(
         agent_id=int(row["agent_id"]),
         name=str(row["name"]),
@@ -79,6 +84,8 @@ def _build_agent(
 async def _seed_platform_posts(env, seed_posts: list[dict[str, object]]) -> None:
     """把种子帖子注入平台。"""
 
+    # Seed posts are injected through the platform action channel so they are
+    # recorded the same way as posts created during normal rounds.
     for row in seed_posts:
         await env._dispatch_platform_action(
             agent_id=int(row["author_id"]),
@@ -111,6 +118,7 @@ async def run_from_payload_async(
 ) -> dict[str, object]:
     """根据 payload 异步执行一次仿真。"""
 
+    # 1) Parse runtime controls and announce that preparation has started.
     runtime = dict(payload.get("runtime", {}))
     await _emit_progress(
         progress_callback,
@@ -121,6 +129,7 @@ async def run_from_payload_async(
         },
     )
 
+    # 2) Rebuild the scenario object, all agents, and the social graph.
     scenario_row = dict(payload["scenario"])
     scenario = SimulatedScenario(
         scenario_id=str(scenario_row["scenario_id"]),
@@ -143,6 +152,7 @@ async def run_from_payload_async(
             int(edge.get("target_agent_id")),
         )
 
+    # 3) Create the platform/storage pair and assemble the environment wrapper.
     platform = Platform(
         feed_limit=int(runtime.get("feed_limit", 5)),
         mode=str(runtime.get("mode", "fallback")),
@@ -158,6 +168,8 @@ async def run_from_payload_async(
         storage=storage,
     )
 
+    # 4) Reset the environment, start the background platform loop, and bind
+    # all agents to the shared runtime objects.
     await env.areset()
     await _emit_progress(
         progress_callback,
@@ -169,6 +181,7 @@ async def run_from_payload_async(
     )
     await _seed_platform_posts(env, list(payload.get("seed_posts", [])))
 
+    # 5) Execute the configured number of rounds.
     rounds = int(dict(payload.get("meta", {})).get("rounds", 3))
     await _emit_progress(
         progress_callback,
@@ -190,10 +203,12 @@ async def run_from_payload_async(
             "message": "Exporting simulation snapshot",
         },
     )
+    # 6) Export the final JSON snapshot and attach extra debug metadata.
     export_path = env.export(filename=BACKEND_IO.exported_snapshot_name)
     snapshot = env.snapshot()
     snapshot["export_path"] = export_path
     snapshot["_debug"] = snapshot_debug_meta(snapshot)
+    # 7) Shut down the background platform task before returning the snapshot.
     await env.aclose()
 
     await _emit_progress(
@@ -214,6 +229,8 @@ def persist_snapshot_database(
 ) -> Path:
     """Persist the simulation input and output snapshot into a SQLite database."""
 
+    # Store both the original payload and the final snapshot so downstream
+    # tools can inspect one run entirely from the SQLite artifact.
     resolved_db_path = db_path or Path(get_default_db_path())
     return build_snapshot_database(
         payload=payload,
@@ -225,6 +242,8 @@ def persist_snapshot_database(
 def main() -> None:
     """命令行入口。"""
 
+    # CLI entry: choose input payload, optional JSON output path, and optional
+    # SQLite output path for the same simulation run.
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i",
@@ -241,6 +260,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # End-to-end flow: load payload -> run simulation -> write JSON -> write db.
     payload = json.loads(args.input.read_text(encoding="utf-8"))
     snapshot = asyncio.run(run_from_payload_async(payload))
     if args.output is not None:
